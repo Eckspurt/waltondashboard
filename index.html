@@ -143,16 +143,67 @@
     }
 
     /* ══════════════════════════════
-       MAIN GRID
+       MAIN GRID (columns)
     ══════════════════════════════ */
     main {
       padding: 1.5rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.5rem;
       max-width: 1600px;
       margin: 0 auto;
-      align-items: start;
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+    .widget-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-width: 0;
+      min-height: 80px;
+    }
+    .widget-col::after {
+      content: '';
+      display: none;
+    }
+    .widget-col:empty::after { display: none; }
+    .col-drop-placeholder {
+      display: none;
+      border: 2px dashed var(--gm-border);
+      color: var(--txt-muted);
+      font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+      align-items: center; justify-content: center;
+      flex: 1;
+      min-height: 200px;
+      pointer-events: none;
+    }
+    .widget-col.drag-col-over .col-drop-placeholder {
+      border-color: var(--raider-red);
+      color: var(--raider-red);
+    }
+    .widget-col.drag-col-over {
+      outline: 2px dashed var(--raider-red);
+      outline-offset: 4px;
+      border-radius: 2px;
+    }
+    .widget-item {
+      width: 100%;
+    }
+    .widget-item.drag-item-over-top {
+      border-top: 2px dashed var(--raider-red);
+    }
+    .widget-item.drag-item-over-top .widget {
+      border-top-color: transparent;
+    }
+    .widget-item.drag-item-over-bottom {
+      border-bottom: 2px dashed var(--raider-red);
+    }
+    @media (max-width: 900px) {
+      main { flex-direction: column; gap: 1rem; padding: 1rem; }
+      .widget-col { width: 100%; }
+      .col-drop-placeholder { display: none !important; }
+    }
+    @media (max-width: 600px) {
+      main { padding: 1rem; gap: 1rem; }
     }
 
     /* ══════════════════════════════
@@ -175,7 +226,10 @@
       display: flex; align-items: center; gap: 0.55rem;
       justify-content: space-between;
       background: var(--gm-dark);
+      cursor: pointer;
+      user-select: none;
     }
+    .widget-header:hover .widget-chevron { color: var(--txt-bright); }
     .widget-header-left {
       display: flex; align-items: center; gap: 0.55rem;
     }
@@ -204,29 +258,24 @@
     }
     .widget-body { padding: 1.1rem; }
 
-    /* ── Collapsible widget body ── */
+    /* ── Generic collapsible widget body ── */
     .widget-body-collapsible {
       overflow: hidden;
-      transition: max-height 0.3s ease, opacity 0.25s ease;
-      max-height: 600px;
+      transition: max-height 0.35s ease, opacity 0.25s ease;
+      max-height: 1200px;
       opacity: 1;
     }
     .widget-body-collapsible.collapsed {
       max-height: 0;
       opacity: 0;
     }
-    .widget-collapse-btn {
-      background: none; border: none; cursor: pointer;
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0; color: var(--txt-dim);
-      transition: color 0.15s;
+    .widget-chevron {
+      color: var(--txt-dim);
+      flex-shrink: 0;
+      transition: transform 0.25s ease, color 0.15s;
     }
-    .widget-collapse-btn:hover { color: var(--txt-bright); }
-    .widget-collapse-chevron {
-      transition: transform 0.25s ease;
-    }
-    .widget-collapse-chevron.collapsed { transform: rotate(-90deg); }
-    /* Temp shown in header when collapsed */
+    .widget-chevron.collapsed { transform: rotate(-90deg); }
+    /* Temp shown in weather header when collapsed */
     .weather-header-temp {
       font-family: 'Barlow Condensed', sans-serif;
       font-weight: 800; font-size: 1.3rem;
@@ -235,12 +284,46 @@
       transition: opacity 0.2s ease;
       white-space: nowrap;
     }
+    .weather-header-temp.visible { opacity: 1; }
+    /* ── Schedule collapsed period strip ── */
+    .sched-period-strip {
+      display: none;
+      position: relative; overflow: hidden;
+      align-items: center; gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--gm-light);
+      border-top: 1px solid var(--gm-border);
+    }
+    .sched-period-strip.visible { display: flex; }
+    .sched-strip-bg {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      background: rgba(255,50,50,0.13);
+      pointer-events: none;
+    }
+    .sched-strip-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 1rem;
+      letter-spacing: 0.04em; color: var(--raider-white);
+      position: relative; z-index: 1; flex-shrink: 0;
+    }
+    .sched-strip-times {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.82rem; font-weight: 600;
+      color: var(--txt-mid); letter-spacing: 0.04em;
+      position: relative; z-index: 1; margin-left: auto; flex-shrink: 0;
+    }
+    .sched-strip-countdown {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.85rem;
+      color: var(--raider-red-glow); letter-spacing: 0.06em;
+      z-index: 2; pointer-events: none;
+    }
     .weather-header-temp sup {
       font-size: 0.65rem; vertical-align: super;
       color: var(--raider-red); font-weight: 600;
     }
-    .weather-header-temp.visible { opacity: 1; }
-
     /* ══════════════════════════════
        WEATHER WIDGET
     ══════════════════════════════ */
@@ -473,29 +556,160 @@
     }
 
     /* ══════════════════════════════
-       FOOTER
+       INSTAGRAM WIDGET
     ══════════════════════════════ */
-    footer {
-      text-align: center; padding: 1rem 1rem 1.5rem;
-      font-size: 0.55rem; letter-spacing: 0.22em;
-      text-transform: uppercase; color: var(--txt-muted);
+    .instagram-body {
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+      background: var(--gm-dark);
+    }
+    .ig-slider {
+      position: relative;
+      aspect-ratio: 1;
+      overflow: hidden;
+    }
+    .ig-slide {
+      position: absolute; inset: 0;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      pointer-events: none;
+    }
+    .ig-slide.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .ig-slide img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    .ig-slide-link {
+      position: absolute; inset: 0;
+      display: flex; align-items: flex-end;
+      background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 50%);
+      text-decoration: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .ig-slider:hover .ig-slide-link { opacity: 1; }
+    .ig-caption {
+      padding: 0.75rem;
+      font-size: 0.68rem; color: var(--txt-mid);
+      letter-spacing: 0.02em; line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .ig-controls {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.5rem 0.75rem;
+      background: var(--gm-dark);
       border-top: 1px solid var(--gm-border);
     }
+    .ig-dots {
+      display: flex; gap: 0.35rem; align-items: center;
+    }
+    .ig-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--gm-border);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .ig-dot.active {
+      background: var(--raider-white);
+      transform: scale(1.3);
+    }
+    .ig-nav {
+      display: flex; gap: 0.4rem;
+    }
+    .ig-nav button {
+      background: var(--gm-mid); border: 1px solid var(--gm-border);
+      color: var(--txt-dim); width: 26px; height: 26px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: color 0.15s, background 0.15s;
+    }
+    .ig-nav button:hover { background: var(--gm-light); color: var(--txt-bright); }
+    .ig-counter {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.7rem; color: var(--txt-dim);
+      letter-spacing: 0.1em;
+    }
+
+    /* ══════════════════════════════
+       ANNOUNCEMENTS WIDGET
+    ══════════════════════════════ */
+    .announcements-list {
+      display: flex; flex-direction: column;
+      max-height: 320px; overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--gm-border) transparent;
+    }
+    .announcements-list::-webkit-scrollbar { width: 4px; }
+    .announcements-list::-webkit-scrollbar-track { background: transparent; }
+    .announcements-list::-webkit-scrollbar-thumb { background: var(--gm-border); border-radius: 2px; }
+    .announcement-row {
+      padding: 0.7rem 0;
+      border-bottom: 1px solid var(--gm-border);
+      font-size: 0.82rem; line-height: 1.5;
+      color: var(--txt-mid); letter-spacing: 0.02em;
+      display: flex; align-items: flex-start; gap: 0.6rem;
+    }
+    .announcement-row:last-child { border-bottom: none; }
+    .announcement-bullet {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--raider-red); flex-shrink: 0;
+      margin-top: 0.45rem;
+    }
+    .announcement-text { flex: 1; }
+    .announcements-empty {
+      text-align: center; padding: 2rem 1rem;
+      color: var(--txt-dim); font-size: 0.7rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+    }
+    /* Collapsed ticker strip */
+    .ann-ticker {
+      display: none;
+      align-items: center; gap: 0.6rem;
+      padding: 0.55rem 0.75rem;
+      border-top: 1px solid var(--gm-border);
+      background: var(--gm-mid);
+      overflow: hidden;
+      min-height: 2.4rem;
+    }
+    .ann-ticker.visible { display: flex; }
+    .ann-ticker-bullet {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--raider-red); flex-shrink: 0;
+    }
+    .ann-ticker-text {
+      flex: 1; font-size: 0.8rem; line-height: 1.4;
+      color: var(--txt-mid); letter-spacing: 0.02em;
+      opacity: 0; transition: opacity 0.4s ease;
+    }
+    .ann-ticker-text.visible { opacity: 1; }
+    .ann-ticker-counter {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.65rem; color: var(--txt-dim);
+      letter-spacing: 0.1em; flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════
+       DRAG AND DROP
+    ══════════════════════════════ */
+    .widget-item.dragging { opacity: 0.4; }
+    .widget-drag-handle { cursor: grab; }
+    .widget-drag-handle:active { cursor: grabbing; }
+    .widget input, .widget button, .widget select,
+    .widget a, .widget textarea, .lb-tab { cursor: pointer; }
 
     /* ══════════════════════════════
        RESPONSIVE
     ══════════════════════════════ */
     @media (min-width: 1400px) {
-      main { grid-template-columns: repeat(3, 1fr); padding: 2rem; gap: 2rem; }
       header { padding: 0 3rem; min-height: 96px; }
       .school-logo { width: 72px; height: 74px; }
       .weather-temp { font-size: 5.2rem; }
     }
-    @media (max-width: 900px) {
-      main { grid-template-columns: repeat(2, 1fr); }
-    }
     @media (max-width: 600px) {
-      main { grid-template-columns: 1fr; padding: 1rem; gap: 1rem; }
       header { padding: 0.8rem 1rem; min-height: auto; flex-wrap: wrap; gap: 0.75rem; }
       .school-logo { width: 44px; height: 46px; }
       .weather-temp { font-size: 3.4rem; }
@@ -503,6 +717,85 @@
       .school-name-sub { display: none; }
       .school-name { display: none; }
     }
+    /* ══════════════════════════════
+       WIDGET MANAGER
+    ══════════════════════════════ */
+    #widget-manager-btn {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      width: 44px; height: 44px;
+      background: var(--gm-light);
+      border: 1px solid var(--gm-border);
+      color: var(--txt-mid);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 2000;
+      border-radius: 50%;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      transition: background 0.2s, color 0.2s, transform 0.2s;
+    }
+    #widget-manager-btn:hover { background: var(--gm-highlight); color: var(--txt-bright); transform: rotate(30deg); }
+    #widget-manager-btn.open { background: var(--raider-red); color: var(--raider-white); transform: rotate(90deg); }
+
+    #widget-manager-panel {
+      position: fixed; bottom: 5rem; right: 1.5rem;
+      width: 260px;
+      background: var(--gm-base);
+      border: 1px solid var(--gm-border);
+      border-top: 3px solid var(--raider-red);
+      z-index: 1999;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      opacity: 0; pointer-events: none;
+      transform: translateY(10px) scale(0.97);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      transform-origin: bottom right;
+    }
+    #widget-manager-panel.open {
+      opacity: 1; pointer-events: all;
+      transform: translateY(0) scale(1);
+    }
+    .wm-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--gm-border);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.7rem;
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--txt-dim);
+      background: var(--gm-dark);
+    }
+    .wm-list { padding: 0.5rem 0; }
+    .wm-row {
+      display: flex; align-items: center;
+      padding: 0.6rem 1rem; gap: 0.75rem;
+      cursor: pointer; user-select: none;
+      transition: background 0.15s;
+    }
+    .wm-row:hover { background: var(--gm-mid); }
+    .wm-icon {
+      width: 26px; height: 26px; flex-shrink: 0;
+      background: var(--gm-mid); border: 1px solid var(--gm-border);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .wm-icon svg { color: var(--txt-bright); }
+    .wm-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.78rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--txt-mid); flex: 1;
+    }
+    .wm-toggle {
+      width: 34px; height: 18px; flex-shrink: 0;
+      background: var(--gm-border); border-radius: 999px;
+      position: relative; transition: background 0.2s;
+    }
+    .wm-toggle::after {
+      content: '';
+      position: absolute; top: 2px; left: 2px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--txt-dim);
+      transition: transform 0.2s, background 0.2s;
+    }
+    .wm-row.active .wm-toggle { background: var(--raider-red); }
+    .wm-row.active .wm-toggle::after { transform: translateX(16px); background: var(--raider-white); }
+    .wm-row.active .wm-label { color: var(--txt-bright); }
   </style>
 </head>
 <body>
@@ -527,77 +820,190 @@
 
 <main>
 
-  <!-- Weather Widget -->
-  <div class="widget" id="weather-widget" style="animation-delay:0.05s">
-    <div class="widget-header" style="cursor:pointer;" onclick="toggleWeather()">
-      <div class="widget-header-left">
-        <div class="widget-icon">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="5"/>
-            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-          </svg>
+  <div class="widget-col" id="col-0">
+    <div class="col-drop-placeholder">Drop here</div>
+    <!-- Weather Widget -->
+    <div class="widget-item" data-id="weather">
+      <div class="widget" id="weather-widget" style="animation-delay:0.05s">
+        <div class="widget-header widget-drag-handle" >
+          <div class="widget-header-left">
+            <div class="widget-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            </div>
+            <span class="widget-title">Current Weather</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <span class="weather-header-temp" id="weather-header-temp"></span>
+            <svg class="widget-chevron" id="weather-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
         </div>
-        <span class="widget-title">Current Weather</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:0.75rem;">
-        <span class="weather-header-temp" id="weather-header-temp"></span>
-        <svg class="widget-collapse-chevron" id="weather-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
+        <div class="widget-body-collapsible" id="weather-collapsible">
+          <div class="widget-body" id="weather-body">
+            <div class="weather-loading"><div class="spin"></div>Fetching weather…</div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="widget-body-collapsible" id="weather-collapsible">
-      <div class="widget-body" id="weather-body">
-        <div class="weather-loading"><div class="spin"></div>Fetching weather…</div>
+
+    <!-- Instagram Widget -->
+    <div class="widget-item" data-id="instagram">
+      <div class="widget" id="instagram-widget" style="animation-delay:0.26s">
+        <div class="widget-header widget-drag-handle" >
+          <div class="widget-header-left">
+            <div class="widget-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                <circle cx="12" cy="12" r="4"/>
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+              </svg>
+            </div>
+            <span class="widget-title">@waltonesports</span>
+          </div>
+          <svg class="widget-chevron" id="instagram-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="widget-body-collapsible" id="instagram-collapsible">
+          <div class="instagram-body">
+            <div class="ig-slider" id="ig-slider">
+              <div class="weather-loading" style="position:absolute;inset:0;justify-content:center;">
+                <div class="spin"></div>
+              </div>
+            </div>
+            <div class="ig-controls">
+              <div class="ig-dots" id="ig-dots"></div>
+              <span class="ig-counter" id="ig-counter"></span>
+              <div class="ig-nav">
+                <button onclick="igNav(-1)" aria-label="Previous">
+                  <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                </button>
+                <button onclick="igNav(1)" aria-label="Next">
+                  <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Bell Schedule Widget -->
-  <div class="widget" id="schedule-widget" style="animation-delay:0.12s">
-    <div class="widget-header">
-      <div class="widget-header-left">
-        <div class="widget-icon">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
+  <div class="widget-col" id="col-1">
+    <div class="col-drop-placeholder">Drop here</div>
+    <!-- Bell Schedule Widget -->
+    <div class="widget-item" data-id="schedule">
+      <div class="widget" id="schedule-widget" style="animation-delay:0.12s">
+        <div class="widget-header widget-drag-handle" >
+          <div class="widget-header-left">
+            <div class="widget-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <span class="widget-title">Bell Schedule</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <span class="widget-header-badge" id="schedule-badge"></span>
+            <svg class="widget-chevron" id="schedule-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+        </div>
+        <div class="sched-period-strip" id="sched-period-strip">
+          <div class="sched-strip-bg" id="sched-strip-bg"></div>
+          <span class="sched-strip-name" id="sched-strip-name"></span>
+          <div class="sched-strip-countdown" id="sched-strip-countdown"></div>
+          <span class="sched-strip-times" id="sched-strip-times"></span>
+        </div>
+        <div class="widget-body-collapsible" id="schedule-collapsible">
+          <div class="widget-body" id="schedule-body">
+            <div class="weather-loading"><div class="spin"></div>Loading schedule…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Announcements Widget -->
+    <div class="widget-item" data-id="announcements">
+      <div class="widget" id="announcements-widget" style="animation-delay:0.15s">
+        <div class="widget-header widget-drag-handle">
+          <div class="widget-header-left">
+            <div class="widget-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3z"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+            </div>
+            <span class="widget-title">Announcements</span>
+          </div>
+          <svg class="widget-chevron" id="announcements-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9"/>
           </svg>
         </div>
-        <span class="widget-title">Bell Schedule</span>
+        <div class="ann-ticker" id="ann-ticker">
+          <div class="ann-ticker-bullet"></div>
+          <span class="ann-ticker-text" id="ann-ticker-text"></span>
+          <span class="ann-ticker-counter" id="ann-ticker-counter"></span>
+        </div>
+        <div class="widget-body-collapsible" id="announcements-collapsible">
+          <div class="widget-body" id="announcements-body">
+            <div class="weather-loading"><div class="spin"></div>Loading announcements…</div>
+          </div>
+        </div>
       </div>
-      <span class="widget-header-badge" id="schedule-badge"></span>
-    </div>
-    <div class="widget-body" id="schedule-body">
-      <div class="weather-loading"><div class="spin"></div>Loading schedule…</div>
     </div>
   </div>
-  <!-- Leaderboard Widget -->
-  <div class="widget" id="leaderboard-widget" style="animation-delay:0.19s">
-    <div class="widget-header">
-      <div class="widget-header-left">
-        <div class="widget-icon">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-            <polyline points="17 6 23 6 23 12"/>
+
+  <div class="widget-col" id="col-2">
+    <div class="col-drop-placeholder">Drop here</div>
+    <!-- Leaderboard Widget -->
+    <div class="widget-item" data-id="leaderboard">
+      <div class="widget" id="leaderboard-widget" style="animation-delay:0.19s">
+        <div class="widget-header widget-drag-handle" >
+          <div class="widget-header-left">
+            <div class="widget-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                <polyline points="17 6 23 6 23 12"/>
+              </svg>
+            </div>
+            <span class="widget-title">Step Challenge</span>
+          </div>
+          <svg class="widget-chevron" id="leaderboard-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9"/>
           </svg>
         </div>
-        <span class="widget-title">Step Challenge</span>
+        <div class="widget-body-collapsible" id="leaderboard-collapsible">
+          <div id="lb-tabs-bar" class="lb-tabs"></div>
+          <div id="lb-body" class="lb-body">
+            <div class="weather-loading"><div class="spin"></div>Loading leaderboard…</div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div id="lb-tabs-bar" class="lb-tabs"></div>
-    <div id="lb-body" class="lb-body">
-      <div class="weather-loading"><div class="spin"></div>Loading leaderboard…</div>
     </div>
   </div>
 
 </main>
 
-<footer>Walton High School &nbsp;·&nbsp; 1590 Bill Murdock Rd, Marietta GA 30062 &nbsp;·&nbsp; Go Raiders!</footer>
-
 <script>
+  // ── Helpers ──
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
   // ── Live clock ──
   function updateClock() {
     const now  = new Date();
@@ -614,22 +1020,57 @@
   updateClock();
   setInterval(updateClock, 1000);
 
-  // ── Weather collapsible ──
-  function toggleWeather() {
-    const collapsible = document.getElementById('weather-collapsible');
-    const chevron     = document.getElementById('weather-chevron');
-    const headerTemp  = document.getElementById('weather-header-temp');
+  // ── Widget collapse toggle (generic) ──
+  const COLLAPSE_KEY = 'walton-widget-collapsed';
+
+  function toggleWidget(id) {
+    const collapsible = document.getElementById(`${id}-collapsible`);
+    const chevron     = document.getElementById(`${id}-chevron`);
+    if (!collapsible) return;
     const isCollapsed = collapsible.classList.toggle('collapsed');
-    chevron.classList.toggle('collapsed', isCollapsed);
-    headerTemp.classList.toggle('visible', isCollapsed);
+    if (chevron) chevron.classList.toggle('collapsed', isCollapsed);
+    // Weather-specific: show/hide temp in header
+    if (id === 'weather') {
+      const headerTemp = document.getElementById('weather-header-temp');
+      if (headerTemp) headerTemp.classList.toggle('visible', isCollapsed);
+    }
+    if (id === 'schedule') updateSchedStrip();
+    if (id === 'announcements') {
+      if (isCollapsed) startAnnTicker();
+      else { stopAnnTicker(); document.getElementById('ann-ticker')?.classList.remove('visible'); }
+    }
+    saveCollapseState();
   }
 
-  // Collapse by default on mobile
-  if (window.innerWidth <= 600) {
-    const collapsible = document.getElementById('weather-collapsible');
-    const chevron     = document.getElementById('weather-chevron');
-    collapsible.classList.add('collapsed');
-    chevron.classList.add('collapsed');
+  function saveCollapseState() {
+    const state = {};
+    ['weather','schedule','leaderboard','instagram','announcements'].forEach(id => {
+      const el = document.getElementById(`${id}-collapsible`);
+      if (el) state[id] = el.classList.contains('collapsed');
+    });
+    localStorage.setItem(COLLAPSE_KEY, JSON.stringify(state));
+  }
+
+  function restoreCollapseState() {
+    // Default: collapse weather on mobile
+    const isMobile = window.innerWidth <= 600;
+    const defaults = { weather: isMobile, schedule: false, leaderboard: false };
+
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '{}'); } catch(e) {}
+
+    const state = { ...defaults, ...saved };
+    ['weather','schedule','leaderboard','instagram','announcements'].forEach(id => {
+      if (state[id]) {
+        const collapsible = document.getElementById(`${id}-collapsible`);
+        const chevron     = document.getElementById(`${id}-chevron`);
+        if (collapsible) collapsible.classList.add('collapsed');
+        if (chevron)     chevron.classList.add('collapsed');
+        if (id === 'weather') {
+          // temp will be populated once weather loads
+        }
+      }
+    });
   }
   const LAT = 34.0154, LON = -84.4468;
   const SZ  = 46;
@@ -739,7 +1180,6 @@
       const headerTemp = document.getElementById('weather-header-temp');
       if (headerTemp) {
         headerTemp.innerHTML = `${temp}<sup>°F</sup>`;
-        // Show it if currently collapsed
         if (document.getElementById('weather-collapsible').classList.contains('collapsed')) {
           headerTemp.classList.add('visible');
         }
@@ -916,6 +1356,31 @@
     }
   }
 
+  let currentSchedulePeriods = null;
+
+  function updateSchedStrip() {
+    const strip    = document.getElementById('sched-period-strip');
+    const bg       = document.getElementById('sched-strip-bg');
+    const nameEl   = document.getElementById('sched-strip-name');
+    const countdown= document.getElementById('sched-strip-countdown');
+    const timesEl  = document.getElementById('sched-strip-times');
+    if (!strip) return;
+
+    const isCollapsed = document.getElementById('schedule-collapsible')?.classList.contains('collapsed');
+    if (!isCollapsed) { strip.classList.remove('visible'); return; }
+
+    const nowMin  = minutesToNow();
+    const current = currentSchedulePeriods?.find(p => nowMin >= p.start && nowMin < p.end);
+    if (!current) { strip.classList.remove('visible'); return; }
+
+    const pct = Math.round(((nowMin - current.start) / (current.end - current.start)) * 100);
+    bg.style.width        = `${pct}%`;
+    nameEl.textContent    = current.name;
+    countdown.textContent = minsToStr(current.end - nowMin);
+    timesEl.textContent   = `${current.startStr} – ${current.endStr}`;
+    strip.classList.add('visible');
+  }
+
   function renderSchedule(periods, tabName) {
     const body   = document.getElementById('schedule-body');
     const nowMin = minutesToNow();
@@ -940,8 +1405,9 @@
 
     const badge = document.getElementById('schedule-badge');
     if (badge) badge.textContent = tabName;
-
     body.innerHTML = `<div class="period-list">${rows}</div>`;
+    currentSchedulePeriods = periods;
+    updateSchedStrip();
   }
 
   // Refresh schedule every minute to update current period highlight
@@ -1069,15 +1535,494 @@
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
+  // ══════════════════════════════════════════════
+  //  COLUMN DRAG AND DROP
+  // ══════════════════════════════════════════════
+  const GRID_ORDER_KEY = 'walton-widget-order';
+  let dragItem = null;
+
+  function initDragAndDrop() {
+    document.querySelectorAll('.widget-item').forEach(attachDrag);
+    document.querySelectorAll('.widget-col').forEach(attachColDrop);
+  }
+
+  function attachDrag(item) {
+    const handle = item.querySelector('.widget-drag-handle');
+    if (!handle) return;
+
+    handle.addEventListener('mousedown', (e) => {
+      if (e.target.closest('button, a, input, select, textarea')) return;
+      e.preventDefault();
+
+      let moved = false;
+      const startX = e.clientX, startY = e.clientY;
+
+      function onMoveCheck(ev) {
+        if (Math.abs(ev.clientX - startX) > 6 || Math.abs(ev.clientY - startY) > 6) {
+          moved = true;
+          document.removeEventListener('mousemove', onMoveCheck);
+          // Commit to drag
+          const h = item.offsetHeight;
+          document.querySelectorAll('.widget-col').forEach(col => {
+            const placeholder = col.querySelector('.col-drop-placeholder');
+            if (!placeholder) return;
+            placeholder.style.minHeight = `${h}px`;
+            const widgets = col.querySelectorAll('.widget-item');
+            placeholder.style.display = (widgets.length === 0 || (widgets.length === 1 && widgets[0] === item)) ? 'flex' : 'none';
+          });
+          startDrag(item, ev.clientX, ev.clientY);
+        }
+      }
+
+      function onMouseUp() {
+        document.removeEventListener('mousemove', onMoveCheck);
+        document.removeEventListener('mouseup', onMouseUp);
+        // If mouse didn't move much, treat as a click → toggle collapse
+        if (!moved) {
+          const widgetEl = item.querySelector('.widget');
+          if (widgetEl) {
+            const id = item.dataset.id;
+            if (id) toggleWidget(id);
+          }
+        }
+      }
+
+      document.addEventListener('mousemove', onMoveCheck);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+  }
+
+  function startDrag(item, startX, startY) {
+    dragItem = item;
+    item.classList.add('dragging');
+
+    function onMouseMove(e) {
+      // Highlight column/position under cursor
+      clearDropHighlights();
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      if (!el) return;
+      const col = el.closest('.widget-col');
+      if (!col) return;
+      const target = el.closest('.widget-item');
+      if (target && target !== dragItem) {
+        const rect = target.getBoundingClientRect();
+        const mid  = rect.top + rect.height / 2;
+        if (e.clientY < mid) target.classList.add('drag-item-over-top');
+        else                  target.classList.add('drag-item-over-bottom');
+      } else if (!target) {
+        col.classList.add('drag-col-over');
+      }
+    }
+
+    function onMouseUp(e) {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup',   onMouseUp);
+      dragItem.classList.remove('dragging');
+
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      if (el) {
+        const col    = el.closest('.widget-col');
+        const target = el.closest('.widget-item');
+        if (col && dragItem !== target) {
+          if (target) {
+            const rect = target.getBoundingClientRect();
+            const mid  = rect.top + rect.height / 2;
+            if (e.clientY < mid) col.insertBefore(dragItem, target);
+            else                  col.insertBefore(dragItem, target.nextSibling);
+          } else {
+            col.appendChild(dragItem);
+          }
+        }
+      }
+
+      clearDropHighlights();
+      saveLayout();
+      dragItem = null;
+      updatePlaceholders();
+    }
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup',   onMouseUp);
+  }
+
+  function clearDropHighlights() {
+    document.querySelectorAll('.drag-item-over-top, .drag-item-over-bottom')
+      .forEach(el => { el.classList.remove('drag-item-over-top','drag-item-over-bottom'); });
+    document.querySelectorAll('.drag-col-over')
+      .forEach(el => el.classList.remove('drag-col-over'));
+  }
+
+  function attachColDrop(col) {
+    // Already handled via mouseup above
+  }
+
+  function updatePlaceholders() {
+    document.querySelectorAll('.widget-col').forEach(col => {
+      const placeholder = col.querySelector('.col-drop-placeholder');
+      if (!placeholder) return;
+      const hasWidgets = col.querySelectorAll('.widget-item').length > 0;
+      // Only show placeholder if column is empty AND we're actively dragging
+      placeholder.style.display = (hasWidgets || !dragItem) ? 'none' : 'flex';
+      placeholder.style.minHeight = '200px';
+    });
+  }
+
+  function saveLayout() {
+    // Don't save on mobile — mobile always uses col-0, we don't want to overwrite desktop layout
+    if (window.innerWidth <= 900) return;
+    const layout = {};
+    document.querySelectorAll('.widget-col').forEach(col => {
+      const colId = col.id;
+      layout[colId] = [...col.querySelectorAll('.widget-item')].map(i => i.dataset.id);
+    });
+    localStorage.setItem(GRID_ORDER_KEY, JSON.stringify(layout));
+  }
+
+  function restoreLayout() {
+    const saved = localStorage.getItem(GRID_ORDER_KEY);
+    const isMobile = window.innerWidth <= 900;
+
+    if (isMobile) {
+      const col0 = document.getElementById('col-0');
+      const mobileOrder = ['weather', 'schedule', 'announcements', 'instagram', 'leaderboard'];
+
+      // Determine order — use saved if available, otherwise default
+      let order = mobileOrder;
+      if (saved) {
+        try {
+          const layout = JSON.parse(saved);
+          const flat = Object.values(layout).flat();
+          if (flat.length) order = flat;
+        } catch(e) {}
+      }
+
+      // Move every widget into col-0 in order
+      order.forEach(id => {
+        const item = document.querySelector(`.widget-item[data-id="${id}"]`);
+        if (item && col0) col0.appendChild(item);
+      });
+
+      // Hide col-1 and col-2 — they're now empty
+      document.getElementById('col-1').style.display = 'none';
+      document.getElementById('col-2').style.display = 'none';
+      return;
+    }
+
+    if (!saved) return;
+    try {
+      const layout = JSON.parse(saved);
+      Object.entries(layout).forEach(([colId, ids]) => {
+        const col = document.getElementById(colId);
+        if (!col) return;
+        ids.forEach(id => {
+          const item = document.querySelector(`.widget-item[data-id="${id}"]`);
+          if (item) col.appendChild(item);
+        });
+      });
+    } catch(e) { /* ignore */ }
+  }
+
+  // ══════════════════════════════════════════════
+  //  INSTAGRAM SLIDER
+  // ══════════════════════════════════════════════
+  const IG_FEED_URL  = 'https://feeds.behold.so/IL895tNzIc0gRvYRcjF7';
+  const IG_INTERVAL  = 5000; // ms between slides
+  let igPosts        = [];
+  let igCurrent      = 0;
+  let igTimer        = null;
+
+  async function initInstagram() {
+    console.log('[IG] initInstagram called');
+    try {
+      console.log('[IG] Fetching:', IG_FEED_URL);
+      const res   = await fetch(IG_FEED_URL);
+      console.log('[IG] Response status:', res.status, res.statusText);
+      console.log('[IG] Content-Type:', res.headers.get('content-type'));
+      const text = await res.text();
+      console.log('[IG] Raw response (first 300 chars):', text.slice(0, 300));
+      const json  = JSON.parse(text);
+      const posts = json.posts || json;
+      console.log('[IG] Posts count:', posts.length);
+      igPosts = posts.filter(p => p.mediaType === 'IMAGE' || p.mediaType === 'CAROUSEL_ALBUM');
+      console.log('[IG] Image posts:', igPosts.length);
+      if (!igPosts.length) throw new Error('No posts');
+      buildSlider();
+      // Attach hover pause directly after building
+      const slider = document.getElementById('ig-slider');
+      if (slider) {
+        slider.addEventListener('mouseenter', igStop);
+        slider.addEventListener('mouseleave', igStart);
+      }
+      igStart();
+    } catch(e) {
+      console.error('[IG] Error:', e);
+      const slider = document.getElementById('ig-slider');
+      if (slider) slider.innerHTML = `<div class="weather-loading" style="position:absolute;inset:0;justify-content:center;flex-direction:column;gap:0.4rem;">
+        <span style="color:var(--raider-red);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;">Unable to load feed</span>
+        <span style="color:var(--txt-dim);font-size:0.6rem;">${e.message}</span>
+      </div>`;
+    }
+  }
+
+  function buildSlider() {
+    const slider  = document.getElementById('ig-slider');
+    const dotsEl  = document.getElementById('ig-dots');
+    slider.innerHTML = '';
+    dotsEl.innerHTML = '';
+
+    igPosts.forEach((post, i) => {
+      // Slide
+      const slide = document.createElement('div');
+      slide.className = 'ig-slide' + (i === 0 ? ' active' : '');
+      const img = document.createElement('img');
+      img.src     = post.mediaUrl;
+      img.alt     = post.caption ? post.caption.slice(0, 60) : 'Instagram post';
+      img.loading = 'lazy';
+      const link = document.createElement('a');
+      link.className = 'ig-slide-link';
+      link.href      = post.permalink;
+      link.target    = '_blank';
+      link.rel       = 'noopener';
+      if (post.caption) {
+        const cap = document.createElement('div');
+        cap.className   = 'ig-caption';
+        cap.textContent = post.caption;
+        link.appendChild(cap);
+      }
+      slide.appendChild(img);
+      slide.appendChild(link);
+      slider.appendChild(slide);
+
+      // Dot
+      const dot = document.createElement('div');
+      dot.className = 'ig-dot' + (i === 0 ? ' active' : '');
+      dot.onclick   = () => igGoTo(i);
+      dotsEl.appendChild(dot);
+    });
+
+    igUpdateCounter();
+  }
+
+  function igGoTo(idx) {
+    const slides = document.querySelectorAll('.ig-slide');
+    const dots   = document.querySelectorAll('.ig-dot');
+    if (!slides.length) return;
+    slides[igCurrent].classList.remove('active');
+    dots[igCurrent].classList.remove('active');
+    igCurrent = (idx + igPosts.length) % igPosts.length;
+    slides[igCurrent].classList.add('active');
+    dots[igCurrent].classList.add('active');
+    igUpdateCounter();
+    // Reset timer
+    igStop(); igStart();
+  }
+
+  function igNav(dir) { igGoTo(igCurrent + dir); }
+
+  function igUpdateCounter() {
+    const el = document.getElementById('ig-counter');
+    if (el) el.textContent = `${igCurrent + 1} / ${igPosts.length}`;
+  }
+
+  function igStart() {
+    igTimer = setInterval(() => igGoTo(igCurrent + 1), IG_INTERVAL);
+  }
+  function igStop() {
+    if (igTimer) { clearInterval(igTimer); igTimer = null; }
+  }
+
+  initInstagram();
+
+  // ══════════════════════════════════════════════
+  //  ANNOUNCEMENTS
+  // ══════════════════════════════════════════════
+  let annItems   = [];
+  let annIndex   = 0;
+  let annTimer   = null;
+
+  function startAnnTicker() {
+    stopAnnTicker();
+    if (!annItems.length) return;
+    updateAnnTicker();
+    annTimer = setInterval(() => {
+      const textEl = document.getElementById('ann-ticker-text');
+      if (textEl) textEl.classList.remove('visible');
+      setTimeout(() => {
+        annIndex = (annIndex + 1) % annItems.length;
+        updateAnnTicker();
+      }, 400);
+    }, 4000);
+  }
+
+  function stopAnnTicker() {
+    if (annTimer) { clearInterval(annTimer); annTimer = null; }
+  }
+
+  function updateAnnTicker() {
+    const ticker  = document.getElementById('ann-ticker');
+    const textEl  = document.getElementById('ann-ticker-text');
+    const counter = document.getElementById('ann-ticker-counter');
+    if (!ticker || !annItems.length) return;
+    const isCollapsed = document.getElementById('announcements-collapsible')?.classList.contains('collapsed');
+    if (!isCollapsed) { ticker.classList.remove('visible'); stopAnnTicker(); return; }
+    textEl.textContent  = annItems[annIndex];
+    counter.textContent = `${annIndex + 1}/${annItems.length}`;
+    ticker.classList.add('visible');
+    setTimeout(() => textEl.classList.add('visible'), 20);
+  }
+
+  async function fetchAnnouncements() {
+    const body = document.getElementById('announcements-body');
+    if (!body) return;
+    try {
+      const rows = await fetchSheetData('Announcements');
+      console.log('[ANN] rows:', JSON.stringify(rows.slice(0,3)));
+      if (!rows.length) {
+        body.innerHTML = `<div class="announcements-empty">No announcements</div>`;
+        return;
+      }
+      const first = (rows[0][0] || '').toLowerCase();
+      const data  = ['announcement','text','message','note'].includes(first) ? rows.slice(1) : rows;
+      const items = data
+        .filter(r => r[0] && r[0].trim())
+        .map(r => r[0].trim());
+      annItems = items;
+      annIndex = 0;
+      body.innerHTML = items.length
+        ? `<div class="announcements-list">${items.map(t => `
+          <div class="announcement-row">
+            <div class="announcement-bullet"></div>
+            <div class="announcement-text">${escHtml(t)}</div>
+          </div>`).join('')}</div>`
+        : `<div class="announcements-empty">No announcements</div>`;
+      updateAnnTicker();
+      const isCollapsed = document.getElementById('announcements-collapsible')?.classList.contains('collapsed');
+      if (isCollapsed && annItems.length) startAnnTicker();
+    } catch(e) {
+      console.error('[ANN] Error:', e);
+      body.innerHTML = `<div class="announcements-empty">${e.message}</div>`;
+    }
+  }
+  restoreLayout();
+  restoreCollapseState();
+  initDragAndDrop();
+  updatePlaceholders();
   initLeaderboard();
-  // Refresh leaderboard every 5 minutes
   setInterval(() => { lbDataCache = {}; initLeaderboard(); }, 5 * 60 * 1000);
 
+  fetchAnnouncements();
+  setInterval(fetchAnnouncements, 5 * 60 * 1000);
+
   fetchSchedule();
-  setInterval(fetchSchedule, 60 * 1000);
+  setInterval(() => { fetchSchedule(); updateSchedStrip(); }, 60 * 1000);
 
   fetchWeather();
   setInterval(fetchWeather, 10 * 60 * 1000);
+
+  // ══════════════════════════════════════════════
+  //  WIDGET MANAGER
+  // ══════════════════════════════════════════════
+  const WIDGET_VISIBILITY_KEY = 'walton-widget-visibility';
+
+  const WIDGET_REGISTRY = [
+    {
+      id: 'weather', label: 'Current Weather',
+      icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`
+    },
+    {
+      id: 'schedule', label: 'Bell Schedule',
+      icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`
+    },
+    {
+      id: 'instagram', label: '@waltonesports',
+      icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`
+    },
+    {
+      id: 'announcements', label: 'Announcements',
+      icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3z"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`
+    },
+    {
+      id: 'leaderboard', label: 'Step Challenge',
+      icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`
+    },
+  ];
+
+  function loadVisibility() {
+    try { return JSON.parse(localStorage.getItem(WIDGET_VISIBILITY_KEY) || '{}'); }
+    catch(e) { return {}; }
+  }
+
+  function saveVisibility(vis) {
+    localStorage.setItem(WIDGET_VISIBILITY_KEY, JSON.stringify(vis));
+  }
+
+  function applyVisibility() {
+    const vis = loadVisibility();
+    WIDGET_REGISTRY.forEach(w => {
+      const item = document.querySelector(`.widget-item[data-id="${w.id}"]`);
+      if (!item) return;
+      const visible = vis[w.id] !== false; // default visible
+      item.style.display = visible ? '' : 'none';
+    });
+  }
+
+  function buildWidgetManager() {
+    const vis  = loadVisibility();
+    const list = document.getElementById('wm-list');
+    list.innerHTML = '';
+    WIDGET_REGISTRY.forEach(w => {
+      const visible = vis[w.id] !== false;
+      const row = document.createElement('div');
+      row.className = 'wm-row' + (visible ? ' active' : '');
+      row.innerHTML = `
+        <div class="wm-icon">${w.icon}</div>
+        <span class="wm-label">${w.label}</span>
+        <div class="wm-toggle"></div>`;
+      row.addEventListener('click', () => {
+        const v = loadVisibility();
+        const nowVisible = v[w.id] !== false;
+        v[w.id] = !nowVisible;
+        saveVisibility(v);
+        row.classList.toggle('active', !nowVisible);
+        applyVisibility();
+      });
+      list.appendChild(row);
+    });
+  }
+
+  function toggleWidgetManager() {
+    const btn   = document.getElementById('widget-manager-btn');
+    const panel = document.getElementById('widget-manager-panel');
+    const isOpen = panel.classList.toggle('open');
+    btn.classList.toggle('open', isOpen);
+    if (isOpen) buildWidgetManager();
+  }
+
+  // Close panel when clicking outside
+  document.addEventListener('click', (e) => {
+    const btn   = document.getElementById('widget-manager-btn');
+    const panel = document.getElementById('widget-manager-panel');
+    if (!btn.contains(e.target) && !panel.contains(e.target)) {
+      panel.classList.remove('open');
+      btn.classList.remove('open');
+    }
+  });
+
+  applyVisibility();
 </script>
+
+<!-- Widget Manager -->
+<button id="widget-manager-btn" onclick="toggleWidgetManager()" title="Manage Widgets">
+  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+</button>
+
+<div id="widget-manager-panel">
+  <div class="wm-header">Manage Widgets</div>
+  <div class="wm-list" id="wm-list"></div>
+</div>
+
 </body>
 </html>
