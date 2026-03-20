@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Walton High School Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      /* Walton Raiders school colors */
+      --raider-red:      #cc2222;
+      --raider-red-dim:  #8b1515;
+      --raider-red-glow: #ff3333;
+      --raider-blue:     #1a3a8f;
+      --raider-blue-dim: #0f2260;
+      --raider-white:    #ffffff;
+
+      /* Midnight blue scale */
+      --gm-darkest:  #080e1a;
+      --gm-dark:     #0d1628;
+      --gm-base:     #111e35;
+      --gm-mid:      #162642;
+      --gm-light:    #1e3258;
+      --gm-border:   #2a4270;
+      --gm-highlight:#3a5585;
+
+      /* Text scale */
+      --txt-bright:  #eef2f8;
+      --txt-mid:     #b0c2d8;
+      --txt-dim:     #5e7a9a;
+      --txt-muted:   #2e4060;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--gm-darkest);
+      color: var(--txt-bright);
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Subtle grain */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.025;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ══════════════════════════════
+       HEADER
+    ══════════════════════════════ */
+    header {
+      background: linear-gradient(135deg, var(--gm-light) 0%, var(--gm-dark) 55%, var(--gm-darkest) 100%);
+      border-bottom: 3px solid var(--raider-red);
+      padding: 0 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      position: relative;
+      overflow: hidden;
+      min-height: 80px;
+    }
+    /* Subtle blue glow behind logo */
+    header::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 80px;
+      width: 160px; height: 160px;
+      background: radial-gradient(ellipse, rgba(26,58,143,0.15) 0%, transparent 70%);
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .header-left {
+      display: flex; align-items: center; gap: 1.2rem;
+      position: relative; z-index: 1;
+    }
+    .school-logo { width: 58px; height: 60px; flex-shrink: 0; object-fit: contain; }
+
+    /* ── Collapsible forecast ── */
+    .forecast-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 0 -1.1rem;
+      padding: 0.5rem 1.1rem;
+      background: var(--gm-dark);
+      border-top: 1px solid var(--gm-border);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .forecast-toggle:hover { background: var(--gm-mid); }
+    .forecast-toggle-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.65rem; letter-spacing: 0.25em;
+      text-transform: uppercase; color: var(--txt-dim);
+    }
+    .forecast-toggle-chevron {
+      color: var(--txt-dim);
+      transition: transform 0.25s ease;
+    }
+    .forecast-toggle-chevron.open { transform: rotate(180deg); }
+    .forecast-collapsible {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.3s ease;
+    }
+    .forecast-collapsible.open { max-height: 220px; }
+
+    .school-name { display: flex; flex-direction: column; gap: 0.08rem; }
+    .school-name-main {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.4rem, 3vw, 2.1rem);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--raider-white); line-height: 1;
+    }
+    .school-name-main em { font-style: normal; color: var(--raider-red); }
+    .school-name-sub {
+      font-size: 0.6rem; letter-spacing: 0.28em;
+      text-transform: uppercase; color: var(--txt-dim);
+    }
+
+    .header-right {
+      display: flex; flex-direction: column; align-items: flex-end;
+      gap: 0.08rem; position: relative; z-index: 1;
+    }
+    #header-clock {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.7rem, 3.5vw, 2.6rem);
+      letter-spacing: 0.04em; color: var(--txt-bright); line-height: 1;
+    }
+    #header-date {
+      font-size: 0.6rem; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--txt-dim);
+    }
+
+    /* ══════════════════════════════
+       MAIN GRID
+    ══════════════════════════════ */
+    main {
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+      max-width: 1600px;
+      margin: 0 auto;
+      align-items: start;
+    }
+
+    /* ══════════════════════════════
+       WIDGET SHELL
+    ══════════════════════════════ */
+    .widget {
+      background: var(--gm-base);
+      border: 1px solid var(--gm-border);
+      border-top: 3px solid var(--raider-red);
+      overflow: hidden;
+      animation: fadeUp 0.45s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .widget-header {
+      padding: 0.65rem 1.1rem;
+      border-bottom: 1px solid var(--gm-border);
+      display: flex; align-items: center; gap: 0.55rem;
+      justify-content: space-between;
+      background: var(--gm-dark);
+    }
+    .widget-header-left {
+      display: flex; align-items: center; gap: 0.55rem;
+    }
+    .widget-header-badge {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--txt-mid);
+      background: var(--gm-mid);
+      border: 1px solid var(--gm-border);
+      padding: 0.18rem 0.55rem;
+      white-space: nowrap;
+    }
+    .widget-icon {
+      width: 26px; height: 26px; flex-shrink: 0;
+      background: var(--gm-mid);
+      border: 1px solid var(--gm-border);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .widget-icon svg { color: var(--txt-bright); }
+    .widget-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.7rem;
+      letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--txt-dim);
+    }
+    .widget-body { padding: 1.1rem; }
+
+    /* ── Collapsible widget body ── */
+    .widget-body-collapsible {
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.25s ease;
+      max-height: 600px;
+      opacity: 1;
+    }
+    .widget-body-collapsible.collapsed {
+      max-height: 0;
+      opacity: 0;
+    }
+    .widget-collapse-btn {
+      background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0; color: var(--txt-dim);
+      transition: color 0.15s;
+    }
+    .widget-collapse-btn:hover { color: var(--txt-bright); }
+    .widget-collapse-chevron {
+      transition: transform 0.25s ease;
+    }
+    .widget-collapse-chevron.collapsed { transform: rotate(-90deg); }
+    /* Temp shown in header when collapsed */
+    .weather-header-temp {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: 1.3rem;
+      letter-spacing: 0.02em; color: var(--raider-white);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s ease;
+      white-space: nowrap;
+    }
+    .weather-header-temp sup {
+      font-size: 0.65rem; vertical-align: super;
+      color: var(--raider-red); font-weight: 600;
+    }
+    .weather-header-temp.visible { opacity: 1; }
+
+    /* ══════════════════════════════
+       WEATHER WIDGET
+    ══════════════════════════════ */
+    .weather-main {
+      display: flex; align-items: center; gap: 1.1rem;
+      margin-bottom: 0.9rem;
+    }
+    .weather-icon-wrap {
+      width: 78px; height: 78px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--gm-mid);
+      border: 1px solid var(--gm-border);
+    }
+    .weather-temp {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: 4.2rem;
+      line-height: 1; letter-spacing: -0.02em;
+      color: var(--raider-white);
+    }
+    .weather-temp sup {
+      font-size: 1.5rem; vertical-align: super;
+      color: var(--raider-red); font-weight: 600;
+    }
+    .weather-desc {
+      font-size: 0.88rem; font-weight: 500;
+      color: var(--txt-mid); letter-spacing: 0.03em;
+      margin-top: 0.15rem; text-transform: capitalize;
+    }
+    .weather-location {
+      font-size: 0.57rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--txt-dim); margin-top: 0.1rem;
+    }
+
+    /* stat strip */
+    .weather-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: var(--gm-border);
+      border-top: 1px solid var(--gm-border);
+      margin: 0 -1.1rem -1.1rem;
+    }
+    .weather-stat {
+      background: var(--gm-mid);
+      padding: 0.6rem 0.75rem;
+      display: flex; flex-direction: column; gap: 0.12rem;
+    }
+    .weather-stat-label {
+      font-size: 0.62rem; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--txt-mid);
+    }
+    .weather-stat-value {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 1.1rem;
+      letter-spacing: 0.04em; color: var(--txt-bright);
+    }
+
+    /* loading state */
+    .weather-loading {
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 2rem 0; color: var(--txt-dim);
+      font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+    }
+    .spin {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid var(--gm-border);
+      border-top-color: var(--raider-red);
+      animation: spin 0.8s linear infinite; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ══════════════════════════════
+       BELL SCHEDULE WIDGET
+    ══════════════════════════════ */
+    .schedule-name {
+      font-size: 0.6rem; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--txt-dim);
+      margin-bottom: 0.8rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .schedule-name-badge {
+      background: var(--gm-mid);
+      border: 1px solid var(--gm-border);
+      color: var(--txt-mid);
+      padding: 0.15rem 0.5rem;
+      font-size: 0.58rem; letter-spacing: 0.18em;
+    }
+
+    .period-list { display: flex; flex-direction: column; gap: 2px; }
+
+    .period-row {
+      display: flex; align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--gm-mid);
+      border: 1px solid transparent;
+      transition: background 0.2s, border-color 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .period-row.is-past {
+      opacity: 0.38;
+    }
+    .period-row.is-current {
+      background: var(--gm-light);
+      border-color: var(--raider-red);
+    }
+    /* Progress fill behind current period */
+    .period-row.is-current .period-progress {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      background: rgba(255,50,50,0.13);
+      pointer-events: none;
+      transition: width 60s linear;
+    }
+
+    .period-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 1rem;
+      letter-spacing: 0.04em; color: var(--txt-bright);
+      flex: 1; min-width: 0;
+      position: relative; z-index: 1;
+    }
+    .period-row.is-current .period-name { color: var(--raider-white); }
+
+    .period-times {
+      display: flex; flex-direction: column; align-items: flex-end;
+      gap: 0.05rem; flex-shrink: 0;
+      position: relative; z-index: 1;
+    }
+    .period-time {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.82rem; font-weight: 600;
+      color: var(--txt-mid); letter-spacing: 0.04em;
+    }
+    .period-row.is-current .period-time { color: var(--txt-bright); }
+
+    /* Countdown — centered absolutely over the progress bar */
+    .period-countdown {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.85rem; font-weight: 700;
+      color: var(--raider-red-glow);
+      letter-spacing: 0.06em;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .schedule-no-school {
+      text-align: center; padding: 2rem 1rem;
+      color: var(--txt-dim);
+      font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
+    }
+    .schedule-no-school strong {
+      display: block;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.6rem; color: var(--gm-highlight);
+      margin-bottom: 0.4rem; letter-spacing: 0.1em;
+    }
+
+    /* ══════════════════════════════
+       LEADERBOARD WIDGET
+    ══════════════════════════════ */
+    .lb-tabs {
+      display: flex; overflow-x: auto; scrollbar-width: none;
+      border-bottom: 1px solid var(--gm-border);
+      background: var(--gm-dark);
+    }
+    .lb-tabs::-webkit-scrollbar { display: none; }
+    .lb-tab {
+      flex-shrink: 0;
+      padding: 0.55rem 0.9rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--txt-dim);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      background: none; border-top: none; border-left: none; border-right: none;
+      margin-bottom: -1px;
+    }
+    .lb-tab:hover { color: var(--txt-mid); }
+    .lb-tab.active {
+      color: var(--raider-white);
+      border-bottom-color: var(--raider-red);
+    }
+
+    .lb-body { padding: 0.75rem 1.1rem 1.1rem; }
+
+    .lb-list { display: flex; flex-direction: column; gap: 2px; }
+
+    .lb-row {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.45rem 0.65rem;
+      background: var(--gm-mid);
+    }
+    .lb-rank {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: 0.85rem;
+      width: 1.6rem; height: 1.6rem; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--txt-dim);
+      border-radius: 50%;
+    }
+    .lb-row:nth-child(1) .lb-rank {
+      background: #f5c842; color: #1a1200;
+    }
+    .lb-row:nth-child(2) .lb-rank {
+      background: #8a9bb0; color: #0d1520;
+    }
+    .lb-row:nth-child(3) .lb-rank {
+      background: #c87e4a; color: #1a0a00;
+    }
+    .lb-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600; font-size: 0.95rem;
+      letter-spacing: 0.03em; color: var(--txt-bright);
+      flex: 1; min-width: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .lb-steps {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.88rem;
+      color: var(--txt-mid); flex-shrink: 0;
+      letter-spacing: 0.03em;
+    }
+    .lb-empty {
+      text-align: center; padding: 2rem 1rem;
+      color: var(--txt-dim);
+      font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+    }
+
+    /* ══════════════════════════════
+       FOOTER
+    ══════════════════════════════ */
+    footer {
+      text-align: center; padding: 1rem 1rem 1.5rem;
+      font-size: 0.55rem; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--txt-muted);
+      border-top: 1px solid var(--gm-border);
+    }
+
+    /* ══════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════ */
+    @media (min-width: 1400px) {
+      main { grid-template-columns: repeat(3, 1fr); padding: 2rem; gap: 2rem; }
+      header { padding: 0 3rem; min-height: 96px; }
+      .school-logo { width: 72px; height: 74px; }
+      .weather-temp { font-size: 5.2rem; }
+    }
+    @media (max-width: 900px) {
+      main { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      main { grid-template-columns: 1fr; padding: 1rem; gap: 1rem; }
+      header { padding: 0.8rem 1rem; min-height: auto; flex-wrap: wrap; gap: 0.75rem; }
+      .school-logo { width: 44px; height: 46px; }
+      .weather-temp { font-size: 3.4rem; }
+      #header-clock { font-size: 1.5rem; }
+      .school-name-sub { display: none; }
+      .school-name { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+
+    <!-- Walton logo -->
+    <img src="logo.png" alt="Walton Raiders Logo" class="school-logo"/>
+
+    <div class="school-name">
+      <div class="school-name-main">Walton <em>Raiders</em></div>
+      <div class="school-name-sub">Marietta, Georgia &nbsp;·&nbsp; Est. 1975</div>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <div id="header-clock">—</div>
+    <div id="header-date">—</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Weather Widget -->
+  <div class="widget" id="weather-widget" style="animation-delay:0.05s">
+    <div class="widget-header" style="cursor:pointer;" onclick="toggleWeather()">
+      <div class="widget-header-left">
+        <div class="widget-icon">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </div>
+        <span class="widget-title">Current Weather</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <span class="weather-header-temp" id="weather-header-temp"></span>
+        <svg class="widget-collapse-chevron" id="weather-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+    </div>
+    <div class="widget-body-collapsible" id="weather-collapsible">
+      <div class="widget-body" id="weather-body">
+        <div class="weather-loading"><div class="spin"></div>Fetching weather…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bell Schedule Widget -->
+  <div class="widget" id="schedule-widget" style="animation-delay:0.12s">
+    <div class="widget-header">
+      <div class="widget-header-left">
+        <div class="widget-icon">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <span class="widget-title">Bell Schedule</span>
+      </div>
+      <span class="widget-header-badge" id="schedule-badge"></span>
+    </div>
+    <div class="widget-body" id="schedule-body">
+      <div class="weather-loading"><div class="spin"></div>Loading schedule…</div>
+    </div>
+  </div>
+  <!-- Leaderboard Widget -->
+  <div class="widget" id="leaderboard-widget" style="animation-delay:0.19s">
+    <div class="widget-header">
+      <div class="widget-header-left">
+        <div class="widget-icon">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+        </div>
+        <span class="widget-title">Step Challenge</span>
+      </div>
+    </div>
+    <div id="lb-tabs-bar" class="lb-tabs"></div>
+    <div id="lb-body" class="lb-body">
+      <div class="weather-loading"><div class="spin"></div>Loading leaderboard…</div>
+    </div>
+  </div>
+
+</main>
+
+<footer>Walton High School &nbsp;·&nbsp; 1590 Bill Murdock Rd, Marietta GA 30062 &nbsp;·&nbsp; Go Raiders!</footer>
+
+<script>
+  // ── Live clock ──
+  function updateClock() {
+    const now  = new Date();
+    const h    = now.getHours();
+    const m    = String(now.getMinutes()).padStart(2, '0');
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    document.getElementById('header-clock').textContent = `${h % 12 || 12}:${m} ${ampm}`;
+    const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const MONTHS = ['January','February','March','April','May','June',
+                    'July','August','September','October','November','December'];
+    document.getElementById('header-date').textContent =
+      `${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ── Weather collapsible ──
+  function toggleWeather() {
+    const collapsible = document.getElementById('weather-collapsible');
+    const chevron     = document.getElementById('weather-chevron');
+    const headerTemp  = document.getElementById('weather-header-temp');
+    const isCollapsed = collapsible.classList.toggle('collapsed');
+    chevron.classList.toggle('collapsed', isCollapsed);
+    headerTemp.classList.toggle('visible', isCollapsed);
+  }
+
+  // Collapse by default on mobile
+  if (window.innerWidth <= 600) {
+    const collapsible = document.getElementById('weather-collapsible');
+    const chevron     = document.getElementById('weather-chevron');
+    collapsible.classList.add('collapsed');
+    chevron.classList.add('collapsed');
+  }
+  const LAT = 34.0154, LON = -84.4468;
+  const SZ  = 46;
+
+  function weatherIcon(code, isDay) {
+    const d = isDay !== 0;
+    if (code === 0)               return { label: d ? 'Clear Sky' : 'Clear Night',  svg: d ? sunSvg() : moonSvg() };
+    if (code === 1)               return { label: 'Mainly Clear',                    svg: d ? sunSvg() : moonSvg() };
+    if (code === 2)               return { label: 'Partly Cloudy',                   svg: partlyCloudySvg(d) };
+    if (code === 3)               return { label: 'Overcast',                        svg: cloudSvg() };
+    if (code >= 45 && code <= 48) return { label: 'Foggy',                           svg: fogSvg() };
+    if (code >= 51 && code <= 57) return { label: 'Drizzle',                         svg: rainSvg() };
+    if (code >= 61 && code <= 63) return { label: 'Light Rain',                      svg: rainSvg() };
+    if (code >= 64 && code <= 65) return { label: 'Rain',                            svg: rainSvg() };
+    if (code >= 66 && code <= 67) return { label: 'Heavy Rain',                      svg: rainSvg() };
+    if (code >= 71 && code <= 77) return { label: 'Snow',                            svg: snowSvg() };
+    if (code >= 80 && code <= 82) return { label: 'Showers',                         svg: rainSvg() };
+    if (code >= 85 && code <= 86) return { label: 'Snow Showers',                    svg: snowSvg() };
+    if (code >= 95)               return { label: 'Thunderstorm',                    svg: thunderSvg() };
+    return { label: 'Unknown', svg: cloudSvg() };
+  }
+
+  function sunSvg() {
+    return `<svg width="${SZ}" height="${SZ}" viewBox="0 0 44 44" fill="none">
+      <circle cx="22" cy="22" r="9" fill="#f7ab6a" opacity="0.95"/>
+      <g stroke="#f7ab6a" stroke-width="2.5" stroke-linecap="round" opacity="0.6">
+        <line x1="22" y1="3" x2="22" y2="8"/><line x1="22" y1="36" x2="22" y2="41"/>
+        <line x1="3" y1="22" x2="8" y2="22"/><line x1="36" y1="22" x2="41" y2="22"/>
+        <line x1="8.1" y1="8.1" x2="11.4" y2="11.4"/><line x1="32.6" y1="32.6" x2="35.9" y2="35.9"/>
+        <line x1="8.1" y1="35.9" x2="11.4" y2="32.6"/><line x1="32.6" y1="11.4" x2="35.9" y2="8.1"/>
+      </g></svg>`;
+  }
+  function moonSvg() {
+    return `<svg width="${SZ}" height="${SZ}" viewBox="0 0 44 44" fill="none">
+      <path d="M30 22.5A12 12 0 0 1 18 10.5c0-1.2.18-2.36.5-3.46A13 13 0 1 0 33.46 22c-1.1.32-2.26.5-3.46.5z"
+            fill="#c8d4de" opacity="0.9"/></svg>`;
+  }
+  function partlyCloudySvg(day) {
+    return `<svg width="${SZ}" height="${SZ}" viewBox="0 0 44 44" fill="none">
+      ${day
+        ? `<circle cx="16" cy="15" r="7" fill="#f7ab6a" opacity="0.85"/>
+           <g stroke="#f7ab6a" stroke-width="2" stroke-linecap="round" opacity="0.5">
+             <line x1="16" y1="4" x2="16" y2="7"/><line x1="16" y1="23" x2="16" y2="26"/>
+             <line x1="5" y1="15" x2="8" y2="15"/><line x1="24" y1="15" x2="27" y2="15"/>
+           </g>`
+        : `<path d="M27 17A8 8 0 0 1 14 11c0-.8.1-1.5.3-2.2A9 9 0 1 0 29 17z" fill="#c8d4de" opacity="0.45"/>`}
+      <path d="M36 29a7 7 0 0 0-6.8-7 8 8 0 0 0-14.8 2.5A5 5 0 1 0 15 34h21a7 7 0 0 0 0-5z"
+            fill="#7a90a0" opacity="0.72"/></svg>`;
+  }
+  function cloudSvg() {
+    return `<svg width="${SZ}" height="${SZ}" viewBox="0 0 44 44" fill="none">
+      <path d="M35 27a8 8 0 0 0-7.8-8 9 9 0 0 0-16.8 2.8A6 6 0 1 0 12 33h23a8 8 0 0 0 0-6z"
+            fill="#7a90a0" opacity="0.75"/></svg>`;
+  }
+  function rainSvg() {
+    return `<svg width="${SZ}" height="${SZ}" viewBox="0 0 44 44" fill="none">
+      <path d="M35 22a8 8 0 0 0-7.8-8 9 9 0 0 0-16.8 2.8A6 6 0 1 0 12 27h23a8 8 0 0 0 0-5z"
+            fill="#7a90a0" opacity="0.7"/>
+      <g stroke="#7bb3d4" stroke-width="2" stroke-linecap="round" opacity="0.9">
+        <line x1="14" y1="32" x2="12" y2="38"/><line x1="20" y1="32" x2="18" y2="38"/>
+        <line x1="26" y1="32" x2="24" y2="38"/><line x1="32" y1="32" x2="30" y2="38"/>
+      </g></svg>`;
+  }
+  function snowSvg() {
+    return `<svg width="${SZ}" height="${SZ}" viewBox="0 0 44 44" fill="none">
+      <path d="M35 22a8 8 0 0 0-7.8-8 9 9 0 0 0-16.8 2.8A6 6 0 1 0 12 27h23a8 8 0 0 0 0-5z"
+            fill="#7a90a0" opacity="0.65"/>
+      <g fill="#c8d4de" opacity="0.9">
+        <circle cx="14" cy="33" r="2"/><circle cx="20" cy="38" r="2"/>
+        <circle cx="26" cy="33" r="2"/><circle cx="32" cy="38" r="2"/>
+      </g></svg>`;
+  }
+  function fogSvg() {
+    return `<svg width="${SZ}" height="${SZ}" viewBox="0 0 44 44" fill="none">
+      <g stroke="#7a90a0" stroke-width="2.5" stroke-linecap="round" opacity="0.75">
+        <line x1="8" y1="15" x2="36" y2="15"/><line x1="6" y1="21" x2="38" y2="21"/>
+        <line x1="10" y1="27" x2="34" y2="27"/><line x1="12" y1="33" x2="32" y2="33"/>
+      </g></svg>`;
+  }
+  function thunderSvg() {
+    return `<svg width="${SZ}" height="${SZ}" viewBox="0 0 44 44" fill="none">
+      <path d="M35 20a8 8 0 0 0-7.8-8 9 9 0 0 0-16.8 2.8A6 6 0 1 0 12 25h23a8 8 0 0 0 0-5z"
+            fill="#7a90a0" opacity="0.7"/>
+      <polygon points="23,27 18,36 23,33 21,44 29,32 23,35" fill="#f7ab6a" opacity="0.95"/></svg>`;
+  }
+
+  async function fetchWeather() {
+    const body = document.getElementById('weather-body');
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast`
+        + `?latitude=${LAT}&longitude=${LON}`
+        + `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,is_day`
+        + `&temperature_unit=fahrenheit&wind_speed_unit=mph`
+        + `&timezone=America%2FNew_York`;
+
+      const data  = await (await fetch(url)).json();
+      const cur   = data.current;
+      const daily = data.daily;
+
+      const icon  = weatherIcon(cur.weather_code, cur.is_day);
+      const temp  = Math.round(cur.temperature_2m);
+      const feels = Math.round(cur.apparent_temperature);
+      const humid = cur.relative_humidity_2m;
+      const wind  = Math.round(cur.wind_speed_10m);
+
+      // Update collapsed header temp
+      const headerTemp = document.getElementById('weather-header-temp');
+      if (headerTemp) {
+        headerTemp.innerHTML = `${temp}<sup>°F</sup>`;
+        // Show it if currently collapsed
+        if (document.getElementById('weather-collapsible').classList.contains('collapsed')) {
+          headerTemp.classList.add('visible');
+        }
+      }
+
+      body.innerHTML = `
+        <div class="weather-main">
+          <div class="weather-icon-wrap">${icon.svg}</div>
+          <div>
+            <div class="weather-temp">${temp}<sup>°F</sup></div>
+            <div class="weather-desc">${icon.label}</div>
+            <div class="weather-location">Marietta, GA &nbsp;·&nbsp; Walton HS</div>
+          </div>
+        </div>
+        <div class="weather-stats">
+          <div class="weather-stat">
+            <span class="weather-stat-label">Feels Like</span>
+            <span class="weather-stat-value">${feels}°F</span>
+          </div>
+          <div class="weather-stat">
+            <span class="weather-stat-label">Humidity</span>
+            <span class="weather-stat-value">${humid}%</span>
+          </div>
+          <div class="weather-stat">
+            <span class="weather-stat-label">Wind</span>
+            <span class="weather-stat-value">${wind} mph</span>
+          </div>
+        </div>`;
+
+    } catch(e) {
+      body.innerHTML = `<div class="weather-loading" style="color:var(--raider-red)">Unable to load weather data.</div>`;
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  //  BELL SCHEDULE
+  // ══════════════════════════════════════════════
+  const SHEETS_API_KEY   = 'AIzaSyAZ1KNhZo-IrXXUxsiDrCnaZcKUBHmltCQ';
+  const SPREADSHEET_ID   = '1mZtMjdd-t5y6ebproGrIb_qLzqPUZ_qEKrdUoZl0qIU';
+  const SHEETS_BASE      = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values`;
+
+  // Parse "h:mm AM/PM" or "h:mm" into total minutes since midnight
+  function parseTime(str) {
+    if (!str) return null;
+    str = str.trim();
+    const ampm = str.match(/(AM|PM)/i);
+    const parts = str.replace(/(AM|PM)/i, '').trim().split(':');
+    let h = parseInt(parts[0]), m = parseInt(parts[1] || 0);
+    if (ampm) {
+      const isPM = ampm[0].toUpperCase() === 'PM';
+      if (isPM && h !== 12) h += 12;
+      if (!isPM && h === 12) h = 0;
+    }
+    return h * 60 + m;
+  }
+
+  function formatTime(str) {
+    // Normalize to "h:mm AM/PM"
+    if (!str) return '';
+    str = str.trim();
+    if (str.match(/(AM|PM)/i)) return str;
+    const parts = str.split(':');
+    let h = parseInt(parts[0]), m = parseInt(parts[1] || 0);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    if (h > 12) h -= 12;
+    if (h === 0) h = 12;
+    return `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+  }
+
+  function minutesToNow() {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  }
+
+  function minsToStr(mins) {
+    if (mins <= 0) return '';
+    const h = Math.floor(mins / 60), m = mins % 60;
+    if (h > 0) return `${h}h ${m}m left`;
+    return `${m}m left`;
+  }
+
+  function calcDuration(start, end) {
+    const mins = end - start;
+    const h = Math.floor(mins / 60), m = mins % 60;
+    if (h > 0 && m > 0) return `${h}h ${m}m`;
+    if (h > 0) return `${h}h`;
+    return `${m}m`;
+  }
+
+  async function fetchSheetData(tabName) {
+    const url = `${SHEETS_BASE}/${encodeURIComponent(tabName)}?key=${SHEETS_API_KEY}&_=${Date.now()}`;
+    const res  = await fetch(url);
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      const msg = errJson?.error?.message || res.statusText;
+      throw new Error(`Sheet "${tabName}": ${res.status} — ${msg}`);
+    }
+    const json = await res.json();
+    return json.values || [];
+  }
+
+  async function fetchSchedule() {
+    const body = document.getElementById('schedule-body');
+
+    // Don't show schedule on weekends
+    const now     = new Date();
+    const weekday = now.getDay();
+    if (weekday === 0 || weekday === 6) {
+      body.innerHTML = `<div class="schedule-no-school">
+        <strong>No School Today</strong>Enjoy your weekend!
+      </div>`;
+      return;
+    }
+
+    try {
+      // Step 1: Read Calendar tab to find today's schedule override
+      const todayStr = `${now.getMonth()+1}/${now.getDate()}/${now.getFullYear()}`;
+      const altFormats = [
+        todayStr,
+        `${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}/${now.getFullYear()}`,
+        `${now.getMonth()+1}/${now.getDate()}/${String(now.getFullYear()).slice(-2)}`,
+        `${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}/${String(now.getFullYear()).slice(-2)}`,
+        now.toISOString().split('T')[0], // YYYY-MM-DD
+      ];
+
+      let tabToUse = 'Daily';
+      try {
+        const calRows = await fetchSheetData('Calendar');
+        // Skip header row if present (check if first cell looks like "date")
+        const dataRows = calRows[0] && calRows[0][0].toLowerCase().includes('date')
+          ? calRows.slice(1) : calRows;
+
+        for (const row of dataRows) {
+          if (!row[0] || !row[1]) continue;
+          const cellDate = row[0].trim();
+          if (altFormats.includes(cellDate)) {
+            tabToUse = row[1].trim();
+            break;
+          }
+        }
+      } catch(e) {
+        // Calendar tab read failed — fall back to Daily
+        console.warn('Calendar tab read failed, using Daily');
+      }
+
+      // Step 2: Load the schedule from the resolved tab
+      const scheduleRows = await fetchSheetData(tabToUse);
+      const dataRows = scheduleRows[0] && scheduleRows[0][0].toLowerCase().includes('period')
+        ? scheduleRows.slice(1) : scheduleRows;
+
+      if (!dataRows.length) {
+        body.innerHTML = `<div class="schedule-no-school"><strong>No Schedule</strong>No periods found for today.</div>`;
+        return;
+      }
+
+      const periods = dataRows
+        .filter(r => r[0] && r[1] && r[2])
+        .map(r => ({
+          name:  r[0].trim(),
+          start: parseTime(r[1]),
+          end:   parseTime(r[2]),
+          startStr: formatTime(r[1]),
+          endStr:   formatTime(r[2]),
+        }));
+
+      renderSchedule(periods, tabToUse);
+
+    } catch(e) {
+      console.error(e);
+      body.innerHTML = `<div class="weather-loading" style="color:var(--raider-red);flex-direction:column;align-items:flex-start;gap:0.4rem;">
+        <span>Unable to load schedule</span>
+        <span style="font-size:0.6rem;color:var(--txt-dim);letter-spacing:0.05em;text-transform:none;">${e.message}</span>
+      </div>`;
+    }
+  }
+
+  function renderSchedule(periods, tabName) {
+    const body   = document.getElementById('schedule-body');
+    const nowMin = minutesToNow();
+
+    const rows = periods.map(p => {
+      const isPast    = nowMin >= p.end;
+      const isCurrent = nowMin >= p.start && nowMin < p.end;
+      const pct       = isCurrent
+        ? Math.round(((nowMin - p.start) / (p.end - p.start)) * 100)
+        : 0;
+      const remaining = isCurrent ? minsToStr(p.end - nowMin) : '';
+
+      return `<div class="period-row ${isPast ? 'is-past' : ''} ${isCurrent ? 'is-current' : ''}">
+        ${isCurrent ? `<div class="period-progress" style="width:${pct}%"></div>` : ''}
+        <div class="period-name">${p.name}</div>
+        <div class="period-times">
+          <span class="period-time">${p.startStr} – ${p.endStr}</span>
+        </div>
+        ${isCurrent ? `<div class="period-countdown">${remaining}</div>` : ''}
+      </div>`;
+    }).join('');
+
+    const badge = document.getElementById('schedule-badge');
+    if (badge) badge.textContent = tabName;
+
+    body.innerHTML = `<div class="period-list">${rows}</div>`;
+  }
+
+  // Refresh schedule every minute to update current period highlight
+  // ══════════════════════════════════════════════
+  //  LEADERBOARD
+  // ══════════════════════════════════════════════
+  const LB_SPREADSHEET_ID = '19Uz7R_0vXKFq58Jt1ZN_gkuidnbQezZKvbkQAZyOXuQ';
+  const LB_BASE = `https://sheets.googleapis.com/v4/spreadsheets/${LB_SPREADSHEET_ID}`;
+
+  let lbSheets    = [];   // [{title, sheetId}]
+  let lbDataCache = {};   // title -> [{name, steps}]
+  let lbActiveTab = 'Overall';
+
+  async function initLeaderboard() {
+    const tabsBar = document.getElementById('lb-tabs-bar');
+    const body    = document.getElementById('lb-body');
+    try {
+      // Fetch sheet metadata to get tab names
+      const meta = await (await fetch(
+        `${LB_BASE}?fields=sheets.properties(title,sheetId)&key=${SHEETS_API_KEY}&_=${Date.now()}`
+      )).json();
+
+      lbSheets = (meta.sheets || []).map(s => s.properties);
+
+      // Build tab bar: Overall first, then each department
+      const tabs = [{ title: 'Overall' }, ...lbSheets];
+      tabsBar.innerHTML = tabs.map(t =>
+        `<button class="lb-tab ${t.title === lbActiveTab ? 'active' : ''}"
+          onclick="switchLbTab('${t.title.replace(/'/g, "\\'")}')">${t.title}</button>`
+      ).join('');
+
+      await loadLbTab(lbActiveTab);
+
+    } catch(e) {
+      body.innerHTML = `<div class="lb-empty">Unable to load leaderboard.<br><span style="font-size:0.6rem;color:var(--txt-muted)">${e.message}</span></div>`;
+    }
+  }
+
+  async function loadLbTab(tabName) {
+    const body = document.getElementById('lb-body');
+
+    if (tabName === 'Overall') {
+      // Load all sheets, combine, sort, take top 10
+      body.innerHTML = `<div class="weather-loading"><div class="spin"></div>Loading…</div>`;
+      try {
+        const allEntries = [];
+        for (const sheet of lbSheets) {
+          const rows = await fetchLbSheet(sheet.title);
+          rows.forEach(r => allEntries.push({ name: r.name, steps: r.steps, dept: sheet.title }));
+        }
+        allEntries.sort((a, b) => b.steps - a.steps);
+        lbDataCache['Overall'] = allEntries.slice(0, 10);
+        renderLb(lbDataCache['Overall Top 10'], true);
+      } catch(e) {
+        body.innerHTML = `<div class="lb-empty">Unable to load data.</div>`;
+      }
+    } else {
+      if (lbDataCache[tabName]) {
+        renderLb(lbDataCache[tabName], false);
+        return;
+      }
+      body.innerHTML = `<div class="weather-loading"><div class="spin"></div>Loading…</div>`;
+      try {
+        const rows = await fetchLbSheet(tabName);
+        rows.sort((a, b) => b.steps - a.steps);
+        lbDataCache[tabName] = rows.slice(0, 10);
+        renderLb(lbDataCache[tabName], false);
+      } catch(e) {
+        body.innerHTML = `<div class="lb-empty">Unable to load data.</div>`;
+      }
+    }
+  }
+
+  async function fetchLbSheet(tabName) {
+    const url = `${LB_BASE}/values/${encodeURIComponent(tabName)}?key=${SHEETS_API_KEY}&_=${Date.now()}`;
+    const res  = await fetch(url);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || res.statusText);
+    }
+    const json = await res.json();
+    const rows = json.values || [];
+    // Skip header row if first cell is non-numeric text like "Name"
+    const data = rows[0] && isNaN(Number(String(rows[0][1]).replace(/,/g,'')))
+      ? rows.slice(1) : rows;
+    return data
+      .filter(r => r[0] && r[1])
+      .map(r => ({
+        name:  r[0].trim(),
+        steps: parseInt(String(r[1]).replace(/,/g, '')) || 0
+      }))
+      .filter(r => r.steps > 0);
+  }
+
+  function switchLbTab(tabName) {
+    lbActiveTab = tabName;
+    // Update active tab styling
+    document.querySelectorAll('.lb-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent === tabName);
+    });
+    loadLbTab(tabName);
+  }
+
+  function renderLb(entries, showDept) {
+    const body = document.getElementById('lb-body');
+    if (!entries || !entries.length) {
+      body.innerHTML = `<div class="lb-empty">No data yet</div>`;
+      return;
+    }
+    const rows = entries.map((e, i) => `
+      <div class="lb-row">
+        <span class="lb-rank">${i + 1}</span>
+        <span class="lb-name">${escLb(e.name)}${showDept && e.dept ? ` <span style="font-size:0.7rem;color:var(--txt-dim);font-weight:400">${escLb(e.dept)}</span>` : ''}</span>
+        <span class="lb-steps">${e.steps.toLocaleString()}</span>
+      </div>`).join('');
+
+    body.innerHTML = `<div class="lb-list">${rows}</div>`;
+  }
+
+  function escLb(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  initLeaderboard();
+  // Refresh leaderboard every 5 minutes
+  setInterval(() => { lbDataCache = {}; initLeaderboard(); }, 5 * 60 * 1000);
+
+  fetchSchedule();
+  setInterval(fetchSchedule, 60 * 1000);
+
+  fetchWeather();
+  setInterval(fetchWeather, 10 * 60 * 1000);
+</script>
+</body>
+</html>
