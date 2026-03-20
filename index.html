@@ -973,6 +973,7 @@
           onclick="switchLbTab('${t.title.replace(/'/g, "\\'")}')">${t.title}</button>`
       ).join('');
 
+      // Load the active tab only after lbSheets is fully populated
       await loadLbTab(lbActiveTab);
 
     } catch(e) {
@@ -994,7 +995,7 @@
         }
         allEntries.sort((a, b) => b.steps - a.steps);
         lbDataCache['Overall'] = allEntries.slice(0, 10);
-        renderLb(lbDataCache['Overall Top 10'], true);
+        renderLb(lbDataCache['Overall'], true);
       } catch(e) {
         body.innerHTML = `<div class="lb-empty">Unable to load data.</div>`;
       }
@@ -1024,9 +1025,12 @@
     }
     const json = await res.json();
     const rows = json.values || [];
-    // Skip header row if first cell is non-numeric text like "Name"
-    const data = rows[0] && isNaN(Number(String(rows[0][1]).replace(/,/g,'')))
-      ? rows.slice(1) : rows;
+    console.log(`[LB] Tab "${tabName}" raw rows:`, JSON.stringify(rows.slice(0, 5)));
+    // Only skip first row if it looks like a text header (col A is "name"/"teacher" etc)
+    const firstCellLower = (rows[0]?.[0] || '').toString().trim().toLowerCase();
+    const looksLikeHeader = ['name','teacher','staff','person','employee'].includes(firstCellLower);
+    const data = looksLikeHeader ? rows.slice(1) : rows;
+    console.log(`[LB] Tab "${tabName}" header skipped: ${looksLikeHeader}, data rows:`, JSON.stringify(data.slice(0, 5)));
     return data
       .filter(r => r[0] && r[1])
       .map(r => ({
