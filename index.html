@@ -154,7 +154,10 @@
       display: flex;
       gap: 1.5rem;
       align-items: flex-start;
+      position: relative;
+      z-index: 2;
     }
+    header { z-index: 3; }
     .widget-col {
       flex: 1;
       display: flex;
@@ -854,6 +857,16 @@
     }
     .timer-digits:hover { color: var(--raider-white); }
     .timer-digits.editing { color: var(--raider-white); outline: none; }
+    .timer-digits.editing::after {
+      content: '|';
+      margin-left: 2px;
+      color: var(--raider-red);
+      animation: timerCursorBlink 0.9s step-end infinite;
+    }
+    @keyframes timerCursorBlink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
     .timer-digits.done    { color: #5fcf5f; cursor: default; }
     .timer-digits.warning { color: #f0b030; }
     .timer-label-text {
@@ -969,9 +982,273 @@
       pointer-events: none;
       animation: timerDoneFlash 0.9s ease forwards;
     }
+
+    /* ══════════════════════════════
+       YOUTUBE VIDEO BACKGROUND
+    ══════════════════════════════ */
+    #yt-bg-wrap {
+      position: fixed; inset: 0;
+      z-index: 0;
+      display: none;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    #yt-bg-wrap iframe {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100vw;
+      height: 56.25vw;   /* 16:9 */
+      min-height: 100vh;
+      min-width: 177.78vh; /* 16:9 */
+    }
+    #yt-dim {
+      position: fixed; inset: 0;
+      z-index: 1;
+      background: rgba(8, 14, 26, 0.58);
+      pointer-events: none;
+      display: none;
+    }
+    body.yt-active { background: #000; }
+
+    /* ══════════════════════════════
+       MUSIC WIDGET
+    ══════════════════════════════ */
+    .music-body {
+      padding: 0.9rem 1.1rem 1.1rem;
+      display: flex; flex-direction: column; gap: 0.75rem;
+    }
+    .music-input-row {
+      display: flex; gap: 0.5rem;
+    }
+    .music-input {
+      flex: 1; min-width: 0;
+      background: var(--gm-mid);
+      border: 1px solid var(--gm-border);
+      border-radius: 6px;
+      padding: 0.42rem 0.65rem;
+      color: var(--txt-bright);
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.82rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .music-input::placeholder { color: var(--txt-muted); }
+    .music-input:focus { border-color: var(--raider-red); }
+    .music-load-btn {
+      background: var(--raider-red);
+      color: #fff;
+      border: none; border-radius: 6px;
+      padding: 0.42rem 0.8rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.85rem;
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .music-load-btn:hover { background: var(--raider-red-glow); }
+    .music-controls {
+      display: none; align-items: center; gap: 0.75rem;
+    }
+    .music-play-btn {
+      width: 34px; height: 34px; flex-shrink: 0;
+      border-radius: 50%;
+      background: var(--raider-red);
+      border: none; color: #fff;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .music-play-btn:hover { background: var(--raider-red-glow); }
+    .music-vol-wrap {
+      display: flex; align-items: center; gap: 0.45rem; flex: 1;
+    }
+    .music-vol-icon { color: var(--txt-dim); flex-shrink: 0; }
+    .music-volume {
+      flex: 1;
+      accent-color: var(--raider-red);
+      cursor: pointer;
+    }
+    .music-error {
+      font-size: 0.75rem;
+      color: var(--raider-red);
+      display: none;
+    }
+    .music-header-controls {
+      display: flex; align-items: center; gap: 0.45rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .music-header-controls.visible { opacity: 1; pointer-events: auto; }
+    .music-header-play-btn {
+      width: 24px; height: 24px; flex-shrink: 0;
+      border-radius: 50%;
+      background: var(--raider-red);
+      border: none; color: #fff;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .music-header-play-btn:hover { background: var(--raider-red-glow); }
+    .music-header-vol {
+      width: 64px;
+      accent-color: var(--raider-red);
+      cursor: pointer;
+    }
+    .music-section-label {
+      font-size: 0.68rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--txt-dim);
+      margin-bottom: 0.3rem;
+    }
+    .music-recents { display: flex; flex-direction: column; gap: 0.25rem; }
+    .music-recent-btn {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: var(--gm-dark);
+      border: 1px solid var(--gm-border);
+      border-radius: 4px;
+      padding: 0.32rem 0.55rem;
+      color: var(--txt-mid);
+      font-family: 'Barlow', sans-serif; font-size: 0.78rem;
+      cursor: pointer; text-align: left; width: 100%;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .music-recent-btn:hover { background: var(--gm-mid); color: var(--txt-bright); border-color: var(--gm-highlight); }
+    .music-recent-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .music-recent-del { color: var(--txt-muted); flex-shrink: 0; font-size: 0.8rem; transition: color 0.15s; }
+    .music-recent-btn:hover .music-recent-del { color: var(--raider-red); }
+
+    /* ══════════════════════════════
+       CLASSBOARD WIDGET
+    ══════════════════════════════ */
+    .classboard-body { padding: 0.9rem 1.1rem 1.1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    .classboard-display {
+      min-height: 90px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem 1.1rem;
+      border-radius: 6px;
+      background: var(--gm-mid);
+      border: 1px solid var(--gm-border);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .classboard-display:hover { border-color: var(--gm-highlight); background: var(--gm-light); }
+    .classboard-message {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.4rem; font-weight: 600;
+      color: var(--txt-bright);
+      text-align: center; white-space: pre-wrap; word-break: break-word;
+      line-height: 1.3;
+    }
+    .classboard-empty { font-size: 0.82rem; color: var(--txt-muted); font-style: italic; }
+    .classboard-edit-area { display: none; flex-direction: column; gap: 0.55rem; }
+    .classboard-textarea {
+      width: 100%;
+      background: var(--gm-mid); border: 1px solid var(--gm-border);
+      border-radius: 6px; color: var(--txt-bright);
+      font-family: 'Barlow', sans-serif; font-size: 0.9rem;
+      padding: 0.6rem 0.7rem;
+      resize: vertical; min-height: 90px; outline: none;
+      transition: border-color 0.15s;
+    }
+    .classboard-textarea::placeholder { color: var(--txt-muted); }
+    .classboard-textarea:focus { border-color: var(--raider-red); }
+    .classboard-hint { font-size: 0.68rem; color: var(--txt-dim); text-align: right; }
+    .classboard-btn-row { display: flex; gap: 0.5rem; justify-content: flex-end; }
+    .classboard-btn {
+      border: none; border-radius: 6px; cursor: pointer;
+      padding: 0.38rem 0.9rem;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.85rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .classboard-btn.primary { background: var(--raider-red); color: #fff; }
+    .classboard-btn.primary:hover { background: var(--raider-red-glow); }
+    .classboard-btn.secondary { background: var(--gm-mid); color: var(--txt-mid); border: 1px solid var(--gm-border); }
+    .classboard-btn.secondary:hover { background: var(--gm-light); color: var(--txt-bright); }
+    .classboard-edit-icon {
+      color: var(--txt-dim); background: none; border: none;
+      padding: 3px 5px; border-radius: 4px; cursor: pointer;
+      display: flex; align-items: center;
+      transition: color 0.15s, background 0.15s;
+    }
+    .classboard-edit-icon:hover { color: var(--txt-bright); background: var(--gm-mid); }
+
+    /* ══════════════════════════════
+       LIBRARY QR WIDGET
+    ══════════════════════════════ */
+    .qr-body {
+      padding: 1rem 1.1rem 1.2rem;
+      display: flex; flex-direction: column; align-items: center; gap: 1rem;
+    }
+    .qr-select-wrap {
+      width: 100%;
+    }
+    .qr-select-wrap label {
+      display: block;
+      font-size: 0.72rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--txt-dim);
+      margin-bottom: 0.35rem;
+    }
+    .qr-select {
+      width: 100%;
+      background: var(--gm-mid);
+      color: var(--txt-bright);
+      border: 1px solid var(--gm-border);
+      border-radius: 6px;
+      padding: 0.45rem 0.65rem;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.9rem;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235e7a9a' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.65rem center;
+      padding-right: 2rem;
+    }
+    .qr-select:focus { border-color: var(--raider-red); }
+    .qr-select option { background: var(--gm-dark); }
+    .qr-code-wrap {
+      display: flex; justify-content: center; align-items: center;
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      width: 180px; height: 180px;
+      flex-shrink: 0;
+    }
+    .qr-code-wrap img {
+      width: 160px; height: 160px;
+      display: block;
+    }
+    .qr-placeholder {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      width: 160px; height: 160px;
+      color: var(--txt-dim);
+      font-size: 0.8rem;
+      text-align: center;
+      gap: 0.5rem;
+    }
+    .qr-url-label {
+      font-size: 0.7rem;
+      color: var(--txt-dim);
+      word-break: break-all;
+      text-align: center;
+      max-width: 220px;
+    }
   </style>
 </head>
 <body>
+
+<!-- YouTube video background -->
+<div id="yt-bg-wrap"><div id="yt-bg-player"></div></div>
+<div id="yt-dim"></div>
 
 <header>
   <div class="header-left">
@@ -1073,6 +1350,64 @@
         </div>
       </div>
     </div>
+
+    <!-- Music Widget -->
+    <div class="widget-item" data-id="music">
+      <div class="widget" id="music-widget" style="animation-delay:0.30s">
+        <div class="widget-header widget-drag-handle">
+          <div class="widget-header-left">
+            <div class="widget-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 18V5l12-2v13"/>
+                <circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+              </svg>
+            </div>
+            <span class="widget-title">Music</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.6rem;">
+            <div class="music-header-controls" id="music-header-controls">
+              <button class="music-header-play-btn" id="music-header-play-btn" onclick="musicToggle()" title="Play / Pause">
+                <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+              </button>
+              <input class="music-header-vol" id="music-header-volume" type="range" min="0" max="100" value="70"
+                oninput="musicSetVolume(this.value)" title="Volume"/>
+            </div>
+            <svg class="widget-chevron" id="music-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+        </div>
+        <div class="widget-body-collapsible" id="music-collapsible">
+          <div class="music-body">
+            <div class="music-input-row">
+              <input class="music-input" id="music-url-input" type="text"
+                placeholder="Paste YouTube or YouTube Music link…"
+                onkeydown="if(event.key==='Enter')musicLoad()"/>
+              <button class="music-load-btn" onclick="musicLoad()">Load</button>
+            </div>
+            <div class="music-error" id="music-error">Invalid YouTube link</div>
+            <div class="music-controls" id="music-controls" style="display:none">
+              <button class="music-play-btn" id="music-play-btn" onclick="musicToggle()" title="Play / Pause">
+                <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+              </button>
+              <div class="music-vol-wrap">
+                <svg class="music-vol-icon" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                </svg>
+                <input class="music-volume" id="music-volume" type="range" min="0" max="100" value="70"
+                  oninput="musicSetVolume(this.value)" title="Volume"/>
+              </div>
+            </div>
+            <div id="music-recents-section">
+              <div class="music-section-label">Recent</div>
+              <div class="music-recents" id="music-recents"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="widget-col" id="col-1">
@@ -1136,6 +1471,86 @@
         <div class="widget-body-collapsible" id="announcements-collapsible">
           <div class="widget-body" id="announcements-body">
             <div class="weather-loading"><div class="spin"></div>Loading announcements…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Library QR Code Widget -->
+    <div class="widget-item" data-id="library-qr">
+      <div class="widget" id="library-qr-widget" style="animation-delay:0.18s">
+        <div class="widget-header widget-drag-handle">
+          <div class="widget-header-left">
+            <div class="widget-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+                <rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/>
+                <rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/>
+              </svg>
+            </div>
+            <span class="widget-title">WEB Track</span>
+          </div>
+          <svg class="widget-chevron" id="library-qr-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="widget-body-collapsible" id="library-qr-collapsible">
+          <div class="qr-body">
+            <div class="qr-select-wrap">
+              <label for="qr-location-select">Location</label>
+              <select class="qr-select" id="qr-location-select">
+                <option value="">Loading locations…</option>
+              </select>
+            </div>
+            <div class="qr-code-wrap" id="qr-code-wrap">
+              <div class="qr-placeholder" id="qr-placeholder">
+                <svg width="32" height="32" fill="none" stroke="#bbb" stroke-width="1.5" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                Select a location
+              </div>
+              <img id="qr-code-img" src="" alt="QR Code" style="display:none;width:160px;height:160px;"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Classboard Widget -->
+    <div class="widget-item" data-id="classboard">
+      <div class="widget" id="classboard-widget" style="animation-delay:0.21s">
+        <div class="widget-header widget-drag-handle">
+          <div class="widget-header-left">
+            <div class="widget-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </div>
+            <span class="widget-title">Classboard</span>
+          </div>
+          <svg class="widget-chevron" id="classboard-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="widget-body-collapsible" id="classboard-collapsible">
+          <div class="classboard-body">
+            <div class="classboard-display" id="classboard-display" onclick="classboardEnterEdit()">
+              <span class="classboard-message classboard-empty" id="classboard-message">Click to add a message…</span>
+            </div>
+            <div class="classboard-edit-area" id="classboard-edit-area">
+              <textarea class="classboard-textarea" id="classboard-textarea"
+                placeholder="Type a message for your class…"
+                onkeydown="classboardKeydown(event)"></textarea>
+              <div class="classboard-hint">Ctrl + Enter to save &nbsp;·&nbsp; Esc to cancel</div>
+              <div class="classboard-btn-row">
+                <button class="classboard-btn secondary" onclick="classboardCancel()">Cancel</button>
+                <button class="classboard-btn primary" onclick="classboardSave()">Save</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1277,6 +1692,10 @@
       if (headerTemp) headerTemp.classList.toggle('visible', isCollapsed);
     }
     if (id === 'schedule') updateSchedStrip();
+    if (id === 'music') {
+      const hc = document.getElementById('music-header-controls');
+      if (hc) hc.classList.toggle('visible', isCollapsed);
+    }
     if (id === 'announcements') {
       if (isCollapsed) startAnnTicker();
       else { stopAnnTicker(); document.getElementById('ann-ticker')?.classList.remove('visible'); }
@@ -1596,7 +2015,8 @@
 
     const pct = Math.round(((nowMin - current.start) / (current.end - current.start)) * 100);
     bg.style.width        = `${pct}%`;
-    nameEl.textContent    = current.name;
+    const stripIsHomeroom = current.name.toLowerCase().includes('homeroom');
+    nameEl.textContent    = stripIsHomeroom ? 'Dead Time' : current.name;
     countdown.textContent = minsToStr(current.end - nowMin);
     timesEl.textContent   = `${current.startStr} – ${current.endStr}`;
     strip.classList.add('visible');
@@ -1607,14 +2027,15 @@
     const nowMin = minutesToNow();
 
     const rows = periods.map(p => {
-      const isPast     = nowMin >= p.end;
-      const isCurrent  = nowMin >= p.start && nowMin < p.end;
-      const isDeadTime = isCurrent && (nowMin - p.start) < 5;
-      const pct        = isCurrent
+      const isPast      = nowMin >= p.end;
+      const isCurrent   = nowMin >= p.start && nowMin < p.end;
+      const isHomeroom  = p.name.toLowerCase().includes('homeroom');
+      const isDeadTime  = isCurrent && (isHomeroom || (nowMin - p.start) < 5);
+      const pct         = isCurrent
         ? Math.round(((nowMin - p.start) / (p.end - p.start)) * 100)
         : 0;
-      const deadTimeEnd = p.start + 5;
-      const remaining  = isCurrent
+      const deadTimeEnd = isHomeroom ? p.end : p.start + 5;
+      const remaining   = isCurrent
         ? (isDeadTime
             ? `Dead Time · ${minsToStr(deadTimeEnd - nowMin)}`
             : minsToStr(p.end - nowMin))
@@ -2045,6 +2466,40 @@
   fetchAnnouncements();
   setInterval(fetchAnnouncements, 5 * 60 * 1000);
 
+  // ── Bell sound ──
+  function playBell() {
+    try {
+      const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+      const gain = ctx.createGain();
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0.7, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 3);
+
+      // Two overlapping tones for a richer bell timbre
+      [880, 1320].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        osc.connect(gain);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 0.92, ctx.currentTime + 3);
+        osc.start(ctx.currentTime + i * 0.01);
+        osc.stop(ctx.currentTime + 3);
+      });
+    } catch(e) { /* AudioContext unavailable */ }
+  }
+
+  let _lastBellMinute = -1;
+  function checkBell() {
+    if (!currentSchedulePeriods) return;
+    const nowMin = minutesToNow();
+    if (nowMin === _lastBellMinute) return;
+    if (currentSchedulePeriods.some(p => p.end === nowMin)) {
+      _lastBellMinute = nowMin;
+      playBell();
+    }
+  }
+  setInterval(checkBell, 1000);
+
   fetchSchedule();
   setInterval(() => { fetchSchedule(); updateSchedStrip(); }, 60 * 1000);
 
@@ -2267,8 +2722,7 @@
     timerEditBuf = [];
     const digits = document.getElementById('timer-digits');
     const label  = document.getElementById('timer-label-text');
-    if (digits) { digits.classList.add('editing'); digits.textContent = '0:00'; }
-    if (label)  label.textContent = 'Type digits, Enter to set';
+    if (digits) { digits.classList.add('editing'); digits.textContent = ''; }
     // Capture keyboard globally while editing
     document.addEventListener('keydown', timerEditKeyHandler);
   }
@@ -2400,6 +2854,295 @@
   });
 
   // ══════════════════════════════════════════════
+  //  MUSIC / YOUTUBE BACKGROUND
+  // ══════════════════════════════════════════════
+  let _ytPlayer    = null;
+  let _ytApiReady  = false;
+  let _ytPending   = null;
+  let _ytPlaying   = false;
+  let _ytCurrentId = null;
+
+  const MUSIC_RECENTS_KEY = 'walton-music-recents';
+  const MUSIC_MAX_RECENTS = 8;
+
+  function _musicLoadRecents() {
+    try { return JSON.parse(localStorage.getItem(MUSIC_RECENTS_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+  function _musicSaveRecents(arr) { localStorage.setItem(MUSIC_RECENTS_KEY, JSON.stringify(arr)); }
+
+  function _musicAddRecent(id, title) {
+    let recents = _musicLoadRecents();
+    recents = recents.filter(r => r.id !== id);
+    recents.unshift({ id, title });
+    recents = recents.slice(0, MUSIC_MAX_RECENTS);
+    _musicSaveRecents(recents);
+    musicRenderRecents();
+  }
+
+  function musicRenderRecents() {
+    const section = document.getElementById('music-recents-section');
+    const list    = document.getElementById('music-recents');
+    if (!section || !list) return;
+    const recents = _musicLoadRecents();
+    if (!recents.length) { section.style.display = 'none'; return; }
+    section.style.display = '';
+    list.innerHTML = recents.map((r, i) => `
+      <button class="music-recent-btn" onclick="musicPlayRecent(${i})">
+        <span class="music-recent-title">${escHtml(r.title || r.id)}</span>
+        <span class="music-recent-del" onclick="event.stopPropagation();musicDeleteRecent('${r.id}')" title="Remove">✕</span>
+      </button>`).join('');
+  }
+
+  function musicPlayRecent(idx) {
+    const r = _musicLoadRecents()[idx];
+    if (!r) return;
+    if (_ytPlayer) { _ytPlayer.loadVideoById(r.id); _ytShowBg(); }
+    else if (_ytApiReady) { _ytCreatePlayer(r.id); }
+    else {
+      _ytPending = r.id;
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
+    }
+  }
+
+  function musicDeleteRecent(id) {
+    _musicSaveRecents(_musicLoadRecents().filter(r => r.id !== id));
+    musicRenderRecents();
+  }
+
+  musicRenderRecents();
+
+  // Called by YouTube IFrame API once loaded
+  window.onYouTubeIframeAPIReady = function() {
+    _ytApiReady = true;
+    if (_ytPending) { _ytCreatePlayer(_ytPending); _ytPending = null; }
+  };
+
+  function _ytExtractId(url) {
+    url = url.trim();
+    try {
+      const u = new URL(url);
+      if (u.searchParams.has('v')) return u.searchParams.get('v');
+      if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('?')[0];
+    } catch(e) {}
+    const m = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+
+  function musicLoad() {
+    const input = document.getElementById('music-url-input');
+    const errEl = document.getElementById('music-error');
+    const id    = _ytExtractId(input.value);
+    if (!id) {
+      errEl.style.display = 'block';
+      input.style.borderColor = 'var(--raider-red)';
+      setTimeout(() => { errEl.style.display = 'none'; input.style.borderColor = ''; }, 2000);
+      return;
+    }
+    errEl.style.display = 'none';
+    input.style.borderColor = '';
+
+    if (_ytPlayer) {
+      _ytPlayer.loadVideoById(id);
+      _ytShowBg();
+    } else if (_ytApiReady) {
+      _ytCreatePlayer(id);
+    } else {
+      _ytPending = id;
+      const tag = document.createElement('script');
+      tag.src   = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
+    }
+  }
+
+  function _ytCreatePlayer(videoId) {
+    _ytShowBg();
+    _ytPlayer = new YT.Player('yt-bg-player', {
+      videoId,
+      playerVars: {
+        autoplay: 1, controls: 0, disablekb: 1,
+        fs: 0, iv_load_policy: 3, modestbranding: 1,
+        playsinline: 1, rel: 0,
+      },
+      events: {
+        onReady(e) {
+          e.target.setVolume(parseInt(document.getElementById('music-volume').value));
+          e.target.playVideo();
+        },
+        onStateChange(e) {
+          _ytPlaying = (e.data === YT.PlayerState.PLAYING);
+          _ytUpdateBtn();
+          if (e.data === YT.PlayerState.PLAYING) {
+            const data = e.target.getVideoData();
+            if (data && data.video_id && data.video_id !== _ytCurrentId) {
+              _ytCurrentId = data.video_id;
+              _musicAddRecent(data.video_id, data.title || data.video_id);
+            }
+          }
+        },
+      },
+    });
+  }
+
+  function _ytShowBg() {
+    document.getElementById('yt-bg-wrap').style.display  = 'block';
+    document.getElementById('yt-dim').style.display      = 'block';
+    document.body.classList.add('yt-active');
+    document.getElementById('music-controls').style.display = 'flex';
+  }
+
+  function musicToggle() {
+    if (!_ytPlayer) return;
+    _ytPlaying ? _ytPlayer.pauseVideo() : _ytPlayer.playVideo();
+  }
+
+  function musicSetVolume(val) {
+    if (_ytPlayer) _ytPlayer.setVolume(parseInt(val));
+    document.getElementById('music-volume').value        = val;
+    document.getElementById('music-header-volume').value = val;
+  }
+
+  function _ytUpdateBtn() {
+    const pauseSvg = `<svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+    const playSvg  = `<svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>`;
+    const icon = _ytPlaying ? pauseSvg : playSvg;
+    const smallPauseSvg = `<svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+    const smallPlaySvg  = `<svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>`;
+    const smallIcon = _ytPlaying ? smallPauseSvg : smallPlaySvg;
+    const btn       = document.getElementById('music-play-btn');
+    const headerBtn = document.getElementById('music-header-play-btn');
+    if (btn)       btn.innerHTML       = icon;
+    if (headerBtn) headerBtn.innerHTML = smallIcon;
+  }
+
+  // ══════════════════════════════════════════════
+  //  CLASSBOARD WIDGET
+  // ══════════════════════════════════════════════
+  const CLASSBOARD_KEY = 'walton-classboard-message';
+
+  function classboardRender() {
+    const msg = localStorage.getItem(CLASSBOARD_KEY) || '';
+    const el  = document.getElementById('classboard-message');
+    if (!el) return;
+    if (msg) {
+      el.textContent = msg;
+      el.classList.remove('classboard-empty');
+    } else {
+      el.textContent = 'Click to add a message…';
+      el.classList.add('classboard-empty');
+    }
+  }
+
+  function classboardEnterEdit() {
+    const display  = document.getElementById('classboard-display');
+    const editArea = document.getElementById('classboard-edit-area');
+    const textarea = document.getElementById('classboard-textarea');
+    display.style.display  = 'none';
+    editArea.style.display = 'flex';
+    textarea.value = localStorage.getItem(CLASSBOARD_KEY) || '';
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  }
+
+  function classboardSave() {
+    const textarea = document.getElementById('classboard-textarea');
+    localStorage.setItem(CLASSBOARD_KEY, textarea.value);
+    classboardRender();
+    classboardCloseEdit();
+  }
+
+  function classboardCancel() { classboardCloseEdit(); }
+
+  function classboardCloseEdit() {
+    document.getElementById('classboard-display').style.display  = '';
+    document.getElementById('classboard-edit-area').style.display = 'none';
+  }
+
+  function classboardKeydown(e) {
+    if (e.key === 'Escape')                     { e.preventDefault(); classboardCancel(); }
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); classboardSave(); }
+  }
+
+  classboardRender();
+
+  // ══════════════════════════════════════════════
+  //  WEB Track Widget
+  // ══════════════════════════════════════════════
+  (function initLibraryQR() {
+    const SHEET_ID   = '1NDj11jKpVsBc2aQM9cbzQIaZjn2n3Rmv1y-LfzFEs0k';
+    const BASE_URL   = 'https://www.librarytrac.com/kiosk/student/KEcJNXSE5u?location=';
+    const CSV_URL    = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+
+    const select     = document.getElementById('qr-location-select');
+    const qrImg      = document.getElementById('qr-code-img');
+    const placeholder= document.getElementById('qr-placeholder');
+
+    // Collapse/expand header
+    const header = document.querySelector('#library-qr-widget .widget-header');
+    const body   = document.getElementById('library-qr-collapsible');
+    const chevron= document.getElementById('library-qr-chevron');
+    if (header && body) {
+      header.addEventListener('click', () => {
+        const collapsed = body.classList.toggle('collapsed');
+        if (chevron) chevron.style.transform = collapsed ? 'rotate(-90deg)' : '';
+      });
+    }
+
+    function updateQR() {
+      const val = select.value;
+      if (!val) {
+        qrImg.style.display = 'none';
+        placeholder.style.display = 'flex';
+        return;
+      }
+      const url = BASE_URL + encodeURIComponent(val);
+      const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=0&data=' + encodeURIComponent(url);
+      qrImg.src = qrSrc;
+      qrImg.style.display = 'block';
+      placeholder.style.display = 'none';
+    }
+
+    select.addEventListener('change', updateQR);
+
+    // Parse CSV — handles quoted fields with commas
+    function parseCSVRow(line) {
+      const result = [];
+      let cur = '', inQuote = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') { inQuote = !inQuote; }
+        else if (ch === ',' && !inQuote) { result.push(cur.trim()); cur = ''; }
+        else { cur += ch; }
+      }
+      result.push(cur.trim());
+      return result;
+    }
+
+    fetch(CSV_URL)
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then(csv => {
+        const rows = csv.split('\n').map(l => l.trim()).filter(Boolean);
+        select.innerHTML = '<option value="">— Select location —</option>';
+        rows.forEach(row => {
+          const cols = parseCSVRow(row);
+          const label = cols[0] || '';
+          const code  = cols[1] || '';
+          if (!label && !code) return;
+          const opt = document.createElement('option');
+          opt.value       = code;
+          opt.textContent = label;
+          select.appendChild(opt);
+        });
+      })
+      .catch(err => {
+        select.innerHTML = '<option value="">⚠ Could not load locations</option>';
+        console.error('Library QR: failed to fetch sheet', err);
+      });
+  })();
+
+  // ══════════════════════════════════════════════
   //  WIDGET MANAGER
   // ══════════════════════════════════════════════
   const WIDGET_VISIBILITY_KEY = 'walton-widget-visibility';
@@ -2428,6 +3171,18 @@
     {
       id: 'timer', label: 'Timer',
       icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 14.5 15.5"/><path d="M9 3h6M12 3v2"/></svg>`
+    },
+    {
+      id: 'music', label: 'Music',
+      icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`
+    },
+    {
+      id: 'classboard', label: 'Classboard',
+      icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`
+    },
+    {
+      id: 'library-qr', label: 'WEB Track',
+      icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/></svg>`
     },
   ];
 
