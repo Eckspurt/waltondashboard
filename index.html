@@ -434,10 +434,12 @@
       background: var(--gm-light);
       border-color: rgba(255,255,255,0.4);
     }
-    .period-row.is-dead-time {
+    .period-row.is-dead-time,
+    .period-row.is-ending-soon {
       border-color: var(--raider-red) !important;
     }
-    .period-row.is-dead-time .period-countdown {
+    .period-row.is-dead-time .period-countdown,
+    .period-row.is-ending-soon .period-countdown {
       color: var(--raider-red) !important;
     }
     .period-row.is-current .period-progress {
@@ -469,14 +471,12 @@
     .period-row.is-current .period-time { color: var(--txt-bright); }
 
     .period-countdown {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.952rem; font-weight: 700;
-      color: var(--txt-bright);
+      font-size: 0.9rem; font-weight: 700;
+      color: var(--txt-mid);
       letter-spacing: 0.06em;
-      z-index: 2;
-      pointer-events: none;
+      flex-shrink: 0;
+      position: relative; z-index: 1;
     }
 
     .schedule-no-school {
@@ -2125,8 +2125,9 @@
     const rows = periods.map(p => {
       const isPast      = nowMin >= p.end;
       const isCurrent   = nowMin >= p.start && nowMin < p.end;
-      const isHomeroom  = p.name.toLowerCase().includes('homeroom');
-      const isDeadTime  = isCurrent && (isHomeroom || (nowMin - p.start) < 5);
+      const isHomeroom   = p.name.toLowerCase().includes('homeroom');
+      const isDeadTime   = isCurrent && (isHomeroom || (nowMin - p.start) < 5);
+      const isEndingSoon = isCurrent && (p.end - nowMin) <= 1;
       const pct         = isCurrent
         ? Math.round(((nowMin - p.start) / (p.end - p.start)) * 100)
         : 0;
@@ -2134,10 +2135,10 @@
       return `<div class="period-row ${isPast ? 'is-past' : ''} ${isCurrent ? 'is-current' : ''} ${isDeadTime ? 'is-dead-time' : ''}">
         ${isCurrent ? `<div class="period-progress" style="width:${pct}%"></div>` : ''}
         <div class="period-name">${p.name}</div>
+        ${isCurrent ? `<div class="period-countdown">${remaining}</div>` : ''}
         <div class="period-times">
           <span class="period-time">${p.startStr} – ${p.endStr}</span>
         </div>
-        ${isCurrent ? `<div class="period-countdown">${remaining}</div>` : ''}
       </div>`;
     }).join('');
 
