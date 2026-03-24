@@ -232,7 +232,7 @@
       display: flex; align-items: center; gap: 0.55rem;
       justify-content: space-between;
       background: var(--gm-dark);
-      cursor: pointer;
+      cursor: default;
       user-select: none;
     }
     .widget-header:hover .widget-chevron { color: var(--txt-bright); }
@@ -512,13 +512,35 @@
     }
     .sched-reminders-chevron.collapsed { transform: rotate(-90deg); }
     .sched-reminders {
-      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;
       padding: 0.55rem 0.75rem 0.65rem;
       overflow: hidden;
       transition: max-height 0.25s ease, padding 0.25s ease;
-      max-height: 80px;
+      max-height: 160px;
     }
     .sched-reminders.collapsed { max-height: 0; padding-top: 0; padding-bottom: 0; }
+    .sched-voice-select {
+      background: var(--gm-dark);
+      border: 1px solid var(--gm-border); border-radius: 4px;
+      color: var(--txt-dim);
+      padding: 4px 6px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem; font-weight: 600;
+      cursor: pointer;
+      max-width: 160px;
+    }
+    .sched-voice-select:focus { outline: none; border-color: var(--gm-highlight); }
+    .sched-volume-row {
+      display: flex; align-items: center; gap: 6px;
+      width: 100%; flex-basis: 100%;
+      color: var(--txt-dim);
+    }
+    .sched-volume-row svg { flex-shrink: 0; }
+    .sched-volume-slider {
+      flex: 1; height: 3px;
+      accent-color: var(--raider-red);
+      cursor: pointer;
+    }
     .sched-reminder-btn {
       display: flex; align-items: center; gap: 5px;
       background: var(--gm-dark);
@@ -749,8 +771,8 @@
        DRAG AND DROP
     ══════════════════════════════ */
     .widget-item.dragging { opacity: 0.4; }
-    .widget-drag-handle { cursor: grab; }
-    .widget-drag-handle:active { cursor: grabbing; }
+    .widget-drag-handle { cursor: default; }
+    body.widget-dragging, body.widget-dragging * { cursor: grabbing !important; }
     .widget input, .widget button, .widget select,
     .widget a, .widget textarea, .lb-tab { cursor: pointer; }
 
@@ -1428,7 +1450,7 @@
               <button class="music-header-play-btn" id="music-header-play-btn" onclick="musicToggle()" title="Play / Pause">
                 <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
               </button>
-              <input class="music-header-vol" id="music-header-volume" type="range" min="0" max="100" value="70"
+              <input class="music-header-vol" id="music-header-volume" type="range" min="0" max="100" value="50"
                 oninput="musicSetVolume(this.value)" title="Volume"/>
             </div>
             <svg class="widget-chevron" id="music-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -1455,7 +1477,7 @@
                   <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
                   <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
                 </svg>
-                <input class="music-volume" id="music-volume" type="range" min="0" max="100" value="70"
+                <input class="music-volume" id="music-volume" type="range" min="0" max="100" value="50"
                   oninput="musicSetVolume(this.value)" title="Volume"/>
               </div>
               <button class="music-video-btn" id="music-video-btn" onclick="musicToggleVideo()" title="Toggle background video">
@@ -1537,6 +1559,18 @@
               </svg>
               Take attendance
             </button>
+            <select class="sched-voice-select" id="sched-voice-select" title="Voice for reminders" onchange="saveVoiceChoice(this.value)">
+              <option value="">Default voice</option>
+            </select>
+            <div class="sched-volume-row">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              </svg>
+              <input class="sched-volume-slider" id="sched-remind-volume" type="range" min="0" max="100" value="50"
+                oninput="saveReminderVolume(this.value)" title="Reminder volume"/>
+            </div>
           </div>
         </div>
       </div>
@@ -2132,7 +2166,7 @@
         ? Math.round(((nowMin - p.start) / (p.end - p.start)) * 100)
         : 0;
       const remaining = isCurrent ? minsToStr(p.end - nowMin) : '';
-      return `<div class="period-row ${isPast ? 'is-past' : ''} ${isCurrent ? 'is-current' : ''} ${isDeadTime ? 'is-dead-time' : ''}">
+      return `<div class="period-row ${isPast ? 'is-past' : ''} ${isCurrent ? 'is-current' : ''} ${isDeadTime ? 'is-dead-time' : ''} ${isEndingSoon ? 'is-ending-soon' : ''}">
         ${isCurrent ? `<div class="period-progress" style="width:${pct}%"></div>` : ''}
         <div class="period-name">${p.name}</div>
         ${isCurrent ? `<div class="period-countdown">${remaining}</div>` : ''}
@@ -2273,6 +2307,7 @@
   function startDrag(item, startX, startY) {
     dragItem = item;
     item.classList.add('dragging');
+    document.body.classList.add('widget-dragging');
 
     function onMouseMove(e) {
       clearDropHighlights();
@@ -2313,6 +2348,7 @@
       }
 
       clearDropHighlights();
+      document.body.classList.remove('widget-dragging');
       saveLayout();
       dragItem = null;
       updatePlaceholders();
@@ -2571,21 +2607,27 @@
   // ── Bell sound ──
   function playBell() {
     try {
-      const ctx  = new (window.AudioContext || window.webkitAudioContext)();
-      const gain = ctx.createGain();
-      gain.connect(ctx.destination);
-      gain.gain.setValueAtTime(0.7, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 3);
-
-      // Two overlapping tones for a richer bell timbre
-      [880, 1320].forEach((freq, i) => {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      // Real bell: inharmonic partials (Terhardt's model), fundamental C5 = 523 Hz
+      const f = 523.25;
+      const partials = [
+        { ratio: 1.000, gain: 0.50, decay: 5.5 },
+        { ratio: 2.756, gain: 0.28, decay: 3.2 },
+        { ratio: 5.404, gain: 0.14, decay: 1.8 },
+        { ratio: 8.933, gain: 0.06, decay: 0.9 },
+      ];
+      partials.forEach(({ ratio, gain: g, decay }) => {
         const osc = ctx.createOscillator();
-        osc.connect(gain);
+        const env = ctx.createGain();
+        osc.connect(env);
+        env.connect(ctx.destination);
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(freq * 0.92, ctx.currentTime + 3);
-        osc.start(ctx.currentTime + i * 0.01);
-        osc.stop(ctx.currentTime + 3);
+        osc.frequency.value = f * ratio;
+        env.gain.setValueAtTime(0, ctx.currentTime);
+        env.gain.linearRampToValueAtTime(g, ctx.currentTime + 0.003);
+        env.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + decay);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + decay);
       });
     } catch(e) { /* AudioContext unavailable */ }
   }
@@ -2594,12 +2636,55 @@
   const SCHED_REMIND_ENDING_KEY  = 'walton-sched-remind-ending';
   const SCHED_REMIND_ATTEND_KEY  = 'walton-sched-remind-attend';
 
+  const SCHED_VOICE_KEY   = 'walton-sched-voice';
+  const SCHED_VOLUME_KEY  = 'walton-sched-volume';
+
+  function populateVoices() {
+    const sel = document.getElementById('sched-voice-select');
+    if (!sel || !window.speechSynthesis) return;
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) return;
+    const saved = localStorage.getItem(SCHED_VOICE_KEY) || '';
+    sel.innerHTML = '<option value="">Default voice</option>' +
+      voices.map(v =>
+        `<option value="${v.name}" ${v.name === saved ? 'selected' : ''}>${v.name}${v.localService ? '' : ' ☁'}</option>`
+      ).join('');
+  }
+
+  function saveVoiceChoice(name) {
+    localStorage.setItem(SCHED_VOICE_KEY, name);
+  }
+
+  function saveReminderVolume(val) {
+    localStorage.setItem(SCHED_VOLUME_KEY, val);
+  }
+
+  function initReminderVolume() {
+    const saved = localStorage.getItem(SCHED_VOLUME_KEY);
+    if (saved !== null) {
+      const el = document.getElementById('sched-remind-volume');
+      if (el) el.value = saved;
+    }
+  }
+  initReminderVolume();
+
   function speakReminder(text) {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text);
-    utt.rate = 0.88; utt.pitch = 1; utt.volume = 1;
+    const vol = parseFloat(localStorage.getItem(SCHED_VOLUME_KEY) ?? '50') / 100;
+    utt.rate = 0.88; utt.pitch = 1; utt.volume = vol;
+    const saved = localStorage.getItem(SCHED_VOICE_KEY);
+    if (saved) {
+      const v = window.speechSynthesis.getVoices().find(v => v.name === saved);
+      if (v) utt.voice = v;
+    }
     window.speechSynthesis.speak(utt);
+  }
+
+  if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = populateVoices;
+    populateVoices(); // populate immediately if already loaded
   }
 
   const SCHED_REMIND_PANEL_KEY = 'walton-sched-remind-panel-open';
@@ -3031,6 +3116,7 @@
   let _ytCurrentId    = null;
   let _ytVideoVisible = true;
 
+  const MUSIC_VOLUME_KEY  = 'walton-music-volume';
   const MUSIC_RECENTS_KEY = 'walton-music-recents';
   const MUSIC_MAX_RECENTS = 8;
 
@@ -3182,7 +3268,14 @@
     if (_ytPlayer) _ytPlayer.setVolume(parseInt(val));
     document.getElementById('music-volume').value        = val;
     document.getElementById('music-header-volume').value = val;
+    localStorage.setItem(MUSIC_VOLUME_KEY, val);
   }
+
+  (function initMusicVolume() {
+    const saved = localStorage.getItem(MUSIC_VOLUME_KEY) ?? '50';
+    document.getElementById('music-volume').value        = saved;
+    document.getElementById('music-header-volume').value = saved;
+  })();
 
   function _ytUpdateBtn() {
     const pauseSvg = `<svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
