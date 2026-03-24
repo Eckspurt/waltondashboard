@@ -29,6 +29,9 @@
       --txt-mid:     #b0c2d8;
       --txt-dim:     #5e7a9a;
       --txt-muted:   #2e4060;
+
+      /* Global font scale: ~12% larger than original */
+      font-size: 112%;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -67,7 +70,6 @@
       overflow: hidden;
       min-height: 80px;
     }
-    /* Subtle blue glow behind logo */
     header::after {
       content: '';
       position: absolute;
@@ -98,7 +100,7 @@
     .forecast-toggle:hover { background: var(--gm-mid); }
     .forecast-toggle-label {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.65rem; letter-spacing: 0.25em;
+      font-size: 0.728rem; letter-spacing: 0.25em;
       text-transform: uppercase; color: var(--txt-dim);
     }
     .forecast-toggle-chevron {
@@ -117,13 +119,13 @@
     .school-name-main {
       font-family: 'Barlow Condensed', sans-serif;
       font-weight: 800;
-      font-size: clamp(1.4rem, 3vw, 2.1rem);
+      font-size: clamp(1.568rem, 3vw, 2.352rem);
       letter-spacing: 0.1em; text-transform: uppercase;
       color: var(--raider-white); line-height: 1;
     }
     .school-name-main em { font-style: normal; color: var(--raider-red); }
     .school-name-sub {
-      font-size: 0.6rem; letter-spacing: 0.28em;
+      font-size: 0.672rem; letter-spacing: 0.28em;
       text-transform: uppercase; color: var(--txt-dim);
     }
 
@@ -134,11 +136,11 @@
     #header-clock {
       font-family: 'Barlow Condensed', sans-serif;
       font-weight: 700;
-      font-size: clamp(1.7rem, 3.5vw, 2.6rem);
+      font-size: clamp(1.904rem, 3.5vw, 2.912rem);
       letter-spacing: 0.04em; color: var(--txt-bright); line-height: 1;
     }
     #header-date {
-      font-size: 0.6rem; letter-spacing: 0.22em;
+      font-size: 0.672rem; letter-spacing: 0.22em;
       text-transform: uppercase; color: var(--txt-dim);
     }
 
@@ -170,7 +172,7 @@
       display: none;
       border: 2px dashed var(--gm-border);
       color: var(--txt-muted);
-      font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+      font-size: 0.672rem; letter-spacing: 0.2em; text-transform: uppercase;
       align-items: center; justify-content: center;
       flex: 1;
       min-height: 200px;
@@ -235,7 +237,7 @@
     }
     .widget-header-badge {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.68rem; font-weight: 700;
+      font-size: 0.762rem; font-weight: 700;
       letter-spacing: 0.14em; text-transform: uppercase;
       color: var(--txt-mid);
       background: var(--gm-mid);
@@ -252,7 +254,7 @@
     .widget-icon svg { color: var(--txt-bright); }
     .widget-title {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700; font-size: 0.7rem;
+      font-weight: 700; font-size: 0.784rem;
       letter-spacing: 0.3em; text-transform: uppercase;
       color: var(--txt-dim);
     }
@@ -278,7 +280,7 @@
     /* Temp shown in weather header when collapsed */
     .weather-header-temp {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 800; font-size: 1.3rem;
+      font-weight: 800; font-size: 1.456rem;
       letter-spacing: 0.02em; color: var(--raider-white);
       opacity: 0; pointer-events: none;
       transition: opacity 0.2s ease;
@@ -302,13 +304,13 @@
     }
     .sched-strip-name {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700; font-size: 1rem;
+      font-weight: 700; font-size: 1.12rem;
       letter-spacing: 0.04em; color: var(--raider-white);
       position: relative; z-index: 1; flex-shrink: 0;
     }
     .sched-strip-times {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.82rem; font-weight: 600;
+      font-size: 0.918rem; font-weight: 600;
       color: var(--txt-mid); letter-spacing: 0.04em;
       position: relative; z-index: 1; margin-left: auto; flex-shrink: 0;
     }
@@ -316,12 +318,12 @@
       position: absolute; inset: 0;
       display: flex; align-items: center; justify-content: center;
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700; font-size: 0.85rem;
+      font-weight: 700; font-size: 0.952rem;
       color: var(--txt-bright); letter-spacing: 0.06em;
       z-index: 2; pointer-events: none;
     }
     .weather-header-temp sup {
-      font-size: 0.65rem; vertical-align: super;
+      font-size: 0.728rem; vertical-align: super;
       color: var(--raider-red); font-weight: 600;
     }
     /* ══════════════════════════════
@@ -339,21 +341,21 @@
     }
     .weather-temp {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 800; font-size: 4.2rem;
+      font-weight: 800; font-size: 4.704rem;
       line-height: 1; letter-spacing: -0.02em;
       color: var(--raider-white);
     }
     .weather-temp sup {
-      font-size: 1.5rem; vertical-align: super;
+      font-size: 1.68rem; vertical-align: super;
       color: var(--raider-red); font-weight: 600;
     }
     .weather-desc {
-      font-size: 0.88rem; font-weight: 500;
+      font-size: 0.986rem; font-weight: 500;
       color: var(--txt-mid); letter-spacing: 0.03em;
       margin-top: 0.15rem; text-transform: capitalize;
     }
     .weather-location {
-      font-size: 0.57rem; letter-spacing: 0.2em;
+      font-size: 0.638rem; letter-spacing: 0.2em;
       text-transform: uppercase; color: var(--txt-dim); margin-top: 0.1rem;
     }
 
@@ -370,12 +372,12 @@
       display: flex; flex-direction: column; gap: 0.12rem;
     }
     .weather-stat-label {
-      font-size: 0.62rem; letter-spacing: 0.18em;
+      font-size: 0.694rem; letter-spacing: 0.18em;
       text-transform: uppercase; color: var(--txt-mid);
     }
     .weather-stat-value {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700; font-size: 1.1rem;
+      font-weight: 700; font-size: 1.232rem;
       letter-spacing: 0.04em; color: var(--txt-bright);
     }
 
@@ -383,7 +385,7 @@
     .weather-loading {
       display: flex; align-items: center; gap: 0.8rem;
       padding: 2rem 0; color: var(--txt-dim);
-      font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+      font-size: 0.784rem; letter-spacing: 0.15em; text-transform: uppercase;
     }
     .spin {
       width: 18px; height: 18px; border-radius: 50%;
@@ -397,7 +399,7 @@
        BELL SCHEDULE WIDGET
     ══════════════════════════════ */
     .schedule-name {
-      font-size: 0.6rem; letter-spacing: 0.22em;
+      font-size: 0.672rem; letter-spacing: 0.22em;
       text-transform: uppercase; color: var(--txt-dim);
       margin-bottom: 0.8rem;
       display: flex; align-items: center; gap: 0.5rem;
@@ -407,7 +409,7 @@
       border: 1px solid var(--gm-border);
       color: var(--txt-mid);
       padding: 0.15rem 0.5rem;
-      font-size: 0.58rem; letter-spacing: 0.18em;
+      font-size: 0.650rem; letter-spacing: 0.18em;
     }
 
     .period-list { display: flex; flex-direction: column; gap: 2px; }
@@ -434,7 +436,6 @@
     .period-row.is-dead-time .period-countdown {
       color: var(--raider-red) !important;
     }
-    /* Progress fill behind current period */
     .period-row.is-current .period-progress {
       position: absolute; left: 0; top: 0; bottom: 0;
       background: rgba(255,255,255,0.12);
@@ -444,7 +445,7 @@
 
     .period-name {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700; font-size: 1rem;
+      font-weight: 700; font-size: 1.12rem;
       letter-spacing: 0.04em; color: var(--txt-bright);
       flex: 1; min-width: 0;
       position: relative; z-index: 1;
@@ -458,17 +459,16 @@
     }
     .period-time {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.82rem; font-weight: 600;
+      font-size: 0.918rem; font-weight: 600;
       color: var(--txt-mid); letter-spacing: 0.04em;
     }
     .period-row.is-current .period-time { color: var(--txt-bright); }
 
-    /* Countdown — centered absolutely over the progress bar */
     .period-countdown {
       position: absolute; inset: 0;
       display: flex; align-items: center; justify-content: center;
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.85rem; font-weight: 700;
+      font-size: 0.952rem; font-weight: 700;
       color: var(--txt-bright);
       letter-spacing: 0.06em;
       z-index: 2;
@@ -478,12 +478,12 @@
     .schedule-no-school {
       text-align: center; padding: 2rem 1rem;
       color: var(--txt-dim);
-      font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
+      font-size: 0.840rem; letter-spacing: 0.2em; text-transform: uppercase;
     }
     .schedule-no-school strong {
       display: block;
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 1.6rem; color: var(--gm-highlight);
+      font-size: 1.792rem; color: var(--gm-highlight);
       margin-bottom: 0.4rem; letter-spacing: 0.1em;
     }
 
@@ -500,7 +500,7 @@
       flex-shrink: 0;
       padding: 0.55rem 0.9rem;
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.68rem; font-weight: 700;
+      font-size: 0.762rem; font-weight: 700;
       letter-spacing: 0.18em; text-transform: uppercase;
       color: var(--txt-dim);
       cursor: pointer;
@@ -527,7 +527,7 @@
     }
     .lb-rank {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 800; font-size: 0.85rem;
+      font-weight: 800; font-size: 0.952rem;
       width: 1.6rem; height: 1.6rem; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
       color: var(--txt-dim);
@@ -544,21 +544,21 @@
     }
     .lb-name {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 600; font-size: 0.95rem;
+      font-weight: 600; font-size: 1.064rem;
       letter-spacing: 0.03em; color: var(--txt-bright);
       flex: 1; min-width: 0;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .lb-steps {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700; font-size: 0.88rem;
+      font-weight: 700; font-size: 0.986rem;
       color: var(--txt-mid); flex-shrink: 0;
       letter-spacing: 0.03em;
     }
     .lb-empty {
       text-align: center; padding: 2rem 1rem;
       color: var(--txt-dim);
-      font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+      font-size: 0.784rem; letter-spacing: 0.18em; text-transform: uppercase;
     }
 
     /* ══════════════════════════════
@@ -600,7 +600,7 @@
     .ig-slider:hover .ig-slide-link { opacity: 1; }
     .ig-caption {
       padding: 0.75rem;
-      font-size: 0.68rem; color: var(--txt-mid);
+      font-size: 0.762rem; color: var(--txt-mid);
       letter-spacing: 0.02em; line-height: 1.4;
       display: -webkit-box; -webkit-line-clamp: 2;
       -webkit-box-orient: vertical; overflow: hidden;
@@ -636,7 +636,7 @@
     .ig-nav button:hover { background: var(--gm-light); color: var(--txt-bright); }
     .ig-counter {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.7rem; color: var(--txt-dim);
+      font-size: 0.784rem; color: var(--txt-dim);
       letter-spacing: 0.1em;
     }
 
@@ -655,7 +655,7 @@
     .announcement-row {
       padding: 0.7rem 0;
       border-bottom: 1px solid var(--gm-border);
-      font-size: 0.82rem; line-height: 1.5;
+      font-size: 0.918rem; line-height: 1.5;
       color: var(--txt-mid); letter-spacing: 0.02em;
       display: flex; align-items: flex-start; gap: 0.6rem;
     }
@@ -668,7 +668,7 @@
     .announcement-text { flex: 1; }
     .announcements-empty {
       text-align: center; padding: 2rem 1rem;
-      color: var(--txt-dim); font-size: 0.7rem;
+      color: var(--txt-dim); font-size: 0.784rem;
       letter-spacing: 0.18em; text-transform: uppercase;
     }
     /* Collapsed ticker strip */
@@ -687,14 +687,14 @@
       background: var(--raider-red); flex-shrink: 0;
     }
     .ann-ticker-text {
-      flex: 1; font-size: 0.8rem; line-height: 1.4;
+      flex: 1; font-size: 0.896rem; line-height: 1.4;
       color: var(--txt-mid); letter-spacing: 0.02em;
       opacity: 0; transition: opacity 0.4s ease;
     }
     .ann-ticker-text.visible { opacity: 1; }
     .ann-ticker-counter {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.65rem; color: var(--txt-dim);
+      font-size: 0.728rem; color: var(--txt-dim);
       letter-spacing: 0.1em; flex-shrink: 0;
     }
 
@@ -713,13 +713,13 @@
     @media (min-width: 1400px) {
       header { padding: 0 3rem; min-height: 96px; }
       .school-logo { width: 72px; height: 74px; }
-      .weather-temp { font-size: 5.2rem; }
+      .weather-temp { font-size: 5.824rem; }
     }
     @media (max-width: 600px) {
       header { padding: 0.8rem 1rem; min-height: auto; flex-wrap: wrap; gap: 0.75rem; }
       .school-logo { width: 44px; height: 46px; }
-      .weather-temp { font-size: 3.4rem; }
-      #header-clock { font-size: 1.5rem; }
+      .weather-temp { font-size: 3.808rem; }
+      #header-clock { font-size: 1.68rem; }
       .school-name-sub { display: none; }
       .school-name { display: none; }
     }
@@ -762,7 +762,7 @@
       padding: 0.75rem 1rem;
       border-bottom: 1px solid var(--gm-border);
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700; font-size: 0.7rem;
+      font-weight: 700; font-size: 0.784rem;
       letter-spacing: 0.3em; text-transform: uppercase;
       color: var(--txt-dim);
       background: var(--gm-dark);
@@ -783,7 +783,7 @@
     .wm-icon svg { color: var(--txt-bright); }
     .wm-label {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700; font-size: 0.78rem;
+      font-weight: 700; font-size: 0.874rem;
       letter-spacing: 0.12em; text-transform: uppercase;
       color: var(--txt-mid); flex: 1;
     }
@@ -802,6 +802,173 @@
     .wm-row.active .wm-toggle { background: var(--raider-red); }
     .wm-row.active .wm-toggle::after { transform: translateX(16px); background: var(--raider-white); }
     .wm-row.active .wm-label { color: var(--txt-bright); }
+
+    /* ══════════════════════════════
+       TIMER WIDGET
+    ══════════════════════════════ */
+    .timer-body { padding: 1rem 1.1rem 1.1rem; }
+
+    /* Arc display */
+    .timer-arc-wrap {
+      display: flex; justify-content: center; align-items: center;
+      margin-bottom: 0.9rem;
+      position: relative;
+    }
+    .timer-arc-wrap.no-timer {
+      /* No SVG present — just show digits centered with some breathing room */
+      min-height: 80px;
+    }
+    .timer-arc-wrap.no-timer .timer-display {
+      position: static;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .timer-arc-wrap.no-timer .timer-digits {
+      font-size: 3.8rem;
+    }
+    .timer-svg { display: block; overflow: visible; }
+    .timer-arc-track {
+      fill: none; stroke: var(--gm-border); stroke-width: 5;
+    }
+    .timer-arc-fill {
+      fill: none; stroke: var(--raider-red); stroke-width: 5;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear, stroke 0.3s;
+      transform-origin: center;
+      transform: rotate(-90deg);
+    }
+    .timer-arc-fill.done { stroke: #3a8f3a; }
+    .timer-arc-fill.warning { stroke: #c87e00; }
+    .timer-display {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0.1rem;
+    }
+    .timer-digits {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: 3.2rem;
+      letter-spacing: -0.01em; line-height: 1;
+      color: var(--txt-bright);
+      transition: color 0.3s;
+      cursor: text;
+    }
+    .timer-digits:hover { color: var(--raider-white); }
+    .timer-digits.editing { color: var(--raider-white); outline: none; }
+    .timer-digits.done    { color: #5fcf5f; cursor: default; }
+    .timer-digits.warning { color: #f0b030; }
+    .timer-label-text {
+      font-size: 0.65rem; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--txt-dim);
+    }
+
+    /* Controls */
+    .timer-controls {
+      display: flex; gap: 0.5rem; justify-content: center;
+      margin-bottom: 0.9rem;
+    }
+    .timer-btn {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.8rem;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      padding: 0.45rem 1.1rem;
+      border: 1px solid var(--gm-border);
+      background: var(--gm-mid); color: var(--txt-mid);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .timer-btn:hover { background: var(--gm-light); color: var(--txt-bright); }
+    .timer-btn.primary {
+      background: var(--raider-red); color: var(--raider-white);
+      border-color: var(--raider-red-dim);
+    }
+    .timer-btn.primary:hover { background: var(--raider-red-glow); border-color: var(--raider-red); }
+    .timer-btn:disabled { opacity: 0.35; pointer-events: none; }
+
+    /* Presets row */
+    .timer-section-label {
+      font-size: 0.6rem; letter-spacing: 0.24em; text-transform: uppercase;
+      color: var(--txt-dim); margin-bottom: 0.45rem;
+    }
+    .timer-presets {
+      display: flex; flex-wrap: wrap; gap: 0.35rem;
+      margin-bottom: 0.9rem;
+    }
+    .timer-preset-btn {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.78rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.3rem 0.65rem;
+      background: var(--gm-mid); border: 1px solid var(--gm-border);
+      color: var(--txt-mid); cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .timer-preset-btn:hover {
+      background: var(--gm-light); color: var(--txt-bright);
+      border-color: var(--raider-red);
+    }
+    .timer-preset-btn.active {
+      background: var(--raider-red); color: var(--raider-white);
+      border-color: var(--raider-red);
+    }
+
+    /* Custom input */
+    .timer-custom-row {
+      display: flex; gap: 0.4rem; align-items: center;
+      margin-bottom: 0.9rem;
+    }
+    .timer-custom-input {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.9rem; font-weight: 600;
+      background: var(--gm-mid); border: 1px solid var(--gm-border);
+      color: var(--txt-bright); padding: 0.35rem 0.6rem;
+      width: 80px; text-align: center;
+      outline: none; letter-spacing: 0.04em;
+    }
+    .timer-custom-input:focus { border-color: var(--raider-red); }
+    .timer-custom-input::placeholder { color: var(--txt-muted); }
+    .timer-custom-unit {
+      font-size: 0.65rem; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--txt-dim);
+    }
+
+    /* Recent timers */
+    .timer-recents {
+      display: flex; flex-wrap: wrap; gap: 0.35rem;
+    }
+    .timer-recent-btn {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600; font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      padding: 0.28rem 0.55rem;
+      background: var(--gm-dark); border: 1px solid var(--gm-border);
+      color: var(--txt-dim); cursor: pointer;
+      display: flex; align-items: center; gap: 0.3rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .timer-recent-btn:hover {
+      background: var(--gm-mid); color: var(--txt-bright);
+      border-color: var(--gm-highlight);
+    }
+    .timer-recent-del {
+      color: var(--txt-muted); font-size: 0.8rem; line-height: 1;
+      margin-left: 0.15rem;
+      transition: color 0.15s;
+    }
+    .timer-recent-btn:hover .timer-recent-del { color: var(--raider-red); }
+
+    /* Done flash overlay */
+    @keyframes timerDoneFlash {
+      0%   { opacity: 0.35; }
+      50%  { opacity: 0; }
+      100% { opacity: 0; }
+    }
+    .timer-done-flash {
+      position: absolute; inset: 0;
+      background: rgba(95,207,95,0.12);
+      pointer-events: none;
+      animation: timerDoneFlash 0.9s ease forwards;
+    }
   </style>
 </head>
 <body>
@@ -810,7 +977,9 @@
   <div class="header-left">
 
     <!-- Walton logo -->
-    <img src="logo.png" alt="Walton Raiders Logo" class="school-logo"/>
+    <a href="https://www.cobbk12.org/walton/" target="_blank" rel="noopener" style="display:flex;align-items:center;flex-shrink:0;">
+      <img src="logo.png" alt="Walton Raiders Logo" class="school-logo"/>
+    </a>
 
     <div class="school-name">
       <div class="school-name-main">Walton <em>Raiders</em></div>
@@ -842,7 +1011,7 @@
                 <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
               </svg>
             </div>
-            <span class="widget-title">Current Weather</span>
+            <span class="widget-title">Weather</span>
           </div>
           <div style="display:flex;align-items:center;gap:0.75rem;">
             <span class="weather-header-temp" id="weather-header-temp"></span>
@@ -993,14 +1162,82 @@
           </svg>
         </div>
         <div class="widget-body-collapsible" id="leaderboard-collapsible">
-          <div id="lb-tabs-bar" class="lb-tabs"></div>
           <div id="lb-body" class="lb-body">
             <div class="weather-loading"><div class="spin"></div>Loading leaderboard…</div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+
+    <!-- Timer Widget -->
+    <div class="widget-item" data-id="timer">
+      <div class="widget" id="timer-widget" style="animation-delay:0.22s">
+        <div class="widget-header widget-drag-handle">
+          <div class="widget-header-left">
+            <div class="widget-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="13" r="8"/>
+                <polyline points="12 9 12 13 14.5 15.5"/>
+                <path d="M9 3h6M12 3v2"/>
+              </svg>
+            </div>
+            <span class="widget-title">Timer</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <span class="widget-header-badge" id="timer-badge" style="display:none"></span>
+            <svg class="widget-chevron" id="timer-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+        </div>
+        <div class="widget-body-collapsible" id="timer-collapsible">
+          <div class="timer-body">
+
+            <!-- Arc + digits -->
+            <div class="timer-arc-wrap" id="timer-arc-wrap">
+              <svg class="timer-svg" id="timer-svg" width="160" height="160" viewBox="0 0 160 160">
+                <circle class="timer-arc-track" cx="80" cy="80" r="68"/>
+                <circle class="timer-arc-fill" id="timer-arc" cx="80" cy="80" r="68"/>
+              </svg>
+              <div class="timer-display">
+                <span class="timer-digits" id="timer-digits" title="Click to set time">0:00</span>
+                <span class="timer-label-text" id="timer-label-text">Click time to set</span>
+              </div>
+            </div>
+
+            <!-- Start / Pause / Reset -->
+            <div class="timer-controls">
+              <button class="timer-btn" id="timer-reset-btn" onclick="timerReset()" disabled>
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <polyline points="1 4 1 10 7 10"/>
+                  <path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
+                </svg>
+                Reset
+              </button>
+              <button class="timer-btn primary" id="timer-start-btn" onclick="timerToggle()" disabled>
+                <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" id="timer-play-icon">
+                  <polygon points="5,3 19,12 5,21"/>
+                </svg>
+                <span id="timer-start-label">Start</span>
+              </button>
+            </div>
+
+            <!-- Presets -->
+            <div class="timer-section-label">Presets</div>
+            <div class="timer-presets" id="timer-presets"></div>
+
+            <!-- Recent -->
+            <div id="timer-recents-section" style="display:none">
+              <div class="timer-section-label">Recent</div>
+              <div class="timer-recents" id="timer-recents"></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end col-2 -->
 
 </main>
 
@@ -1035,7 +1272,6 @@
     if (!collapsible) return;
     const isCollapsed = collapsible.classList.toggle('collapsed');
     if (chevron) chevron.classList.toggle('collapsed', isCollapsed);
-    // Weather-specific: show/hide temp in header
     if (id === 'weather') {
       const headerTemp = document.getElementById('weather-header-temp');
       if (headerTemp) headerTemp.classList.toggle('visible', isCollapsed);
@@ -1058,7 +1294,6 @@
   }
 
   function restoreCollapseState() {
-    // Default: collapse weather on mobile
     const isMobile = window.innerWidth <= 600;
     const defaults = { weather: isMobile, schedule: false, leaderboard: false };
 
@@ -1072,9 +1307,6 @@
         const chevron     = document.getElementById(`${id}-chevron`);
         if (collapsible) collapsible.classList.add('collapsed');
         if (chevron)     chevron.classList.add('collapsed');
-        if (id === 'weather') {
-          // temp will be populated once weather loads
-        }
       }
     });
   }
@@ -1174,7 +1406,6 @@
 
       const data  = await (await fetch(url)).json();
       const cur   = data.current;
-      const daily = data.daily;
 
       const icon  = weatherIcon(cur.weather_code, cur.is_day);
       const temp  = Math.round(cur.temperature_2m);
@@ -1182,7 +1413,6 @@
       const humid = cur.relative_humidity_2m;
       const wind  = Math.round(cur.wind_speed_10m);
 
-      // Update collapsed header temp
       const headerTemp = document.getElementById('weather-header-temp');
       if (headerTemp) {
         headerTemp.innerHTML = `${temp}<sup>°F</sup>`;
@@ -1227,7 +1457,6 @@
   const SPREADSHEET_ID   = '1mZtMjdd-t5y6ebproGrIb_qLzqPUZ_qEKrdUoZl0qIU';
   const SHEETS_BASE      = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values`;
 
-  // Parse "h:mm AM/PM" or "h:mm" into total minutes since midnight
   function parseTime(str) {
     if (!str) return null;
     str = str.trim();
@@ -1243,7 +1472,6 @@
   }
 
   function formatTime(str) {
-    // Normalize to "h:mm AM/PM"
     if (!str) return '';
     str = str.trim();
     if (str.match(/(AM|PM)/i)) return str;
@@ -1267,14 +1495,6 @@
     return `${m}m left`;
   }
 
-  function calcDuration(start, end) {
-    const mins = end - start;
-    const h = Math.floor(mins / 60), m = mins % 60;
-    if (h > 0 && m > 0) return `${h}h ${m}m`;
-    if (h > 0) return `${h}h`;
-    return `${m}m`;
-  }
-
   async function fetchSheetData(tabName) {
     const url = `${SHEETS_BASE}/${encodeURIComponent(tabName)}?key=${SHEETS_API_KEY}&_=${Date.now()}`;
     const res  = await fetch(url);
@@ -1290,7 +1510,6 @@
   async function fetchSchedule() {
     const body = document.getElementById('schedule-body');
 
-    // Don't show schedule on weekends
     const now     = new Date();
     const weekday = now.getDay();
     if (weekday === 0 || weekday === 6) {
@@ -1301,20 +1520,18 @@
     }
 
     try {
-      // Step 1: Read Calendar tab to find today's schedule override
       const todayStr = `${now.getMonth()+1}/${now.getDate()}/${now.getFullYear()}`;
       const altFormats = [
         todayStr,
         `${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}/${now.getFullYear()}`,
         `${now.getMonth()+1}/${now.getDate()}/${String(now.getFullYear()).slice(-2)}`,
         `${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}/${String(now.getFullYear()).slice(-2)}`,
-        now.toISOString().split('T')[0], // YYYY-MM-DD
+        now.toISOString().split('T')[0],
       ];
 
       let tabToUse = 'Daily';
       try {
         const calRows = await fetchSheetData('Calendar');
-        // Skip header row if present (check if first cell looks like "date")
         const dataRows = calRows[0] && calRows[0][0].toLowerCase().includes('date')
           ? calRows.slice(1) : calRows;
 
@@ -1327,11 +1544,9 @@
           }
         }
       } catch(e) {
-        // Calendar tab read failed — fall back to Daily
         console.warn('Calendar tab read failed, using Daily');
       }
 
-      // Step 2: Load the schedule from the resolved tab
       const scheduleRows = await fetchSheetData(tabToUse);
       const dataRows = scheduleRows[0] && scheduleRows[0][0].toLowerCase().includes('period')
         ? scheduleRows.slice(1) : scheduleRows;
@@ -1357,7 +1572,7 @@
       console.error(e);
       body.innerHTML = `<div class="weather-loading" style="color:var(--raider-red);flex-direction:column;align-items:flex-start;gap:0.4rem;">
         <span>Unable to load schedule</span>
-        <span style="font-size:0.6rem;color:var(--txt-dim);letter-spacing:0.05em;text-transform:none;">${e.message}</span>
+        <span style="font-size:0.672rem;color:var(--txt-dim);letter-spacing:0.05em;text-transform:none;">${e.message}</span>
       </div>`;
     }
   }
@@ -1422,112 +1637,42 @@
     updateSchedStrip();
   }
 
-  // Refresh schedule every minute to update current period highlight
   // ══════════════════════════════════════════════
   //  LEADERBOARD
   // ══════════════════════════════════════════════
   const LB_SPREADSHEET_ID = '19Uz7R_0vXKFq58Jt1ZN_gkuidnbQezZKvbkQAZyOXuQ';
   const LB_BASE = `https://sheets.googleapis.com/v4/spreadsheets/${LB_SPREADSHEET_ID}`;
 
-  let lbSheets    = [];   // [{title, sheetId}]
-  let lbDataCache = {};   // title -> [{name, steps}]
-  let lbActiveTab = 'Overall';
-
   async function initLeaderboard() {
-    const tabsBar = document.getElementById('lb-tabs-bar');
-    const body    = document.getElementById('lb-body');
-    try {
-      // Fetch sheet metadata to get tab names
-      const meta = await (await fetch(
-        `${LB_BASE}?fields=sheets.properties(title,sheetId)&key=${SHEETS_API_KEY}&_=${Date.now()}`
-      )).json();
-
-      lbSheets = (meta.sheets || []).map(s => s.properties);
-
-      // Build tab bar: Overall first, then each department
-      const tabs = [{ title: 'Overall' }, ...lbSheets];
-      tabsBar.innerHTML = tabs.map(t =>
-        `<button class="lb-tab ${t.title === lbActiveTab ? 'active' : ''}"
-          onclick="switchLbTab('${t.title.replace(/'/g, "\\'")}')">${t.title}</button>`
-      ).join('');
-
-      // Load the active tab only after lbSheets is fully populated
-      await loadLbTab(lbActiveTab);
-
-    } catch(e) {
-      body.innerHTML = `<div class="lb-empty">Unable to load leaderboard.<br><span style="font-size:0.6rem;color:var(--txt-muted)">${e.message}</span></div>`;
-    }
-  }
-
-  async function loadLbTab(tabName) {
     const body = document.getElementById('lb-body');
-
-    if (tabName === 'Overall') {
-      // Load all sheets, combine, sort, take top 10
-      body.innerHTML = `<div class="weather-loading"><div class="spin"></div>Loading…</div>`;
-      try {
-        const allEntries = [];
-        for (const sheet of lbSheets) {
-          const rows = await fetchLbSheet(sheet.title);
-          rows.forEach(r => allEntries.push({ name: r.name, steps: r.steps, dept: sheet.title }));
-        }
-        allEntries.sort((a, b) => b.steps - a.steps);
-        lbDataCache['Overall'] = allEntries.slice(0, 10);
-        renderLb(lbDataCache['Overall'], true);
-      } catch(e) {
-        body.innerHTML = `<div class="lb-empty">Unable to load data.</div>`;
+    body.innerHTML = `<div class="weather-loading"><div class="spin"></div>Loading…</div>`;
+    try {
+      const url  = `${LB_BASE}/values/Sheet1?key=${SHEETS_API_KEY}&_=${Date.now()}`;
+      const res  = await fetch(url);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message || res.statusText);
       }
-    } else {
-      if (lbDataCache[tabName]) {
-        renderLb(lbDataCache[tabName], false);
-        return;
-      }
-      body.innerHTML = `<div class="weather-loading"><div class="spin"></div>Loading…</div>`;
-      try {
-        const rows = await fetchLbSheet(tabName);
-        rows.sort((a, b) => b.steps - a.steps);
-        lbDataCache[tabName] = rows.slice(0, 10);
-        renderLb(lbDataCache[tabName], false);
-      } catch(e) {
-        body.innerHTML = `<div class="lb-empty">Unable to load data.</div>`;
-      }
+      const json = await res.json();
+      const rows = json.values || [];
+      // Skip header row if first cell looks like a label
+      const firstLower = (rows[0]?.[0] || '').toString().trim().toLowerCase();
+      const data = ['department','dept','name','team'].includes(firstLower) ? rows.slice(1) : rows;
+      const entries = data
+        .filter(r => r[0] && r[1])
+        .map(r => ({
+          name:  r[0].trim(),
+          steps: parseInt(String(r[1]).replace(/,/g, '')) || 0
+        }))
+        .filter(e => e.steps > 0);
+      entries.sort((a, b) => b.steps - a.steps);
+      renderLb(entries);
+    } catch(e) {
+      body.innerHTML = `<div class="lb-empty">Unable to load leaderboard.<br><span style="font-size:0.672rem;color:var(--txt-muted)">${e.message}</span></div>`;
     }
   }
 
-  async function fetchLbSheet(tabName) {
-    const url = `${LB_BASE}/values/${encodeURIComponent(tabName)}?key=${SHEETS_API_KEY}&_=${Date.now()}`;
-    const res  = await fetch(url);
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || res.statusText);
-    }
-    const json = await res.json();
-    const rows = json.values || [];
-    console.log(`[LB] Tab "${tabName}" raw rows:`, JSON.stringify(rows.slice(0, 5)));
-    // Only skip first row if it looks like a text header (col A is "name"/"teacher" etc)
-    const firstCellLower = (rows[0]?.[0] || '').toString().trim().toLowerCase();
-    const looksLikeHeader = ['name','teacher','staff','person','employee'].includes(firstCellLower);
-    const data = looksLikeHeader ? rows.slice(1) : rows;
-    console.log(`[LB] Tab "${tabName}" header skipped: ${looksLikeHeader}, data rows:`, JSON.stringify(data.slice(0, 5)));
-    return data
-      .filter(r => r[0] && r[1])
-      .map(r => ({
-        name:  r[0].trim(),
-        steps: parseInt(String(r[1]).replace(/,/g, '')) || 0
-      }))
-      .filter(r => r.steps > 0);
-  }
-
-  function switchLbTab(tabName) {
-    lbActiveTab = tabName;
-    // Update active tab styling
-    document.querySelectorAll('.lb-tab').forEach(btn => {
-      btn.classList.toggle('active', btn.textContent === tabName);
-    });
-    loadLbTab(tabName);
-  }
-
-  function renderLb(entries, showDept) {
+  function renderLb(entries) {
     const body = document.getElementById('lb-body');
     if (!entries || !entries.length) {
       body.innerHTML = `<div class="lb-empty">No data yet</div>`;
@@ -1536,10 +1681,9 @@
     const rows = entries.map((e, i) => `
       <div class="lb-row">
         <span class="lb-rank">${i + 1}</span>
-        <span class="lb-name">${escLb(e.name)}${showDept && e.dept ? ` <span style="font-size:0.7rem;color:var(--txt-dim);font-weight:400">${escLb(e.dept)}</span>` : ''}</span>
+        <span class="lb-name">${escLb(e.name)}</span>
         <span class="lb-steps">${e.steps.toLocaleString()}</span>
       </div>`).join('');
-
     body.innerHTML = `<div class="lb-list">${rows}</div>`;
   }
 
@@ -1573,7 +1717,6 @@
         if (Math.abs(ev.clientX - startX) > 6 || Math.abs(ev.clientY - startY) > 6) {
           moved = true;
           document.removeEventListener('mousemove', onMoveCheck);
-          // Commit to drag
           const h = item.offsetHeight;
           document.querySelectorAll('.widget-col').forEach(col => {
             const placeholder = col.querySelector('.col-drop-placeholder');
@@ -1589,7 +1732,6 @@
       function onMouseUp() {
         document.removeEventListener('mousemove', onMoveCheck);
         document.removeEventListener('mouseup', onMouseUp);
-        // If mouse didn't move much, treat as a click → toggle collapse
         if (!moved) {
           const widgetEl = item.querySelector('.widget');
           if (widgetEl) {
@@ -1609,7 +1751,6 @@
     item.classList.add('dragging');
 
     function onMouseMove(e) {
-      // Highlight column/position under cursor
       clearDropHighlights();
       const el = document.elementFromPoint(e.clientX, e.clientY);
       if (!el) return;
@@ -1664,23 +1805,19 @@
       .forEach(el => el.classList.remove('drag-col-over'));
   }
 
-  function attachColDrop(col) {
-    // Already handled via mouseup above
-  }
+  function attachColDrop(col) {}
 
   function updatePlaceholders() {
     document.querySelectorAll('.widget-col').forEach(col => {
       const placeholder = col.querySelector('.col-drop-placeholder');
       if (!placeholder) return;
       const hasWidgets = col.querySelectorAll('.widget-item').length > 0;
-      // Only show placeholder if column is empty AND we're actively dragging
       placeholder.style.display = (hasWidgets || !dragItem) ? 'none' : 'flex';
       placeholder.style.minHeight = '200px';
     });
   }
 
   function saveLayout() {
-    // Don't save on mobile — mobile always uses col-0, we don't want to overwrite desktop layout
     if (window.innerWidth <= 900) return;
     const layout = {};
     document.querySelectorAll('.widget-col').forEach(col => {
@@ -1698,7 +1835,6 @@
       const col0 = document.getElementById('col-0');
       const mobileOrder = ['weather', 'schedule', 'announcements', 'instagram', 'leaderboard'];
 
-      // Determine order — use saved if available, otherwise default
       let order = mobileOrder;
       if (saved) {
         try {
@@ -1708,13 +1844,11 @@
         } catch(e) {}
       }
 
-      // Move every widget into col-0 in order
       order.forEach(id => {
         const item = document.querySelector(`.widget-item[data-id="${id}"]`);
         if (item && col0) col0.appendChild(item);
       });
 
-      // Hide col-1 and col-2 — they're now empty
       document.getElementById('col-1').style.display = 'none';
       document.getElementById('col-2').style.display = 'none';
       return;
@@ -1731,35 +1865,27 @@
           if (item) col.appendChild(item);
         });
       });
-    } catch(e) { /* ignore */ }
+    } catch(e) {}
   }
 
   // ══════════════════════════════════════════════
   //  INSTAGRAM SLIDER
   // ══════════════════════════════════════════════
   const IG_FEED_URL  = 'https://feeds.behold.so/IL895tNzIc0gRvYRcjF7';
-  const IG_INTERVAL  = 5000; // ms between slides
+  const IG_INTERVAL  = 5000;
   let igPosts        = [];
   let igCurrent      = 0;
   let igTimer        = null;
 
   async function initInstagram() {
-    console.log('[IG] initInstagram called');
     try {
-      console.log('[IG] Fetching:', IG_FEED_URL);
       const res   = await fetch(IG_FEED_URL);
-      console.log('[IG] Response status:', res.status, res.statusText);
-      console.log('[IG] Content-Type:', res.headers.get('content-type'));
       const text = await res.text();
-      console.log('[IG] Raw response (first 300 chars):', text.slice(0, 300));
       const json  = JSON.parse(text);
       const posts = json.posts || json;
-      console.log('[IG] Posts count:', posts.length);
       igPosts = posts.filter(p => p.mediaType === 'IMAGE' || p.mediaType === 'CAROUSEL_ALBUM');
-      console.log('[IG] Image posts:', igPosts.length);
       if (!igPosts.length) throw new Error('No posts');
       buildSlider();
-      // Attach hover pause directly after building
       const slider = document.getElementById('ig-slider');
       if (slider) {
         slider.addEventListener('mouseenter', igStop);
@@ -1767,11 +1893,10 @@
       }
       igStart();
     } catch(e) {
-      console.error('[IG] Error:', e);
       const slider = document.getElementById('ig-slider');
       if (slider) slider.innerHTML = `<div class="weather-loading" style="position:absolute;inset:0;justify-content:center;flex-direction:column;gap:0.4rem;">
-        <span style="color:var(--raider-red);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;">Unable to load feed</span>
-        <span style="color:var(--txt-dim);font-size:0.6rem;">${e.message}</span>
+        <span style="color:var(--raider-red);font-size:0.784rem;letter-spacing:0.1em;text-transform:uppercase;">Unable to load feed</span>
+        <span style="color:var(--txt-dim);font-size:0.672rem;">${e.message}</span>
       </div>`;
     }
   }
@@ -1783,7 +1908,6 @@
     dotsEl.innerHTML = '';
 
     igPosts.forEach((post, i) => {
-      // Slide
       const slide = document.createElement('div');
       slide.className = 'ig-slide' + (i === 0 ? ' active' : '');
       const img = document.createElement('img');
@@ -1805,7 +1929,6 @@
       slide.appendChild(link);
       slider.appendChild(slide);
 
-      // Dot
       const dot = document.createElement('div');
       dot.className = 'ig-dot' + (i === 0 ? ' active' : '');
       dot.onclick   = () => igGoTo(i);
@@ -1825,7 +1948,6 @@
     slides[igCurrent].classList.add('active');
     dots[igCurrent].classList.add('active');
     igUpdateCounter();
-    // Reset timer
     igStop(); igStart();
   }
 
@@ -1888,7 +2010,6 @@
     if (!body) return;
     try {
       const rows = await fetchSheetData('Announcements');
-      console.log('[ANN] rows:', JSON.stringify(rows.slice(0,3)));
       if (!rows.length) {
         body.innerHTML = `<div class="announcements-empty">No announcements</div>`;
         return;
@@ -1911,7 +2032,6 @@
       const isCollapsed = document.getElementById('announcements-collapsible')?.classList.contains('collapsed');
       if (isCollapsed && annItems.length) startAnnTicker();
     } catch(e) {
-      console.error('[ANN] Error:', e);
       body.innerHTML = `<div class="announcements-empty">${e.message}</div>`;
     }
   }
@@ -1920,7 +2040,7 @@
   initDragAndDrop();
   updatePlaceholders();
   initLeaderboard();
-  setInterval(() => { lbDataCache = {}; initLeaderboard(); }, 5 * 60 * 1000);
+  setInterval(initLeaderboard, 5 * 60 * 1000);
 
   fetchAnnouncements();
   setInterval(fetchAnnouncements, 5 * 60 * 1000);
@@ -1932,13 +2052,361 @@
   setInterval(fetchWeather, 10 * 60 * 1000);
 
   // ══════════════════════════════════════════════
+  //  TIMER WIDGET
+  // ══════════════════════════════════════════════
+  const TIMER_RECENTS_KEY = 'walton-timer-recents';
+  const TIMER_PRESETS     = [1, 1.5, 2, 2.5, 5]; // minutes
+  const TIMER_MAX_RECENTS = 8;
+  const TIMER_CIRCUMFERENCE = 2 * Math.PI * 68; // r=68
+
+  let timerTotal    = 0;   // seconds set
+  let timerRemain   = 0;   // seconds remaining
+  let timerRunning  = false;
+  let timerInterval = null;
+  let timerDone     = false;
+
+  function timerLoadRecents() {
+    try { return JSON.parse(localStorage.getItem(TIMER_RECENTS_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+  function timerSaveRecents(arr) {
+    localStorage.setItem(TIMER_RECENTS_KEY, JSON.stringify(arr));
+  }
+
+  function timerFormatSecs(s) {
+    const m = Math.floor(s / 60), sec = s % 60;
+    return `${m}:${String(sec).padStart(2,'0')}`;
+  }
+
+  function timerFormatMins(mins) {
+    const totalSecs = Math.round(mins * 60);
+    const m = Math.floor(totalSecs / 60), s = totalSecs % 60;
+    return `${m}:${String(s).padStart(2,'0')}`;
+  }
+
+  function timerSetArc(remain, total) {
+    const arc = document.getElementById('timer-arc');
+    if (!arc) return;
+    const pct = total > 0 ? remain / total : 1;
+    const offset = TIMER_CIRCUMFERENCE * (1 - pct);
+    arc.style.strokeDasharray  = TIMER_CIRCUMFERENCE;
+    arc.style.strokeDashoffset = offset;
+
+    arc.classList.remove('done','warning');
+    if (timerDone)          arc.classList.add('done');
+    else if (pct <= 0.25)   arc.classList.add('warning');
+  }
+
+  function timerUpdateDisplay() {
+    const digits    = document.getElementById('timer-digits');
+    const label     = document.getElementById('timer-label-text');
+    const badge     = document.getElementById('timer-badge');
+    const svg       = document.getElementById('timer-svg');
+    const wrap      = document.getElementById('timer-arc-wrap');
+    const collapsed = document.getElementById('timer-collapsible')?.classList.contains('collapsed');
+    if (!digits) return;
+
+    const hasTimer = timerTotal > 0;
+
+    // Show/hide the arc SVG
+    if (svg)  svg.style.display  = hasTimer ? 'block' : 'none';
+    if (wrap) wrap.classList.toggle('no-timer', !hasTimer);
+
+    digits.textContent = hasTimer ? timerFormatSecs(timerRemain) : '0:00';
+    digits.classList.remove('done','warning');
+
+    if (timerDone) {
+      digits.classList.add('done');
+      label.textContent = 'Done!';
+      if (badge) { badge.textContent = 'Done!'; badge.style.display = collapsed ? '' : 'none'; }
+    } else if (timerRunning) {
+      const pct = timerTotal > 0 ? timerRemain / timerTotal : 1;
+      if (pct <= 0.25) digits.classList.add('warning');
+      label.textContent = 'Running';
+      if (badge) { badge.textContent = timerFormatSecs(timerRemain); badge.style.display = collapsed ? '' : 'none'; }
+    } else if (hasTimer) {
+      label.textContent = 'Paused';
+      if (badge) { badge.textContent = timerFormatSecs(timerRemain); badge.style.display = collapsed ? '' : 'none'; }
+    } else {
+      label.textContent = 'Click time to set';
+      if (badge) { badge.style.display = 'none'; }
+    }
+
+    timerSetArc(timerRemain, timerTotal);
+    timerUpdateButtons();
+  }
+
+  function timerUpdateButtons() {
+    const startBtn   = document.getElementById('timer-start-btn');
+    const startLabel = document.getElementById('timer-start-label');
+    const playIcon   = document.getElementById('timer-play-icon');
+    const resetBtn   = document.getElementById('timer-reset-btn');
+    if (!startBtn) return;
+
+    const hasTimer = timerTotal > 0;
+    startBtn.disabled = !hasTimer || timerDone;
+    resetBtn.disabled = !hasTimer && !timerDone;
+
+    if (timerRunning) {
+      startLabel.textContent = 'Pause';
+      playIcon.innerHTML = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
+    } else {
+      startLabel.textContent = timerRemain < timerTotal && timerRemain > 0 ? 'Resume' : 'Start';
+      playIcon.innerHTML = `<polygon points="5,3 19,12 5,21"/>`;
+    }
+  }
+
+  function timerSet(seconds) {
+    timerStop();
+    timerTotal   = seconds;
+    timerRemain  = seconds;
+    timerDone    = false;
+    timerUpdateDisplay();
+    // Highlight matching preset
+    document.querySelectorAll('.timer-preset-btn').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.secs) === seconds);
+    });
+    document.querySelectorAll('.timer-recent-btn').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.secs) === seconds);
+    });
+    // Auto-start
+    timerStart();
+  }
+
+  function timerToggle() {
+    if (timerRunning) timerPause();
+    else timerStart();
+  }
+
+  function timerStart() {
+    if (timerTotal === 0 || timerRemain === 0 || timerDone) return;
+    timerRunning = true;
+    timerInterval = setInterval(() => {
+      if (timerRemain > 0) {
+        timerRemain--;
+        timerUpdateDisplay();
+      }
+      if (timerRemain === 0) {
+        timerStop();
+        timerDone = true;
+        timerUpdateDisplay();
+        timerPlayDoneAnim();
+      }
+    }, 1000);
+    timerUpdateDisplay();
+  }
+
+  function timerPause() {
+    timerRunning = false;
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    timerUpdateDisplay();
+  }
+
+  function timerStop() {
+    timerRunning = false;
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  }
+
+  function timerReset() {
+    timerStop();
+    timerRemain = timerTotal;
+    timerDone   = false;
+    timerUpdateDisplay();
+  }
+
+  function timerPlayDoneAnim() {
+    const wrap = document.getElementById('timer-arc-wrap');
+    if (!wrap) return;
+    const flash = document.createElement('div');
+    flash.className = 'timer-done-flash';
+    wrap.appendChild(flash);
+    setTimeout(() => flash.remove(), 900);
+    // Play a short beep using AudioContext
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [0, 150, 300].forEach(delay => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.18, ctx.currentTime + delay/1000);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay/1000 + 0.25);
+        osc.start(ctx.currentTime + delay/1000);
+        osc.stop(ctx.currentTime + delay/1000 + 0.25);
+      });
+    } catch(e) {}
+  }
+
+  // ── Right-to-left digit entry ──
+  let timerEditBuf = []; // up to 4 digits, stored as entered (right-to-left fill)
+  let timerEditing = false;
+
+  function timerDigitsFromBuf(buf) {
+    // buf is array of digit chars, max 4, e.g. ['2','3','5'] = 2:35
+    // Pad to 4 digits on the left: ['0','2','3','5']
+    const padded = buf.slice(-4);
+    while (padded.length < 4) padded.unshift('0');
+    // padded[0..1] = minutes, padded[2..3] = seconds
+    const mm = parseInt(padded[0] + padded[1]);
+    const ss = parseInt(padded[2] + padded[3]);
+    return `${mm}:${String(ss).padStart(2,'0')}`;
+  }
+
+  function timerSecsFromBuf(buf) {
+    const padded = buf.slice(-4);
+    while (padded.length < 4) padded.unshift('0');
+    const mm = parseInt(padded[0] + padded[1]);
+    const ss = parseInt(padded[2] + padded[3]);
+    return mm * 60 + ss;
+  }
+
+  function timerDigitsEdit() {
+    if (timerRunning || timerDone) return;
+    timerEditing = true;
+    timerEditBuf = [];
+    const digits = document.getElementById('timer-digits');
+    const label  = document.getElementById('timer-label-text');
+    if (digits) { digits.classList.add('editing'); digits.textContent = '0:00'; }
+    if (label)  label.textContent = 'Type digits, Enter to set';
+    // Capture keyboard globally while editing
+    document.addEventListener('keydown', timerEditKeyHandler);
+  }
+
+  function timerEditKeyHandler(e) {
+    if (!timerEditing) return;
+    const key = e.key;
+
+    if (key >= '0' && key <= '9') {
+      e.preventDefault();
+      // Max 4 digits (99:99 style cap — also cap at something sane like 99:59)
+      if (timerEditBuf.length < 4) {
+        timerEditBuf.push(key);
+      } else {
+        // Shift left and push
+        timerEditBuf.shift();
+        timerEditBuf.push(key);
+      }
+      const digits = document.getElementById('timer-digits');
+      if (digits) digits.textContent = timerDigitsFromBuf(timerEditBuf);
+    } else if (key === 'Backspace') {
+      e.preventDefault();
+      timerEditBuf.pop();
+      const digits = document.getElementById('timer-digits');
+      if (digits) digits.textContent = timerEditBuf.length ? timerDigitsFromBuf(timerEditBuf) : '0:00';
+    } else if (key === 'Enter') {
+      e.preventDefault();
+      timerDigitsCommit();
+    } else if (key === 'Escape') {
+      e.preventDefault();
+      timerDigitsCancel();
+    }
+  }
+
+  function timerDigitsCommit() {
+    if (!timerEditing) return;
+    timerEditing = false;
+    document.removeEventListener('keydown', timerEditKeyHandler);
+
+    const digits = document.getElementById('timer-digits');
+    if (digits) digits.classList.remove('editing');
+
+    const secs = timerSecsFromBuf(timerEditBuf);
+    timerEditBuf = [];
+
+    if (secs <= 0) { timerUpdateDisplay(); return; }
+
+    timerSet(secs);
+
+    // Save to recents if not a preset
+    const presetSecs = TIMER_PRESETS.map(p => Math.round(p * 60));
+    if (!presetSecs.includes(secs)) {
+      let recents = timerLoadRecents();
+      recents = recents.filter(r => r !== secs);
+      recents.unshift(secs);
+      recents = recents.slice(0, TIMER_MAX_RECENTS);
+      timerSaveRecents(recents);
+      timerRenderRecents();
+    }
+  }
+
+  function timerDigitsCancel() {
+    timerEditing = false;
+    timerEditBuf = [];
+    document.removeEventListener('keydown', timerEditKeyHandler);
+    const digits = document.getElementById('timer-digits');
+    if (digits) digits.classList.remove('editing');
+    timerUpdateDisplay();
+  }
+
+  function timerDeleteRecent(secs) {
+    let recents = timerLoadRecents();
+    recents = recents.filter(r => r !== secs);
+    timerSaveRecents(recents);
+    timerRenderRecents();
+  }
+
+  function timerRenderRecents() {
+    const section = document.getElementById('timer-recents-section');
+    const list    = document.getElementById('timer-recents');
+    if (!section || !list) return;
+    const recents = timerLoadRecents();
+    if (!recents.length) { section.style.display = 'none'; return; }
+    section.style.display = '';
+    list.innerHTML = recents.map(secs => {
+      const mins = secs / 60;
+      const label = timerFormatMins(mins);
+      const isActive = secs === timerTotal;
+      return `<button class="timer-recent-btn${isActive ? ' active' : ''}" data-secs="${secs}"
+        onclick="timerSetFromRecent(${secs})">
+        ${label}
+        <span class="timer-recent-del" onclick="event.stopPropagation();timerDeleteRecent(${secs})" title="Remove">✕</span>
+      </button>`;
+    }).join('');
+  }
+
+  function timerSetFromRecent(secs) {
+    timerSet(secs);
+    timerRenderRecents();
+  }
+
+  function timerInitPresets() {
+    const wrap = document.getElementById('timer-presets');
+    if (!wrap) return;
+    wrap.innerHTML = TIMER_PRESETS.map(mins => {
+      const secs  = Math.round(mins * 60);
+      const label = timerFormatMins(mins);
+      return `<button class="timer-preset-btn" data-secs="${secs}"
+        onclick="timerSet(${secs})">${label}</button>`;
+    }).join('');
+  }
+
+  // Init timer widget on load
+  timerInitPresets();
+  timerRenderRecents();
+  // Hide arc until a timer is set
+  const _timerSvgEl = document.getElementById('timer-svg');
+  const _timerWrapEl = document.getElementById('timer-arc-wrap');
+  if (_timerSvgEl)  _timerSvgEl.style.display = 'none';
+  if (_timerWrapEl) _timerWrapEl.classList.add('no-timer');
+  // Wire click-to-edit on the digits display
+  const _timerDigitsEl = document.getElementById('timer-digits');
+  if (_timerDigitsEl) _timerDigitsEl.addEventListener('click', timerDigitsEdit);
+  // Click outside the arc while editing cancels entry
+  document.addEventListener('click', (e) => {
+    if (!timerEditing) return;
+    const wrap = document.getElementById('timer-arc-wrap');
+    if (wrap && !wrap.contains(e.target)) timerDigitsCancel();
+  });
+
+  // ══════════════════════════════════════════════
   //  WIDGET MANAGER
   // ══════════════════════════════════════════════
   const WIDGET_VISIBILITY_KEY = 'walton-widget-visibility';
 
   const WIDGET_REGISTRY = [
     {
-      id: 'weather', label: 'Current Weather',
+      id: 'weather', label: 'Weather',
       icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`
     },
     {
@@ -1957,6 +2425,10 @@
       id: 'leaderboard', label: 'Step Challenge',
       icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`
     },
+    {
+      id: 'timer', label: 'Timer',
+      icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 14.5 15.5"/><path d="M9 3h6M12 3v2"/></svg>`
+    },
   ];
 
   function loadVisibility() {
@@ -1973,7 +2445,7 @@
     WIDGET_REGISTRY.forEach(w => {
       const item = document.querySelector(`.widget-item[data-id="${w.id}"]`);
       if (!item) return;
-      const visible = vis[w.id] !== false; // default visible
+      const visible = vis[w.id] !== false;
       item.style.display = visible ? '' : 'none';
     });
   }
@@ -2010,7 +2482,6 @@
     if (isOpen) buildWidgetManager();
   }
 
-  // Close panel when clicking outside
   document.addEventListener('click', (e) => {
     const btn   = document.getElementById('widget-manager-btn');
     const panel = document.getElementById('widget-manager-panel');
