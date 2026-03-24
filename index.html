@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Walton High School Dashboard</title>
+  <title>Walton Dashboard</title>
+  <link rel="icon" type="image/png" href="logo.png"/>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
     :root {
@@ -489,6 +490,49 @@
       font-size: 1.792rem; color: var(--gm-highlight);
       margin-bottom: 0.4rem; letter-spacing: 0.1em;
     }
+
+    /* ── Schedule reminders ── */
+    .sched-reminders-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.38rem 0.75rem;
+      border-top: 1px solid var(--gm-border);
+      cursor: pointer; user-select: none;
+      transition: background 0.15s;
+    }
+    .sched-reminders-toggle:hover { background: var(--gm-mid); }
+    .sched-reminders-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--txt-dim);
+    }
+    .sched-reminders-chevron {
+      color: var(--txt-dim);
+      transition: transform 0.2s;
+    }
+    .sched-reminders-chevron.collapsed { transform: rotate(-90deg); }
+    .sched-reminders {
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      padding: 0.55rem 0.75rem 0.65rem;
+      overflow: hidden;
+      transition: max-height 0.25s ease, padding 0.25s ease;
+      max-height: 80px;
+    }
+    .sched-reminders.collapsed { max-height: 0; padding-top: 0; padding-bottom: 0; }
+    .sched-reminder-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--gm-dark);
+      border: 1px solid var(--gm-border); border-radius: 4px;
+      color: var(--txt-dim);
+      padding: 4px 9px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .sched-reminder-btn.active { background: var(--raider-red); color: #fff; border-color: var(--raider-red); }
+    .sched-reminder-btn:hover:not(.active) { background: var(--gm-mid); color: var(--txt-bright); border-color: var(--gm-highlight); }
 
     /* ══════════════════════════════
        LEADERBOARD WIDGET
@@ -1118,6 +1162,21 @@
     .music-recent-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .music-recent-del { color: var(--txt-muted); flex-shrink: 0; font-size: 0.8rem; transition: color 0.15s; }
     .music-recent-btn:hover .music-recent-del { color: var(--raider-red); }
+    .music-video-btn {
+      flex-shrink: 0;
+      background: var(--gm-border);
+      border: none; border-radius: 4px;
+      color: var(--txt-dim);
+      padding: 4px 8px;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: background 0.15s, color 0.15s;
+    }
+    .music-video-btn.active { background: var(--raider-red); color: #fff; }
+    .music-video-btn:hover:not(.active) { background: var(--gm-highlight); color: var(--txt-bright); }
 
     /* ══════════════════════════════
        CLASSBOARD WIDGET
@@ -1399,6 +1458,14 @@
                 <input class="music-volume" id="music-volume" type="range" min="0" max="100" value="70"
                   oninput="musicSetVolume(this.value)" title="Volume"/>
               </div>
+              <button class="music-video-btn" id="music-video-btn" onclick="musicToggleVideo()" title="Toggle background video">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="2" y="3" width="20" height="14" rx="2"/>
+                  <line x1="8" y1="21" x2="16" y2="21"/>
+                  <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                Video
+              </button>
             </div>
             <div id="music-recents-section">
               <div class="music-section-label">Recent</div>
@@ -1441,6 +1508,35 @@
         <div class="widget-body-collapsible" id="schedule-collapsible">
           <div class="widget-body" id="schedule-body">
             <div class="weather-loading"><div class="spin"></div>Loading schedule…</div>
+          </div>
+          <div class="sched-reminders-toggle" onclick="toggleSchedRemindersPanel()">
+            <span class="sched-reminders-label">Reminders</span>
+            <svg class="sched-reminders-chevron collapsed" id="sched-reminders-chevron" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+          <div class="sched-reminders collapsed" id="sched-reminders-panel">
+            <button class="sched-reminder-btn" id="sched-remind-early" onclick="toggleSchedReminder('early')" title="Spoken reminder 1 minute before each period">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              1 min warning
+            </button>
+            <button class="sched-reminder-btn" id="sched-remind-ending" onclick="toggleSchedReminder('ending')" title="Spoken reminder 1 minute before the end of each period">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              1 min remaining
+            </button>
+            <button class="sched-reminder-btn" id="sched-remind-attend" onclick="toggleSchedReminder('attend')" title="Spoken reminder to take attendance 5 minutes into each period">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 11l3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+              Take attendance
+            </button>
           </div>
         </div>
       </div>
@@ -2034,13 +2130,7 @@
       const pct         = isCurrent
         ? Math.round(((nowMin - p.start) / (p.end - p.start)) * 100)
         : 0;
-      const deadTimeEnd = isHomeroom ? p.end : p.start + 5;
-      const remaining   = isCurrent
-        ? (isDeadTime
-            ? `Dead Time · ${minsToStr(deadTimeEnd - nowMin)}`
-            : minsToStr(p.end - nowMin))
-        : '';
-
+      const remaining = isCurrent ? minsToStr(p.end - nowMin) : '';
       return `<div class="period-row ${isPast ? 'is-past' : ''} ${isCurrent ? 'is-current' : ''} ${isDeadTime ? 'is-dead-time' : ''}">
         ${isCurrent ? `<div class="period-progress" style="width:${pct}%"></div>` : ''}
         <div class="period-name">${p.name}</div>
@@ -2116,6 +2206,18 @@
   //  COLUMN DRAG AND DROP
   // ══════════════════════════════════════════════
   const GRID_ORDER_KEY = 'walton-widget-order';
+
+  const DEFAULT_LAYOUT = {
+    'col-0': ['schedule', 'announcements', 'weather', 'instagram'],
+    'col-1': ['classboard', 'library-qr'],
+    'col-2': ['music', 'timer', 'leaderboard'],
+  };
+
+  const DEFAULT_VISIBILITY = {
+    schedule: true, announcements: true, classboard: true,
+    music: true, timer: true,
+    weather: false, instagram: false, leaderboard: false, 'library-qr': false,
+  };
   let dragItem = null;
 
   function initDragAndDrop() {
@@ -2275,10 +2377,9 @@
       return;
     }
 
-    if (!saved) return;
+    const layoutToApply = saved ? JSON.parse(saved) : DEFAULT_LAYOUT;
     try {
-      const layout = JSON.parse(saved);
-      Object.entries(layout).forEach(([colId, ids]) => {
+      Object.entries(layoutToApply).forEach(([colId, ids]) => {
         const col = document.getElementById(colId);
         if (!col) return;
         ids.forEach(id => {
@@ -2488,14 +2589,80 @@
     } catch(e) { /* AudioContext unavailable */ }
   }
 
-  let _lastBellMinute = -1;
+  const SCHED_REMIND_EARLY_KEY   = 'walton-sched-remind-early';
+  const SCHED_REMIND_ENDING_KEY  = 'walton-sched-remind-ending';
+  const SCHED_REMIND_ATTEND_KEY  = 'walton-sched-remind-attend';
+
+  function speakReminder(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate = 0.88; utt.pitch = 1; utt.volume = 1;
+    window.speechSynthesis.speak(utt);
+  }
+
+  const SCHED_REMIND_PANEL_KEY = 'walton-sched-remind-panel-open';
+
+  function toggleSchedRemindersPanel() {
+    const panel   = document.getElementById('sched-reminders-panel');
+    const chevron = document.getElementById('sched-reminders-chevron');
+    const isOpen  = panel.classList.toggle('collapsed');
+    chevron.classList.toggle('collapsed', isOpen);
+    localStorage.setItem(SCHED_REMIND_PANEL_KEY, !isOpen);
+  }
+
+  function toggleSchedReminder(type) {
+    const key = type === 'early' ? SCHED_REMIND_EARLY_KEY
+              : type === 'ending' ? SCHED_REMIND_ENDING_KEY
+              : SCHED_REMIND_ATTEND_KEY;
+    const next = localStorage.getItem(key) !== 'true';
+    localStorage.setItem(key, next);
+    document.getElementById(`sched-remind-${type}`)?.classList.toggle('active', next);
+  }
+
+  function initSchedReminders() {
+    const panelOpen = localStorage.getItem(SCHED_REMIND_PANEL_KEY) === 'true';
+    document.getElementById('sched-reminders-panel')?.classList.toggle('collapsed', !panelOpen);
+    document.getElementById('sched-reminders-chevron')?.classList.toggle('collapsed', !panelOpen);
+    document.getElementById('sched-remind-early')?.classList.toggle('active',
+      localStorage.getItem(SCHED_REMIND_EARLY_KEY) === 'true');
+    document.getElementById('sched-remind-ending')?.classList.toggle('active',
+      localStorage.getItem(SCHED_REMIND_ENDING_KEY) === 'true');
+    document.getElementById('sched-remind-attend')?.classList.toggle('active',
+      localStorage.getItem(SCHED_REMIND_ATTEND_KEY) === 'true');
+  }
+  initSchedReminders();
+
+  let _lastBellMin   = -1;
+  let _lastEarlyMin  = -1;
+  let _lastEndingMin = -1;
+  let _lastAttendMin = -1;
+
   function checkBell() {
     if (!currentSchedulePeriods) return;
     const nowMin = minutesToNow();
-    if (nowMin === _lastBellMinute) return;
-    if (currentSchedulePeriods.some(p => p.end === nowMin)) {
-      _lastBellMinute = nowMin;
+
+    if (nowMin !== _lastBellMin && currentSchedulePeriods.some(p => p.end === nowMin)) {
+      _lastBellMin = nowMin;
       playBell();
+    }
+    if (nowMin !== _lastEarlyMin
+        && localStorage.getItem(SCHED_REMIND_EARLY_KEY) === 'true'
+        && currentSchedulePeriods.some(p => p.start - 1 === nowMin)) {
+      _lastEarlyMin = nowMin;
+      speakReminder('1 minute until class begins');
+    }
+    if (nowMin !== _lastEndingMin
+        && localStorage.getItem(SCHED_REMIND_ENDING_KEY) === 'true'
+        && currentSchedulePeriods.some(p => p.end - 1 === nowMin)) {
+      _lastEndingMin = nowMin;
+      speakReminder('1 minute remaining');
+    }
+    if (nowMin !== _lastAttendMin
+        && localStorage.getItem(SCHED_REMIND_ATTEND_KEY) === 'true'
+        && currentSchedulePeriods.some(p => p.start + 5 === nowMin)) {
+      _lastAttendMin = nowMin;
+      speakReminder('Take attendance');
     }
   }
   setInterval(checkBell, 1000);
@@ -2856,11 +3023,12 @@
   // ══════════════════════════════════════════════
   //  MUSIC / YOUTUBE BACKGROUND
   // ══════════════════════════════════════════════
-  let _ytPlayer    = null;
-  let _ytApiReady  = false;
-  let _ytPending   = null;
-  let _ytPlaying   = false;
-  let _ytCurrentId = null;
+  let _ytPlayer       = null;
+  let _ytApiReady     = false;
+  let _ytPending      = null;
+  let _ytPlaying      = false;
+  let _ytCurrentId    = null;
+  let _ytVideoVisible = true;
 
   const MUSIC_RECENTS_KEY = 'walton-music-recents';
   const MUSIC_MAX_RECENTS = 8;
@@ -2987,10 +3155,21 @@
   }
 
   function _ytShowBg() {
-    document.getElementById('yt-bg-wrap').style.display  = 'block';
-    document.getElementById('yt-dim').style.display      = 'block';
-    document.body.classList.add('yt-active');
+    document.getElementById('yt-bg-wrap').style.display  = _ytVideoVisible ? 'block' : 'none';
+    document.getElementById('yt-dim').style.display      = _ytVideoVisible ? 'block' : 'none';
+    document.body.classList.toggle('yt-active', _ytVideoVisible);
     document.getElementById('music-controls').style.display = 'flex';
+    const btn = document.getElementById('music-video-btn');
+    if (btn) btn.classList.toggle('active', _ytVideoVisible);
+  }
+
+  function musicToggleVideo() {
+    _ytVideoVisible = !_ytVideoVisible;
+    document.getElementById('yt-bg-wrap').style.display = _ytVideoVisible ? 'block' : 'none';
+    document.getElementById('yt-dim').style.display     = _ytVideoVisible ? 'block' : 'none';
+    document.body.classList.toggle('yt-active', _ytVideoVisible);
+    const btn = document.getElementById('music-video-btn');
+    if (btn) btn.classList.toggle('active', _ytVideoVisible);
   }
 
   function musicToggle() {
@@ -3187,8 +3366,11 @@
   ];
 
   function loadVisibility() {
-    try { return JSON.parse(localStorage.getItem(WIDGET_VISIBILITY_KEY) || '{}'); }
-    catch(e) { return {}; }
+    try {
+      const saved = localStorage.getItem(WIDGET_VISIBILITY_KEY);
+      return saved ? JSON.parse(saved) : { ...DEFAULT_VISIBILITY };
+    }
+    catch(e) { return { ...DEFAULT_VISIBILITY }; }
   }
 
   function saveVisibility(vis) {
