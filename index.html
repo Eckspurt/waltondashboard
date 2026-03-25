@@ -516,7 +516,7 @@
       padding: 0.55rem 0.75rem 0.65rem;
       overflow: hidden;
       transition: max-height 0.25s ease, padding 0.25s ease;
-      max-height: 130px;
+      max-height: 150px;
     }
     .sched-reminders.collapsed { max-height: 0; padding-top: 0; padding-bottom: 0; }
     .sched-voice-select {
@@ -1560,6 +1560,14 @@
                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
               </svg>
               Take attendance
+            </button>
+            <button class="sched-reminder-btn" id="sched-remind-web" onclick="toggleSchedReminder('web')" title="Spoken reminder 1 minute into A/B/C/D block">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              WEB sign in
             </button>
             <div class="sched-divider"></div>
             <div class="sched-volume-row">
@@ -2641,6 +2649,7 @@
   const SCHED_REMIND_EARLY_KEY   = 'walton-sched-remind-early';
   const SCHED_REMIND_ENDING_KEY  = 'walton-sched-remind-ending';
   const SCHED_REMIND_ATTEND_KEY  = 'walton-sched-remind-attend';
+  const SCHED_REMIND_WEB_KEY     = 'walton-sched-remind-web';
 
   const SCHED_VOICE_KEY   = 'walton-sched-voice';
   const SCHED_VOLUME_KEY  = 'walton-sched-volume';
@@ -2708,8 +2717,9 @@
   }
 
   function toggleSchedReminder(type) {
-    const key = type === 'early' ? SCHED_REMIND_EARLY_KEY
+    const key = type === 'early'  ? SCHED_REMIND_EARLY_KEY
               : type === 'ending' ? SCHED_REMIND_ENDING_KEY
+              : type === 'web'    ? SCHED_REMIND_WEB_KEY
               : SCHED_REMIND_ATTEND_KEY;
     const next = localStorage.getItem(key) !== 'true';
     localStorage.setItem(key, next);
@@ -2726,6 +2736,8 @@
       localStorage.getItem(SCHED_REMIND_ENDING_KEY) === 'true');
     document.getElementById('sched-remind-attend')?.classList.toggle('active',
       localStorage.getItem(SCHED_REMIND_ATTEND_KEY) === 'true');
+    document.getElementById('sched-remind-web')?.classList.toggle('active',
+      localStorage.getItem(SCHED_REMIND_WEB_KEY) === 'true');
   }
   initSchedReminders();
 
@@ -2733,6 +2745,7 @@
   let _lastEarlyMin  = -1;
   let _lastEndingMin = -1;
   let _lastAttendMin  = -1;
+  let _lastWebMin     = -1;
   let _lastDisplayMin = -1;
 
   function checkBell() {
@@ -2767,6 +2780,13 @@
         && currentSchedulePeriods.some(p => p.start + 5 === nowMin)) {
       _lastAttendMin = nowMin;
       speakReminder('Take attendance');
+    }
+    if (nowMin !== _lastWebMin
+        && localStorage.getItem(SCHED_REMIND_WEB_KEY) === 'true'
+        && /web/i.test(currentScheduleTab)
+        && currentSchedulePeriods.some(p => /^[ABCD]$/i.test(p.name.trim()) && p.start + 1 === nowMin)) {
+      _lastWebMin = nowMin;
+      speakReminder('1 minute until WEB Block sign in');
     }
   }
   setInterval(checkBell, 1000);
