@@ -516,7 +516,7 @@
       padding: 0.55rem 0.75rem 0.65rem;
       overflow: hidden;
       transition: max-height 0.25s ease, padding 0.25s ease;
-      max-height: 150px;
+      max-height: 220px;
     }
     .sched-reminders.collapsed { max-height: 0; padding-top: 0; padding-bottom: 0; }
     .sched-voice-select {
@@ -742,6 +742,20 @@
       color: var(--txt-dim); font-size: 0.784rem;
       letter-spacing: 0.18em; text-transform: uppercase;
     }
+    .ann-header-right { display: flex; align-items: center; gap: 0.5rem; }
+    .iptv-btn {
+      display: flex; align-items: center; gap: 4px;
+      background: var(--gm-mid);
+      border: 1px solid var(--gm-border); border-radius: 4px;
+      color: var(--txt-dim);
+      padding: 3px 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .iptv-btn:hover { background: var(--raider-red); color: #fff; border-color: var(--raider-red); }
     /* Collapsed ticker strip */
     .ann-ticker {
       display: none;
@@ -1540,6 +1554,14 @@
             </svg>
           </div>
           <div class="sched-reminders collapsed" id="sched-reminders-panel">
+            <button class="sched-reminder-btn" id="sched-remind-bell" onclick="toggleSchedReminder('bell')" title="Play bell sound at the end of each period">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                <line x1="12" y1="2" x2="12" y2="4"/>
+              </svg>
+              End bell
+            </button>
             <button class="sched-reminder-btn" id="sched-remind-early" onclick="toggleSchedReminder('early')" title="Spoken reminder 1 minute before each period">
               <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -1583,6 +1605,13 @@
               <input class="sched-volume-slider" id="sched-remind-volume" type="range" min="0" max="100" value="50"
                 oninput="saveReminderVolume(this.value)" title="Reminder volume"/>
             </div>
+            <div class="sched-divider"></div>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="chime"    onclick="selectBell('chime')"    title="Gentle ascending 4-note chime">Chime</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="triple"   onclick="selectBell('triple')"   title="Three quick bell strikes">Triple</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="handbell" onclick="selectBell('handbell')" title="Bright hand bell / bicycle bell">Hand Bell</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="electric" onclick="selectBell('electric')" title="Classic rapid-ring school bell">Electric</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="quack"    onclick="selectBell('quack')"    title="Duck quack">Quack</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="boing"    onclick="selectBell('boing')"    title="Cartoon spring boing">Boing</button>
           </div>
         </div>
       </div>
@@ -1601,9 +1630,18 @@
             </div>
             <span class="widget-title">Announcements</span>
           </div>
-          <svg class="widget-chevron" id="announcements-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
+          <div class="ann-header-right">
+            <a class="iptv-btn" href="iptv://" title="Launch IPTV">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="2" y="7" width="20" height="15" rx="2"/>
+                <polyline points="17 2 12 7 7 2"/>
+              </svg>
+              IPTV
+            </a>
+            <svg class="widget-chevron" id="announcements-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
         </div>
         <div class="ann-ticker" id="ann-ticker">
           <div class="ann-ticker-bullet"></div>
@@ -2619,33 +2657,142 @@
   setInterval(fetchAnnouncements, 5 * 60 * 1000);
 
   // ── Bell sound ──
+  const BELL_STYLE_KEY = 'walton-bell-style';
+
+  function selectBell(style) {
+    localStorage.setItem(BELL_STYLE_KEY, style);
+    document.querySelectorAll('.sched-bell-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.bell === style));
+    playBell();
+  }
+
+  function initBellStyle() {
+    const saved = localStorage.getItem(BELL_STYLE_KEY) || 'chime';
+    document.querySelectorAll('.sched-bell-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.bell === saved));
+  }
+  initBellStyle();
+
+  // Shared helper: strike a set of inharmonic partials at time t
+  function _strikePartials(ctx, f, partials, t, vol = 1) {
+    partials.forEach(({ ratio, gain: g, decay }) => {
+      const osc = ctx.createOscillator();
+      const env = ctx.createGain();
+      osc.connect(env); env.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = f * ratio;
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(g * vol, t + 0.003);
+      env.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+      osc.start(t); osc.stop(t + decay);
+    });
+  }
+
   function playBell() {
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      // Real bell: inharmonic partials (Terhardt's model), fundamental C5 = 523 Hz
-      const f = 523.25;
-      const partials = [
-        { ratio: 1.000, gain: 0.50, decay: 5.5 },
-        { ratio: 2.756, gain: 0.28, decay: 3.2 },
-        { ratio: 5.404, gain: 0.14, decay: 1.8 },
-        { ratio: 8.933, gain: 0.06, decay: 0.9 },
-      ];
-      partials.forEach(({ ratio, gain: g, decay }) => {
-        const osc = ctx.createOscillator();
-        const env = ctx.createGain();
-        osc.connect(env);
-        env.connect(ctx.destination);
+      const ctx   = new (window.AudioContext || window.webkitAudioContext)();
+      const style = localStorage.getItem(BELL_STYLE_KEY) || 'chime';
+
+      if (style === 'electric') {
+        // Classic rapid-ring school bell — square-wave pulses at ~14 Hz for 2.5 s
+        const dur = 2.5, rate = 14, onTime = 0.028;
+        for (let i = 0; i < Math.floor(dur * rate); i++) {
+          const t   = ctx.currentTime + i / rate;
+          const osc = ctx.createOscillator();
+          const env = ctx.createGain();
+          osc.connect(env); env.connect(ctx.destination);
+          osc.type = 'square'; osc.frequency.value = 1080;
+          env.gain.setValueAtTime(0, t);
+          env.gain.linearRampToValueAtTime(0.22, t + 0.003);
+          env.gain.setValueAtTime(0.22, t + onTime - 0.003);
+          env.gain.linearRampToValueAtTime(0, t + onTime);
+          osc.start(t); osc.stop(t + onTime + 0.01);
+        }
+
+      } else if (style === 'triple') {
+        // Three quick inharmonic bell strikes, 0.5 s apart
+        const partials = [
+          { ratio: 1.000, gain: 0.48, decay: 3.5 },
+          { ratio: 2.756, gain: 0.26, decay: 2.0 },
+          { ratio: 5.404, gain: 0.12, decay: 1.0 },
+        ];
+        [0, 0.5, 1.0].forEach((delay, i) =>
+          _strikePartials(ctx, 523.25, partials, ctx.currentTime + delay, 1 - i * 0.08));
+
+      } else if (style === 'handbell') {
+        // Bright, high-pitched hand bell — fast attack, shimmer
+        const partials = [
+          { ratio: 1.000, gain: 0.42, decay: 2.8 },
+          { ratio: 2.756, gain: 0.28, decay: 1.4 },
+          { ratio: 5.404, gain: 0.18, decay: 0.6 },
+          { ratio: 8.933, gain: 0.10, decay: 0.25 },
+        ];
+        _strikePartials(ctx, 880, partials, ctx.currentTime);
+
+      } else if (style === 'chime') {
+        // Gentle ascending 4-note chime: C5 E5 G5 C6
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+          const t   = ctx.currentTime + i * 0.3;
+          const osc = ctx.createOscillator();
+          const env = ctx.createGain();
+          osc.connect(env); env.connect(ctx.destination);
+          osc.type = 'sine'; osc.frequency.value = freq;
+          env.gain.setValueAtTime(0, t);
+          env.gain.linearRampToValueAtTime(0.35, t + 0.004);
+          env.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+          osc.start(t); osc.stop(t + 2.2);
+        });
+
+      } else if (style === 'quack') {
+        // Duck quack — sawtooth + bandpass filter sweep, two quick quacks
+        const _quack = (t) => {
+          const osc    = ctx.createOscillator();
+          const filter = ctx.createBiquadFilter();
+          const env    = ctx.createGain();
+          osc.connect(filter); filter.connect(env); env.connect(ctx.destination);
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(330, t);
+          osc.frequency.exponentialRampToValueAtTime(210, t + 0.18);
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(1500, t);
+          filter.frequency.exponentialRampToValueAtTime(650, t + 0.18);
+          filter.Q.value = 4;
+          env.gain.setValueAtTime(0, t);
+          env.gain.linearRampToValueAtTime(0.45, t + 0.012);
+          env.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+          osc.start(t); osc.stop(t + 0.25);
+        };
+        _quack(ctx.currentTime);
+        _quack(ctx.currentTime + 0.3);
+
+      } else if (style === 'boing') {
+        // Cartoon spring boing — sine with exponential pitch drop + LFO wobble
+        const osc    = ctx.createOscillator();
+        const lfo    = ctx.createOscillator();
+        const lfoGain= ctx.createGain();
+        const env    = ctx.createGain();
+        lfo.connect(lfoGain); lfoGain.connect(osc.frequency);
+        osc.connect(env); env.connect(ctx.destination);
         osc.type = 'sine';
-        osc.frequency.value = f * ratio;
-        env.gain.setValueAtTime(0, ctx.currentTime);
-        env.gain.linearRampToValueAtTime(g, ctx.currentTime + 0.003);
-        env.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + decay);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + decay);
-      });
+        const t = ctx.currentTime;
+        // Main pitch falls from high to low
+        osc.frequency.setValueAtTime(950, t);
+        osc.frequency.exponentialRampToValueAtTime(55, t + 1.3);
+        // LFO adds the springy wobble, fading out as pitch drops
+        lfo.frequency.setValueAtTime(14, t);
+        lfo.frequency.linearRampToValueAtTime(5, t + 1.3);
+        lfoGain.gain.setValueAtTime(60, t);
+        lfoGain.gain.exponentialRampToValueAtTime(2, t + 1.3);
+        // Amplitude envelope
+        env.gain.setValueAtTime(0.5, t);
+        env.gain.exponentialRampToValueAtTime(0.0001, t + 1.35);
+        osc.start(t); lfo.start(t);
+        osc.stop(t + 1.4); lfo.stop(t + 1.4);
+      }
     } catch(e) { /* AudioContext unavailable */ }
   }
 
+  const SCHED_REMIND_BELL_KEY    = 'walton-sched-remind-bell';
   const SCHED_REMIND_EARLY_KEY   = 'walton-sched-remind-early';
   const SCHED_REMIND_ENDING_KEY  = 'walton-sched-remind-ending';
   const SCHED_REMIND_ATTEND_KEY  = 'walton-sched-remind-attend';
@@ -2717,12 +2864,16 @@
   }
 
   function toggleSchedReminder(type) {
-    const key = type === 'early'  ? SCHED_REMIND_EARLY_KEY
+    const key = type === 'bell'   ? SCHED_REMIND_BELL_KEY
+              : type === 'early'  ? SCHED_REMIND_EARLY_KEY
               : type === 'ending' ? SCHED_REMIND_ENDING_KEY
               : type === 'web'    ? SCHED_REMIND_WEB_KEY
               : SCHED_REMIND_ATTEND_KEY;
-    const next = localStorage.getItem(key) !== 'true';
-    localStorage.setItem(key, next);
+    // Bell defaults on, so invert logic accordingly
+    const isBell = type === 'bell';
+    const current = isBell ? localStorage.getItem(key) !== 'false' : localStorage.getItem(key) === 'true';
+    const next = !current;
+    localStorage.setItem(key, isBell ? (next ? 'true' : 'false') : next);
     document.getElementById(`sched-remind-${type}`)?.classList.toggle('active', next);
   }
 
@@ -2730,6 +2881,8 @@
     const panelOpen = localStorage.getItem(SCHED_REMIND_PANEL_KEY) === 'true';
     document.getElementById('sched-reminders-panel')?.classList.toggle('collapsed', !panelOpen);
     document.getElementById('sched-reminders-chevron')?.classList.toggle('collapsed', !panelOpen);
+    document.getElementById('sched-remind-bell')?.classList.toggle('active',
+      localStorage.getItem(SCHED_REMIND_BELL_KEY) !== 'false');
     document.getElementById('sched-remind-early')?.classList.toggle('active',
       localStorage.getItem(SCHED_REMIND_EARLY_KEY) === 'true');
     document.getElementById('sched-remind-ending')?.classList.toggle('active',
@@ -2759,7 +2912,9 @@
     }
     updateSchedStrip();
 
-    if (nowMin !== _lastBellMin && currentSchedulePeriods.some(p => p.end === nowMin)) {
+    if (nowMin !== _lastBellMin
+        && localStorage.getItem(SCHED_REMIND_BELL_KEY) !== 'false'
+        && currentSchedulePeriods.some(p => p.end === nowMin)) {
       _lastBellMin = nowMin;
       playBell();
     }
