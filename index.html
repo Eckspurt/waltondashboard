@@ -600,6 +600,8 @@
       background: var(--gm-dark);
       padding: 4px 5px 3px;
       min-height: 36px;
+      min-width: 0;
+      overflow: hidden;
       display: flex; flex-direction: column; gap: 2px;
     }
     .cal-cell.cal-weekend { background: var(--gm-darkest); }
@@ -660,7 +662,7 @@
     }
     .cal-modal-close:hover { color: var(--txt-bright); background: var(--gm-mid); }
     .cal-modal .cal-day-hdr  { font-size: 0.72rem; padding: 7px 0; }
-    .cal-modal .cal-cell     { min-height: 72px; padding: 7px 8px 5px; gap: 4px; }
+    .cal-modal .cal-cell     { min-height: 72px; padding: 7px 8px 5px; gap: 4px; min-width: 0; overflow: hidden; }
     .cal-modal .cal-num      { font-size: 1.05rem; width: 28px; height: 28px; }
     .cal-modal .cal-tag      { font-size: 0.66rem; padding: 2px 5px; }
 
