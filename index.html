@@ -516,7 +516,7 @@
       padding: 0.55rem 0.75rem 0.65rem;
       overflow: hidden;
       transition: max-height 0.25s ease, padding 0.25s ease;
-      max-height: 160px;
+      max-height: 130px;
     }
     .sched-reminders.collapsed { max-height: 0; padding-top: 0; padding-bottom: 0; }
     .sched-voice-select {
@@ -535,7 +535,9 @@
       width: 100%; flex-basis: 100%;
       color: var(--txt-dim);
     }
+    .sched-divider { flex-basis: 100%; height: 0; border-top: 1px solid var(--gm-border); margin: 2px 0; }
     .sched-volume-row svg { flex-shrink: 0; }
+    .sched-test-btn { flex-shrink: 0; }
     .sched-volume-slider {
       flex: 1; height: 3px;
       accent-color: var(--raider-red);
@@ -1559,11 +1561,13 @@
               </svg>
               Take attendance
             </button>
-            <select class="sched-voice-select" id="sched-voice-select" title="Voice for reminders" onchange="saveVoiceChoice(this.value)">
-              <option value="">Default voice</option>
-            </select>
+            <div class="sched-divider"></div>
             <div class="sched-volume-row">
-              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <select class="sched-voice-select" id="sched-voice-select" title="Voice for reminders" onchange="saveVoiceChoice(this.value)">
+                <option value="">Default voice</option>
+              </select>
+              <button class="sched-reminder-btn sched-test-btn" onclick="testReminder()" title="Test current voice and volume">Test</button>
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-left:4px">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
                 <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
@@ -2127,6 +2131,7 @@
   }
 
   let currentSchedulePeriods = null;
+  let currentScheduleTab     = '';
 
   function updateSchedStrip() {
     const strip    = document.getElementById('sched-period-strip');
@@ -2180,6 +2185,7 @@
     if (badge) badge.textContent = tabName;
     body.innerHTML = `<div class="period-list">${rows}</div>`;
     currentSchedulePeriods = periods;
+    currentScheduleTab     = tabName;
     updateSchedStrip();
   }
 
@@ -2668,6 +2674,10 @@
   }
   initReminderVolume();
 
+  function testReminder() {
+    speakReminder('This is a test of the reminder voice.');
+  }
+
   function speakReminder(text) {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
@@ -2722,11 +2732,19 @@
   let _lastBellMin   = -1;
   let _lastEarlyMin  = -1;
   let _lastEndingMin = -1;
-  let _lastAttendMin = -1;
+  let _lastAttendMin  = -1;
+  let _lastDisplayMin = -1;
 
   function checkBell() {
     if (!currentSchedulePeriods) return;
     const nowMin = minutesToNow();
+
+    // Re-render schedule display on every minute tick so countdown/classes stay in sync
+    if (nowMin !== _lastDisplayMin) {
+      _lastDisplayMin = nowMin;
+      renderSchedule(currentSchedulePeriods, currentScheduleTab);
+    }
+    updateSchedStrip();
 
     if (nowMin !== _lastBellMin && currentSchedulePeriods.some(p => p.end === nowMin)) {
       _lastBellMin = nowMin;
