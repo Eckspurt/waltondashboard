@@ -741,8 +741,52 @@
     }
 
     /* ══════════════════════════════
-       INSTAGRAM WIDGET
+       QUESTION OF THE DAY WIDGET
     ══════════════════════════════ */
+    .qotd-body { padding: 0.85rem 1.1rem 1rem; display: flex; flex-direction: column; gap: 0.85rem; }
+    .qotd-qr-wrap {
+      display: flex; justify-content: center;
+    }
+    .qotd-qr {
+      background: #fff; border-radius: 8px; padding: 8px;
+      width: 140px; height: 140px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .qotd-qr img { width: 124px; height: 124px; display: block; }
+    .qotd-qr-placeholder {
+      font-size: 0.65rem; color: var(--txt-dim); text-align: center;
+      line-height: 1.4; padding: 4px;
+    }
+    .qotd-question {
+      font-size: 1.19rem; font-weight: 500; color: var(--txt-bright);
+      line-height: 1.45; letter-spacing: 0.01em; text-align: center;
+    }
+    .qotd-results { display: flex; flex-direction: column; gap: 0.45rem; }
+    .qotd-bar-row { display: flex; flex-direction: column; gap: 3px; }
+    .qotd-bar-label {
+      display: flex; justify-content: space-between;
+      font-size: 0.85rem; color: var(--txt-dim);
+      font-family: 'Barlow Condensed', sans-serif;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .qotd-bar-label .qotd-bar-pct { color: var(--txt-mid); font-weight: 600; }
+    .qotd-bar-track {
+      height: 7px; background: var(--gm-mid); border-radius: 3px; overflow: hidden;
+    }
+    .qotd-bar-fill {
+      height: 100%; background: var(--raider-red); border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+    .qotd-footer {
+      font-size: 0.78rem; color: var(--txt-dim);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .qotd-no-question {
+      text-align: center; padding: 1.5rem 1rem;
+      color: var(--txt-dim); font-size: 0.98rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+    }
 
     /* ══════════════════════════════
        ANNOUNCEMENTS WIDGET
@@ -1725,6 +1769,32 @@
       </div>
     </div>
 
+    <!-- Question of the Day Widget -->
+    <div class="widget-item" data-id="qotd">
+      <div class="widget" id="qotd-widget" style="animation-delay:0.28s">
+        <div class="widget-header widget-drag-handle">
+          <div class="widget-header-left">
+            <div class="widget-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <span class="widget-title">Question of the Day</span>
+          </div>
+          <svg class="widget-chevron" id="qotd-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="widget-body-collapsible" id="qotd-collapsible">
+          <div class="widget-body" id="qotd-body">
+            <div class="weather-loading"><div class="spin"></div>Loading…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- end col-2 -->
 
 </main>
@@ -2205,14 +2275,14 @@
 
   const DEFAULT_LAYOUT = {
     'col-0': ['schedule', 'announcements', 'weather'],
-    'col-1': ['classboard', 'timer', 'step-challenge'],
-    'col-2': ['calendar', 'music'],
+    'col-1': ['classboard', 'timer', 'leaderboard'],
+    'col-2': ['calendar', 'music', 'qotd'],
   };
 
   const DEFAULT_VISIBILITY = {
     schedule: true, classboard: true, calendar: true,
     announcements: true, timer: true, music: true,
-    weather: true, leaderboard: true,
+    weather: true, leaderboard: true, qotd: true,
   };
   let dragItem = null;
 
@@ -3357,6 +3427,149 @@
 
   classboardRender();
 
+  // ══════════════════════════════════════════════
+  //  QUESTION OF THE DAY
+  // ══════════════════════════════════════════════
+  const QOTD_SHEET_ID  = '1lnIig3Fw_1O_-iN5ihkEN1bUIjQhsjFuu2ueTRpoh_s';
+  const QOTD_BASE      = `https://sheets.googleapis.com/v4/spreadsheets/${QOTD_SHEET_ID}/values`;
+  // Paste your Apps Script Web App URL here after deploying it:
+  const QOTD_VOTE_URL  = 'https://script.google.com/macros/s/AKfycbza2s0S0cqr1l7eio5_cyRvqDoumSkyY42605cEOUrmHPCMo-_HAkqhvFdCJXqV41wL/exec';
+
+  const LETTERS = ['A','B','C','D','E','F'];
+  let _qotdQuestion = null;
+
+  function dayOfYear(d) {
+    const start = new Date(d.getFullYear(), 0, 0);
+    return Math.floor((d - start) / 86400000);
+  }
+
+  async function fetchQOTD() {
+    const body = document.getElementById('qotd-body');
+    if (!body) return;
+    try {
+      const now    = new Date();
+      const todayN = String(dayOfYear(now)); // "85" etc.
+      const url    = `${QOTD_BASE}/${encodeURIComponent('Questions')}?key=${SHEETS_API_KEY}&_=${Date.now()}`;
+      const res    = await fetch(url);
+      const json   = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      const rows     = json.values || [];
+      // Skip header row if first cell is non-numeric (e.g. "Day")
+      const dataRows = isNaN(rows[0]?.[0]) ? rows.slice(1) : rows;
+
+      const found = dataRows.find(r => r[0] && String(r[0]).trim() === todayN);
+
+      if (!found) {
+        body.innerHTML = `<div class="qotd-no-question">No question for today (day ${todayN})</div>`;
+        _qotdQuestion = null;
+        return;
+      }
+
+      // r[0]=day#, r[1]=question, r[2..]=options
+      let options = found.slice(2).map(o => o?.trim()).filter(Boolean);
+
+      // Resolve "[Last Week's Winner]" placeholder
+      if (options.some(o => /last week/i.test(o))) {
+        const targetDay  = String(Number(todayN) - 7);
+        const targetRow  = dataRows.find(r => r[0] && String(r[0]).trim() === targetDay);
+        const statsUrl   = `${QOTD_BASE}/${encodeURIComponent('Stats')}?key=${SHEETS_API_KEY}&_=${Date.now()}`;
+        const statsJson  = await (await fetch(statsUrl)).json();
+        const statsRows  = statsJson.values || [];
+        const statsDR    = isNaN(statsRows[0]?.[0]) ? statsRows.slice(1) : statsRows;
+        const statsRow   = statsDR.find(r => r[0] && String(r[0]).trim() === targetDay);
+        let winner = null;
+        if (statsRow && targetRow) {
+          let max = -1, winnerIdx = -1;
+          for (let j = 1; j <= 6; j++) {
+            const v = parseInt(statsRow[j]) || 0;
+            if (v > max) { max = v; winnerIdx = j - 1; }
+          }
+          const prevOpts = targetRow.slice(2).map(o => o?.trim()).filter(Boolean);
+          if (winnerIdx >= 0 && max > 0) winner = prevOpts[winnerIdx] || null;
+        }
+        if (winner) options = options.map(o => /last week/i.test(o) ? winner : o);
+      }
+
+      _qotdQuestion = {
+        dayKey:  todayN,
+        text:    found[1]?.trim() || '',
+        options,
+      };
+      renderQOTD();
+      fetchQOTDResults();
+    } catch(e) {
+      const body = document.getElementById('qotd-body');
+      if (body) body.innerHTML = `<div class="qotd-no-question" style="font-size:0.7rem;text-transform:none;letter-spacing:0">Error: ${e.message}</div>`;
+    }
+  }
+
+  function renderQOTD() {
+    const body = document.getElementById('qotd-body');
+    if (!body || !_qotdQuestion) return;
+    const { text, options, dayKey } = _qotdQuestion;
+
+    const optionsHTML = options.map((o, i) => `
+      <div class="qotd-option">
+        <span class="qotd-option-letter">${LETTERS[i]}.</span>
+        <span>${escHtml(o)}</span>
+      </div>`).join('');
+
+    const qrHTML = QOTD_VOTE_URL
+      ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=88x88&margin=0&data=${encodeURIComponent(QOTD_VOTE_URL + '?date=' + encodeURIComponent(dayKey))}" alt="Vote QR"/>`
+      : `<div class="qotd-qr-placeholder">Set up<br>vote URL</div>`;
+
+    const barsHTML = options.map((o, i) => `
+      <div class="qotd-bar-row">
+        <div class="qotd-bar-label">
+          <span>${LETTERS[i]}. ${escHtml(o)}</span>
+          <span class="qotd-bar-pct" id="qotd-pct-${i}">—</span>
+        </div>
+        <div class="qotd-bar-track"><div class="qotd-bar-fill" id="qotd-bar-${i}" style="width:0%"></div></div>
+      </div>`).join('');
+
+    body.innerHTML = `
+      <div class="qotd-body">
+        <div class="qotd-qr-wrap"><div class="qotd-qr">${qrHTML}</div></div>
+        <div class="qotd-question">${escHtml(text)}</div>
+        <div class="qotd-results">${barsHTML}</div>
+        <div class="qotd-footer">
+          <span id="qotd-total">0 votes</span>
+          <span id="qotd-updated"></span>
+        </div>
+      </div>`;
+  }
+
+  async function fetchQOTDResults() {
+    if (!_qotdQuestion) return;
+    try {
+      const url  = `${QOTD_BASE}/${encodeURIComponent('Stats')}?key=${SHEETS_API_KEY}&_=${Date.now()}`;
+      const res  = await fetch(url);
+      const json = await res.json();
+      const rows = json.values || [];
+      const dataRows = rows[0]?.[0]?.toLowerCase().includes('date') ? rows.slice(1) : rows;
+
+      let counts = _qotdQuestion.options.map(() => 0);
+      const found = dataRows.find(r => r[0] && String(r[0]).trim() === _qotdQuestion.dayKey);
+      if (found) counts = _qotdQuestion.options.map((_, i) => parseInt(found[i + 1]) || 0);
+
+      const total = counts.reduce((a, b) => a + b, 0);
+      counts.forEach((c, i) => {
+        const pct = total ? Math.round((c / total) * 100) : 0;
+        const bar = document.getElementById(`qotd-bar-${i}`);
+        const lbl = document.getElementById(`qotd-pct-${i}`);
+        if (bar) bar.style.width = pct + '%';
+        if (lbl) lbl.textContent = total ? `${c} (${pct}%)` : '—';
+      });
+      const totalEl   = document.getElementById('qotd-total');
+      const updatedEl = document.getElementById('qotd-updated');
+      if (totalEl)   totalEl.textContent   = `${total} vote${total !== 1 ? 's' : ''}`;
+      if (updatedEl) updatedEl.textContent = `Updated ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+    } catch(e) { /* silently ignore refresh errors */ }
+  }
+
+  fetchQOTD();
+  setInterval(fetchQOTDResults, 30 * 1000); // refresh results every 30s
+  setInterval(fetchQOTD, 60 * 60 * 1000);   // refresh question hourly
 
   // ══════════════════════════════════════════════
   //  WIDGET MANAGER
@@ -3395,6 +3608,10 @@
     {
       id: 'leaderboard', label: 'Step Challenge',
       icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`
+    },
+    {
+      id: 'qotd', label: 'Question of the Day',
+      icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`
     },
   ];
 
