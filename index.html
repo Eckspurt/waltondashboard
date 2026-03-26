@@ -1547,11 +1547,14 @@
                 oninput="saveReminderVolume(this.value)" title="Reminder volume"/>
             </div>
             <div class="sched-divider"></div>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="bell.mp3"  onclick="selectBell('bell.mp3')">Bell</button>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="slide.mp3" onclick="selectBell('slide.mp3')">Slide</button>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="quack.mp3" onclick="selectBell('quack.mp3')">Quack</button>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="bruh.mp3"  onclick="selectBell('bruh.mp3')">Bruh</button>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="random"    onclick="selectBell('random')">Random</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="bell.mp3"       onclick="selectBell('bell.mp3')">Bell</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="slide.mp3"      onclick="selectBell('slide.mp3')">Slide</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="quack.mp3"      onclick="selectBell('quack.mp3')">Quack</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="bruh.mp3"       onclick="selectBell('bruh.mp3')">Bruh</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="hey_listen.mp3" onclick="selectBell('hey_listen.mp3')">Hey Listen</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="shame.mp3"      onclick="selectBell('shame.mp3')">Shame</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="item.mp3"       onclick="selectBell('item.mp3')">Item</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="random"         onclick="selectBell('random')">Random</button>
           </div>
         </div>
       </div>
@@ -2480,7 +2483,7 @@
       b.classList.toggle('active', b.dataset.bell === saved));
   })();
 
-  const BELL_FILES = ['bell.mp3', 'slide.mp3', 'quack.mp3', 'bruh.mp3'];
+  const BELL_FILES = ['bell.mp3', 'slide.mp3', 'quack.mp3', 'bruh.mp3', 'hey_listen.mp3', 'shame.mp3', 'item.mp3'];
 
   function playBell() {
     try {
