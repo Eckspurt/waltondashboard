@@ -765,7 +765,7 @@
     .qotd-bar-row { display: flex; flex-direction: column; gap: 3px; }
     .qotd-bar-label {
       display: flex; justify-content: space-between;
-      font-size: 0.85rem; color: var(--txt-dim);
+      font-size: 0.85rem; color: var(--txt-bright);
       font-family: 'Barlow Condensed', sans-serif;
       letter-spacing: 0.06em; text-transform: uppercase;
     }
@@ -786,6 +786,73 @@
       text-align: center; padding: 1.5rem 1rem;
       color: var(--txt-dim); font-size: 0.98rem;
       letter-spacing: 0.18em; text-transform: uppercase;
+    }
+    /* QOTD modal */
+    .qotd-modal-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.72);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .qotd-modal-overlay.open { opacity: 1; pointer-events: all; }
+    .qotd-modal {
+      background: var(--gm-dark);
+      border: 1px solid var(--gm-border); border-radius: 10px;
+      width: min(760px, 96vw); max-height: 92vh; overflow-y: auto;
+      transform: scale(0.96); transition: transform 0.2s;
+      display: flex; flex-direction: column;
+    }
+    .qotd-modal-overlay.open .qotd-modal { transform: scale(1); }
+    .qotd-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.4rem 0.8rem;
+      border-bottom: 1px solid var(--gm-border);
+    }
+    .qotd-modal-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.1rem; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--txt-mid);
+    }
+    .qotd-modal-close {
+      background: none; border: none; color: var(--txt-dim);
+      cursor: pointer; font-size: 1.3rem; line-height: 1;
+      padding: 4px 8px; border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .qotd-modal-close:hover { color: var(--txt-bright); background: var(--gm-mid); }
+    .qotd-modal-body { padding: 2rem 2.4rem 2.2rem; display: flex; flex-direction: column; gap: 1.6rem; }
+    .qotd-modal-qr-wrap { display: flex; justify-content: center; }
+    .qotd-modal-qr {
+      background: #fff; border-radius: 12px; padding: 12px;
+      width: 280px; height: 280px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .qotd-modal-qr img { width: 256px; height: 256px; display: block; }
+    .qotd-modal-question {
+      font-size: 2rem; font-weight: 500; color: var(--txt-bright);
+      line-height: 1.35; letter-spacing: 0.01em; text-align: center;
+    }
+    .qotd-modal-results { display: flex; flex-direction: column; gap: 0.9rem; }
+    .qotd-modal-bar-row { display: flex; flex-direction: column; gap: 6px; }
+    .qotd-modal-bar-label {
+      display: flex; justify-content: space-between;
+      font-size: 1.15rem; color: var(--txt-bright);
+      font-family: 'Barlow Condensed', sans-serif;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .qotd-modal-bar-label .qotd-bar-pct { color: var(--txt-mid); font-weight: 600; }
+    .qotd-modal-bar-track {
+      height: 14px; background: var(--gm-mid); border-radius: 5px; overflow: hidden;
+    }
+    .qotd-modal-bar-fill {
+      height: 100%; background: var(--raider-red); border-radius: 5px;
+      transition: width 0.5s ease;
+    }
+    .qotd-modal-footer {
+      font-size: 0.9rem; color: var(--txt-dim);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      display: flex; justify-content: space-between; align-items: center;
     }
 
     /* ══════════════════════════════
@@ -1547,20 +1614,19 @@
             </svg>
           </div>
           <div class="sched-reminders collapsed" id="sched-reminders-panel">
-            <button class="sched-reminder-btn" id="sched-remind-bell" onclick="toggleSchedReminder('bell')" title="Play bell sound at the end of each period">
-              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                <line x1="12" y1="2" x2="12" y2="4"/>
-              </svg>
-              End bell
-            </button>
             <button class="sched-reminder-btn" id="sched-remind-early" onclick="toggleSchedReminder('early')" title="Spoken reminder 1 minute before each period">
               <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
               1 min warning
+            </button>
+            <button class="sched-reminder-btn" id="sched-remind-attend" onclick="toggleSchedReminder('attend')" title="Spoken reminder to take attendance 5 minutes into each period">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 11l3 3L22 4"/>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              </svg>
+              Take attendance
             </button>
             <button class="sched-reminder-btn" id="sched-remind-ending" onclick="toggleSchedReminder('ending')" title="Spoken reminder 1 minute before the end of each period">
               <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1569,12 +1635,13 @@
               </svg>
               1 min remaining
             </button>
-            <button class="sched-reminder-btn" id="sched-remind-attend" onclick="toggleSchedReminder('attend')" title="Spoken reminder to take attendance 5 minutes into each period">
+            <button class="sched-reminder-btn" id="sched-remind-bell" onclick="toggleSchedReminder('bell')" title="Play bell sound at the end of each period">
               <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M9 11l3 3L22 4"/>
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                <line x1="12" y1="2" x2="12" y2="4"/>
               </svg>
-              Take attendance
+              End bell
             </button>
             <div class="sched-divider"></div>
             <div class="sched-volume-row">
@@ -1596,8 +1663,8 @@
             <button class="sched-reminder-btn sched-bell-btn" data-bell="quack.mp3"      onclick="selectBell('quack.mp3')">Quack</button>
             <button class="sched-reminder-btn sched-bell-btn" data-bell="bruh.mp3"       onclick="selectBell('bruh.mp3')">Bruh</button>
             <button class="sched-reminder-btn sched-bell-btn" data-bell="hey_listen.mp3" onclick="selectBell('hey_listen.mp3')">Hey Listen</button>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="shame.mp3"      onclick="selectBell('shame.mp3')">Shame</button>
             <button class="sched-reminder-btn sched-bell-btn" data-bell="item.mp3"       onclick="selectBell('item.mp3')">Item</button>
+            <button class="sched-reminder-btn sched-bell-btn" data-bell="shame.mp3"      onclick="selectBell('shame.mp3')">Shame</button>
             <button class="sched-reminder-btn sched-bell-btn" data-bell="random"         onclick="selectBell('random')">Random</button>
           </div>
         </div>
@@ -1798,6 +1865,17 @@
   </div><!-- end col-2 -->
 
 </main>
+
+<!-- QOTD expanded modal -->
+<div class="qotd-modal-overlay" id="qotd-modal-overlay" onclick="qotdCloseModal(event)">
+  <div class="qotd-modal" id="qotd-modal">
+    <div class="qotd-modal-header">
+      <span class="qotd-modal-title">Question of the Day</span>
+      <button class="qotd-modal-close" onclick="qotdCloseModal()" title="Close">&#x2715;</button>
+    </div>
+    <div class="qotd-modal-body" id="qotd-modal-body"></div>
+  </div>
+</div>
 
 <!-- Calendar expanded modal -->
 <div class="cal-modal-overlay" id="cal-modal-overlay" onclick="calCloseModal(event)">
@@ -2840,7 +2918,10 @@
   }
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') document.getElementById('cal-modal-overlay')?.classList.remove('open');
+    if (e.key === 'Escape') {
+      document.getElementById('cal-modal-overlay')?.classList.remove('open');
+      document.getElementById('qotd-modal-overlay')?.classList.remove('open');
+    }
   });
 
   fetchCalendarData();
@@ -3528,8 +3609,8 @@
       </div>`).join('');
 
     body.innerHTML = `
-      <div class="qotd-body">
-        <div class="qotd-qr-wrap"><div class="qotd-qr">${qrHTML}</div></div>
+      <div class="qotd-body" onclick="qotdOpenModal()" style="cursor:pointer" title="Click to expand">
+        <div class="qotd-qr-wrap">${QOTD_VOTE_URL ? `<a href="${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}" target="_blank" rel="noopener" style="display:block;cursor:pointer;" onclick="event.stopPropagation()"><div class="qotd-qr">${qrHTML}</div></a>` : `<div class="qotd-qr">${qrHTML}</div>`}</div>
         <div class="qotd-question">${escHtml(text)}</div>
         <div class="qotd-results">${barsHTML}</div>
         <div class="qotd-footer">
@@ -3553,18 +3634,62 @@
       if (found) counts = _qotdQuestion.options.map((_, i) => parseInt(found[i + 1]) || 0);
 
       const total = counts.reduce((a, b) => a + b, 0);
+      const timeStr = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
       counts.forEach((c, i) => {
         const pct = total ? Math.round((c / total) * 100) : 0;
         const bar = document.getElementById(`qotd-bar-${i}`);
         const lbl = document.getElementById(`qotd-pct-${i}`);
         if (bar) bar.style.width = pct + '%';
         if (lbl) lbl.textContent = total ? `${c} (${pct}%)` : '—';
+        const mbar = document.getElementById(`qotd-modal-bar-${i}`);
+        const mlbl = document.getElementById(`qotd-modal-pct-${i}`);
+        if (mbar) mbar.style.width = pct + '%';
+        if (mlbl) mlbl.textContent = total ? `${c} (${pct}%)` : '—';
       });
       const totalEl   = document.getElementById('qotd-total');
       const updatedEl = document.getElementById('qotd-updated');
       if (totalEl)   totalEl.textContent   = `${total} vote${total !== 1 ? 's' : ''}`;
-      if (updatedEl) updatedEl.textContent = `Updated ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+      if (updatedEl) updatedEl.textContent = `Updated ${timeStr}`;
+      const mtotalEl   = document.getElementById('qotd-modal-total');
+      const mupdatedEl = document.getElementById('qotd-modal-updated');
+      if (mtotalEl)   mtotalEl.textContent   = `${total} vote${total !== 1 ? 's' : ''}`;
+      if (mupdatedEl) mupdatedEl.textContent = `Updated ${timeStr}`;
     } catch(e) { /* silently ignore refresh errors */ }
+  }
+
+  function qotdOpenModal() {
+    if (!_qotdQuestion) return;
+    const { text, options, dayKey } = _qotdQuestion;
+    const voteUrl = QOTD_VOTE_URL ? `${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}` : null;
+    const qrHTML = voteUrl
+      ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&margin=0&data=${encodeURIComponent(voteUrl)}" alt="Vote QR"/>`
+      : `<div class="qotd-qr-placeholder">Set up<br>vote URL</div>`;
+    const qrWrap = voteUrl
+      ? `<a href="${voteUrl}" target="_blank" rel="noopener" style="display:block;cursor:pointer;" onclick="event.stopPropagation()"><div class="qotd-modal-qr">${qrHTML}</div></a>`
+      : `<div class="qotd-modal-qr">${qrHTML}</div>`;
+    const barsHTML = options.map((o, i) => `
+      <div class="qotd-modal-bar-row">
+        <div class="qotd-modal-bar-label">
+          <span>${LETTERS[i]}. ${escHtml(o)}</span>
+          <span class="qotd-bar-pct" id="qotd-modal-pct-${i}">—</span>
+        </div>
+        <div class="qotd-modal-bar-track"><div class="qotd-modal-bar-fill" id="qotd-modal-bar-${i}" style="width:0%"></div></div>
+      </div>`).join('');
+    document.getElementById('qotd-modal-body').innerHTML = `
+      <div class="qotd-modal-qr-wrap">${qrWrap}</div>
+      <div class="qotd-modal-question">${escHtml(text)}</div>
+      <div class="qotd-modal-results">${barsHTML}</div>
+      <div class="qotd-modal-footer">
+        <span id="qotd-modal-total">0 votes</span>
+        <span id="qotd-modal-updated"></span>
+      </div>`;
+    fetchQOTDResults();
+    document.getElementById('qotd-modal-overlay').classList.add('open');
+  }
+
+  function qotdCloseModal(e) {
+    if (e && e.target !== document.getElementById('qotd-modal-overlay') && !e.target.closest('.qotd-modal-close')) return;
+    document.getElementById('qotd-modal-overlay').classList.remove('open');
   }
 
   fetchQOTD();
