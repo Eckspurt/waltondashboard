@@ -2362,6 +2362,11 @@
     announcements: true, timer: true, music: true,
     weather: true, leaderboard: true, qotd: true,
   };
+
+  const DEFAULT_MOBILE_VISIBILITY = {
+    weather: true, schedule: true, calendar: true, announcements: true,
+    classboard: false, timer: false, music: false, leaderboard: false, qotd: false,
+  };
   let dragItem = null;
 
   function initDragAndDrop() {
@@ -2502,7 +2507,7 @@
 
     if (isMobile) {
       const col0 = document.getElementById('col-0');
-      const mobileOrder = ['weather', 'schedule', 'announcements', 'leaderboard', 'classboard', 'timer', 'qotd'];
+      const mobileOrder = ['weather', 'schedule', 'calendar', 'announcements', 'classboard', 'timer', 'music', 'leaderboard', 'qotd'];
 
       let order = mobileOrder;
       if (saved) {
@@ -3741,11 +3746,13 @@
   ];
 
   function loadVisibility() {
+    const isMobile = window.innerWidth <= 900;
     try {
       const saved = localStorage.getItem(WIDGET_VISIBILITY_KEY);
-      return saved ? JSON.parse(saved) : { ...DEFAULT_VISIBILITY };
+      if (saved) return JSON.parse(saved);
+      return isMobile ? { ...DEFAULT_MOBILE_VISIBILITY } : { ...DEFAULT_VISIBILITY };
     }
-    catch(e) { return { ...DEFAULT_VISIBILITY }; }
+    catch(e) { return isMobile ? { ...DEFAULT_MOBILE_VISIBILITY } : { ...DEFAULT_VISIBILITY }; }
   }
 
   function saveVisibility(vis) {
