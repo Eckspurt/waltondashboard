@@ -2203,7 +2203,14 @@
         console.warn('Calendar tab read failed, using Daily');
       }
 
-      const scheduleRows = await fetchSheetData(tabToUse);
+      let scheduleRows;
+      try {
+        scheduleRows = await fetchSheetData(tabToUse);
+      } catch(e) {
+        console.warn(`Schedule tab "${tabToUse}" not found, falling back to Daily`);
+        tabToUse = 'Daily';
+        scheduleRows = await fetchSheetData('Daily');
+      }
       const dataRows = scheduleRows[0] && scheduleRows[0][0].toLowerCase().includes('period')
         ? scheduleRows.slice(1) : scheduleRows;
 
