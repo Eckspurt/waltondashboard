@@ -1959,17 +1959,36 @@
   }
 
   // ── Live clock ──
+  // Atomic clock sync: fetch reference time once, store offset vs local clock
+  let _timeOffsetMs = 0;
+  function now() { return new Date(Date.now() + _timeOffsetMs); }
+
+  (async function syncAtomicClock() {
+    try {
+      const tz  = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const res  = await fetch(`https://worldtimeapi.org/api/timezone/${encodeURIComponent(tz)}`);
+      const json = await res.json();
+      // unixtime is seconds; measure local time at moment of parse
+      const serverMs = json.unixtime * 1000;
+      _timeOffsetMs  = serverMs - Date.now();
+    } catch {
+      // Fall back to machine time silently
+    }
+    // Re-sync every 30 minutes
+    setTimeout(syncAtomicClock, 30 * 60 * 1000);
+  })();
+
   function updateClock() {
-    const now  = new Date();
-    const h    = now.getHours();
-    const m    = String(now.getMinutes()).padStart(2, '0');
+    const n    = now();
+    const h    = n.getHours();
+    const m    = String(n.getMinutes()).padStart(2, '0');
     const ampm = h >= 12 ? 'PM' : 'AM';
     document.getElementById('header-clock').textContent = `${h % 12 || 12}:${m} ${ampm}`;
     const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const MONTHS = ['January','February','March','April','May','June',
                     'July','August','September','October','November','December'];
     document.getElementById('header-date').textContent =
-      `${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+      `${DAYS[n.getDay()]}, ${MONTHS[n.getMonth()]} ${n.getDate()}, ${n.getFullYear()}`;
   }
   updateClock();
   setInterval(updateClock, 1000);
@@ -2202,8 +2221,8 @@
   }
 
   function minutesToNow() {
-    const now = new Date();
-    return now.getHours() * 60 + now.getMinutes();
+    const n = now();
+    return n.getHours() * 60 + n.getMinutes();
   }
 
   function minsToStr(mins) {
@@ -2336,7 +2355,7 @@
     const body   = document.getElementById('schedule-body');
     const nowMin = minutesToNow();
 
-    const todayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
+    const todayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][now().getDay()];
     const ld = getLunchDuty();
 
     const rows = periods.map(p => {
@@ -2999,7 +3018,7 @@
     }
     if (nowMin !== _lastLunchDutyMin) {
       const ld = getLunchDuty();
-      const todayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
+      const todayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][now().getDay()];
       if (ld.enabled) {
         const triggered = (ld.entries || []).some(e => {
           if (e.day !== todayName || !e.period) return false;
