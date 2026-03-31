@@ -542,12 +542,21 @@
       color: var(--txt-dim);
     }
     .sched-divider { flex-basis: 100%; height: 0; border-top: 1px solid var(--gm-border); margin: 2px 0; }
+    .sched-bell-sounds { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .sched-bell-sounds.hidden { display: none; }
     .sched-lunch-row { flex-basis: 100%; display: flex; flex-direction: column; gap: 0; align-items: flex-start; }
     .lunch-duty-config {
-      display: flex; flex-wrap: wrap; gap: 0.35rem;
+      display: flex; flex-direction: column; gap: 0.35rem;
       width: 100%; padding: 0.3rem 0 0.1rem;
     }
     .lunch-duty-config.hidden { display: none; }
+    .lunch-duty-entry { display: flex; gap: 0.35rem; align-items: center; width: 100%; }
+    .lunch-duty-entry-btn {
+      flex-shrink: 0; background: none; border: none; padding: 0 2px;
+      font-size: 0.85rem; line-height: 1; cursor: pointer;
+      color: var(--txt-muted); transition: color 0.15s;
+    }
+    .lunch-duty-entry-btn:hover { color: var(--raider-red); }
     .lunch-duty-select {
       flex: 1; min-width: 60px;
       background: var(--gm-dark); color: var(--txt-mid);
@@ -1006,6 +1015,15 @@
       background: var(--gm-dark);
     }
     .wm-list { padding: 0.5rem 0; }
+    .wm-divider { height: 0; border-top: 1px solid var(--gm-border); margin: 0.25rem 0; }
+    .wm-feedback-row {
+      display: flex; align-items: center;
+      padding: 0.6rem 1rem; gap: 0.75rem;
+      cursor: pointer; user-select: none;
+      transition: background 0.15s; text-decoration: none;
+    }
+    .wm-feedback-row:hover { background: var(--gm-mid); }
+    .wm-feedback-row .wm-label { color: var(--txt-dim); }
     .wm-row {
       display: flex; align-items: center;
       padding: 0.6rem 1rem; gap: 0.75rem;
@@ -1665,6 +1683,7 @@
               </svg>
               1 min remaining
             </button>
+            <div class="sched-divider"></div>
             <button class="sched-reminder-btn" id="sched-remind-bell" onclick="toggleSchedReminder('bell')" title="Play bell sound at the end of each period">
               <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -1673,6 +1692,17 @@
               </svg>
               End bell
             </button>
+            <div class="sched-bell-sounds" id="sched-bell-sounds">
+              <button class="sched-reminder-btn sched-bell-btn" data-bell="bell.mp3"       onclick="selectBell('bell.mp3')">Bell</button>
+              <button class="sched-reminder-btn sched-bell-btn" data-bell="slide.mp3"      onclick="selectBell('slide.mp3')">Slide</button>
+              <button class="sched-reminder-btn sched-bell-btn" data-bell="quack.mp3"      onclick="selectBell('quack.mp3')">Quack</button>
+              <button class="sched-reminder-btn sched-bell-btn" data-bell="bruh.mp3"       onclick="selectBell('bruh.mp3')">Bruh</button>
+              <button class="sched-reminder-btn sched-bell-btn" data-bell="hey_listen.mp3" onclick="selectBell('hey_listen.mp3')">Hey Listen</button>
+              <button class="sched-reminder-btn sched-bell-btn" data-bell="item.mp3"       onclick="selectBell('item.mp3')">Item</button>
+              <button class="sched-reminder-btn sched-bell-btn" data-bell="shame.mp3"      onclick="selectBell('shame.mp3')">Shame</button>
+              <button class="sched-reminder-btn sched-bell-btn" data-bell="random"         onclick="selectBell('random')">Random</button>
+            </div>
+            <div class="sched-divider"></div>
             <div class="sched-lunch-row">
             <button class="sched-reminder-btn" id="sched-remind-lunch" onclick="toggleLunchDuty()" title="Show a lunch duty badge on the specified period when today matches">
               <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1682,21 +1712,7 @@
               </svg>
               Lunch Duty
             </button>
-            <div class="lunch-duty-config hidden" id="lunch-duty-config">
-              <select class="lunch-duty-select" id="lunch-duty-day" title="Day of week" onchange="saveLunchDutySetting('day', this.value)">
-                <option value="Monday">Monday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Wednesday">Wednesday</option>
-                <option value="Thursday">Thursday</option>
-                <option value="Friday">Friday</option>
-              </select>
-              <select class="lunch-duty-select" id="lunch-duty-period" title="Period" onchange="saveLunchDutySetting('period', this.value)">
-              </select>
-              <select class="lunch-duty-select" id="lunch-duty-half" title="Half of period" onchange="saveLunchDutySetting('half', this.value)">
-                <option value="1st Half">1st Half</option>
-                <option value="2nd Half">2nd Half</option>
-              </select>
-            </div>
+            <div class="lunch-duty-config hidden" id="lunch-duty-config"></div>
             </div>
             <div class="sched-divider"></div>
             <div class="sched-volume-row">
@@ -1712,15 +1728,6 @@
               <input class="sched-volume-slider" id="sched-remind-volume" type="range" min="0" max="100" value="50"
                 oninput="saveReminderVolume(this.value)" title="Reminder volume"/>
             </div>
-            <div class="sched-divider"></div>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="bell.mp3"       onclick="selectBell('bell.mp3')">Bell</button>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="slide.mp3"      onclick="selectBell('slide.mp3')">Slide</button>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="quack.mp3"      onclick="selectBell('quack.mp3')">Quack</button>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="bruh.mp3"       onclick="selectBell('bruh.mp3')">Bruh</button>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="hey_listen.mp3" onclick="selectBell('hey_listen.mp3')">Hey Listen</button>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="item.mp3"       onclick="selectBell('item.mp3')">Item</button>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="shame.mp3"      onclick="selectBell('shame.mp3')">Shame</button>
-            <button class="sched-reminder-btn sched-bell-btn" data-bell="random"         onclick="selectBell('random')">Random</button>
           </div>
         </div>
       </div>
@@ -2315,8 +2322,11 @@
 
     const pct = Math.round(((nowMin - current.start) / (current.end - current.start)) * 100);
     bg.style.width        = `${pct}%`;
-    const stripIsHomeroom = current.name.toLowerCase().includes('homeroom');
-    nameEl.textContent    = stripIsHomeroom ? 'Dead Time' : current.name;
+    const nowMin2  = minutesToNow();
+    const stripIsDeadTime = current.name.toLowerCase().includes('homeroom')
+      || (nowMin2 - current.start) < 5
+      || (current.end - nowMin2) <= 5;
+    nameEl.textContent = stripIsDeadTime ? 'Dead Time' : current.name;
     countdown.textContent = minsToStr(current.end - nowMin);
     timesEl.textContent   = `${current.startStr} – ${current.endStr}`;
     strip.classList.add('visible');
@@ -2333,13 +2343,13 @@
       const isPast      = nowMin >= p.end;
       const isCurrent   = nowMin >= p.start && nowMin < p.end;
       const isHomeroom   = p.name.toLowerCase().includes('homeroom');
-      const isDeadTime   = isCurrent && (isHomeroom || (nowMin - p.start) < 5);
+      const isDeadTime   = isCurrent && (isHomeroom || (nowMin - p.start) < 5 || (p.end - nowMin) <= 5);
       const isEndingSoon = isCurrent && (p.end - nowMin) <= 1;
       const pct         = isCurrent
         ? Math.round(((nowMin - p.start) / (p.end - p.start)) * 100)
         : 0;
       const remaining = isCurrent ? minsToStr(p.end - nowMin) : '';
-      const showLunch = ld.enabled && ld.period === p.name && ld.day === todayName;
+      const showLunch = ld.enabled && (ld.entries || []).some(e => e.period === p.name && e.day === todayName);
       return `<div class="period-row ${isPast ? 'is-past' : ''} ${isCurrent ? 'is-current' : ''} ${isDeadTime ? 'is-dead-time' : ''} ${isEndingSoon ? 'is-ending-soon' : ''}">
         ${isCurrent ? `<div class="period-progress" style="width:${pct}%"></div>` : ''}
         <div class="period-name">${p.name}</div>
@@ -2348,7 +2358,7 @@
             <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/>
             <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>
           </svg>
-          Lunch Duty${ld.half ? ' · ' + ld.half : ''}
+          Lunch Duty${(ld.entries || []).find(e => e.period === p.name && e.day === todayName)?.half ? ' · ' + (ld.entries || []).find(e => e.period === p.name && e.day === todayName).half : ''}
         </span>` : ''}
         ${isCurrent ? `<div class="period-countdown">${remaining}</div>` : ''}
         <div class="period-times">
@@ -2362,7 +2372,7 @@
     body.innerHTML = `<div class="period-list">${rows}</div>`;
     currentSchedulePeriods = periods;
     currentScheduleTab     = tabName;
-    populateLunchDutyPeriods(periods);
+    renderLunchDutyEntries();
     updateSchedStrip();
   }
 
@@ -2826,14 +2836,16 @@
     const next = !current;
     localStorage.setItem(key, isBell ? (next ? 'true' : 'false') : next);
     document.getElementById(`sched-remind-${type}`)?.classList.toggle('active', next);
+    if (isBell) document.getElementById('sched-bell-sounds')?.classList.toggle('hidden', !next);
   }
 
   function initSchedReminders() {
     const panelOpen = localStorage.getItem(SCHED_REMIND_PANEL_KEY) === 'true';
     document.getElementById('sched-reminders-panel')?.classList.toggle('collapsed', !panelOpen);
     document.getElementById('sched-reminders-chevron')?.classList.toggle('collapsed', !panelOpen);
-    document.getElementById('sched-remind-bell')?.classList.toggle('active',
-      localStorage.getItem(SCHED_REMIND_BELL_KEY) !== 'false');
+    const bellOn = localStorage.getItem(SCHED_REMIND_BELL_KEY) !== 'false';
+    document.getElementById('sched-remind-bell')?.classList.toggle('active', bellOn);
+    document.getElementById('sched-bell-sounds')?.classList.toggle('hidden', !bellOn);
     document.getElementById('sched-remind-early')?.classList.toggle('active',
       localStorage.getItem(SCHED_REMIND_EARLY_KEY) === 'true');
     document.getElementById('sched-remind-ending')?.classList.toggle('active',
@@ -2849,8 +2861,15 @@
   const LUNCH_DUTY_KEY = 'walton-lunch-duty';
 
   function getLunchDuty() {
-    try { return JSON.parse(localStorage.getItem(LUNCH_DUTY_KEY)) || {}; }
-    catch { return {}; }
+    try {
+      const raw = JSON.parse(localStorage.getItem(LUNCH_DUTY_KEY)) || {};
+      // Migrate old single-entry format
+      if (!raw.entries) {
+        raw.entries = [{ day: raw.day || 'Monday', period: raw.period || '', half: raw.half || '1st Half' }];
+        delete raw.day; delete raw.period; delete raw.half;
+      }
+      return raw;
+    } catch { return { enabled: false, entries: [{ day: 'Monday', period: '', half: '1st Half' }] }; }
   }
 
   function _saveLunchDuty(data) {
@@ -2866,32 +2885,65 @@
     if (currentSchedulePeriods) renderSchedule(currentSchedulePeriods, currentScheduleTab);
   }
 
-  function saveLunchDutySetting(field, value) {
+  function updateLunchDutyEntry(index, field, value) {
     const d = getLunchDuty();
-    d[field] = value;
-    _saveLunchDuty(d);
+    if (d.entries[index]) { d.entries[index][field] = value; _saveLunchDuty(d); }
     if (currentSchedulePeriods) renderSchedule(currentSchedulePeriods, currentScheduleTab);
   }
 
-  function populateLunchDutyPeriods(periods) {
-    const sel = document.getElementById('lunch-duty-period');
-    if (!sel) return;
-    const saved = getLunchDuty().period || '';
-    const lunchPeriods = periods.filter(p => /\b(3rd|4th|5th|6th|period\s*[3456]|^[3456]$)/i.test(p.name));
-    sel.innerHTML = lunchPeriods.map(p =>
-      `<option value="${escHtml(p.name)}" ${p.name === saved ? 'selected' : ''}>${escHtml(p.name)}</option>`
-    ).join('');
-    if (!saved && lunchPeriods.length) {
-      const d = getLunchDuty(); d.period = lunchPeriods[0].name; _saveLunchDuty(d);
+  function addLunchDutyEntry() {
+    const d = getLunchDuty();
+    const last = d.entries[d.entries.length - 1] || {};
+    d.entries.push({ day: last.day || 'Monday', period: last.period || '', half: last.half || '1st Half' });
+    _saveLunchDuty(d);
+    renderLunchDutyEntries();
+  }
+
+  function removeLunchDutyEntry(index) {
+    const d = getLunchDuty();
+    if (d.entries.length <= 1) return;
+    d.entries.splice(index, 1);
+    _saveLunchDuty(d);
+    renderLunchDutyEntries();
+    if (currentSchedulePeriods) renderSchedule(currentSchedulePeriods, currentScheduleTab);
+  }
+
+  const _DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  const _HALVES = ['1st Half','2nd Half'];
+
+  function renderLunchDutyEntries() {
+    const config = document.getElementById('lunch-duty-config');
+    if (!config) return;
+    const d = getLunchDuty();
+    const lunchPeriods = (currentSchedulePeriods || [])
+      .filter(p => /\b(3rd|4th|5th|6th|period\s*[3456]|^[3456]$)/i.test(p.name));
+    if (!d.entries[0]?.period && lunchPeriods.length) {
+      d.entries[0].period = lunchPeriods[0].name; _saveLunchDuty(d);
     }
+    const hasTwo = d.entries.length >= 2;
+    config.innerHTML = d.entries.slice(0, 2).map((e, i) => `
+      <div class="lunch-duty-entry">
+        <select class="lunch-duty-select" onchange="updateLunchDutyEntry(${i},'day',this.value)">
+          ${_DAYS.map(day => `<option value="${day}" ${e.day === day ? 'selected' : ''}>${day}</option>`).join('')}
+        </select>
+        <select class="lunch-duty-select" onchange="updateLunchDutyEntry(${i},'period',this.value)">
+          ${lunchPeriods.map(p => `<option value="${escHtml(p.name)}" ${e.period === p.name ? 'selected' : ''}>${escHtml(p.name)}</option>`).join('')}
+        </select>
+        <select class="lunch-duty-select" onchange="updateLunchDutyEntry(${i},'half',this.value)">
+          ${_HALVES.map(h => `<option value="${h}" ${e.half === h ? 'selected' : ''}>${h}</option>`).join('')}
+        </select>
+        ${hasTwo
+          ? `<button class="lunch-duty-entry-btn" onclick="removeLunchDutyEntry(${i})" title="Remove">✕</button>`
+          : `<button class="lunch-duty-entry-btn" onclick="addLunchDutyEntry()" title="Add another">+</button>`
+        }
+      </div>`).join('');
   }
 
   function initLunchDuty() {
     const d = getLunchDuty();
     document.getElementById('sched-remind-lunch')?.classList.toggle('active', !!d.enabled);
     document.getElementById('lunch-duty-config')?.classList.toggle('hidden', !d.enabled);
-    if (d.day) { const el = document.getElementById('lunch-duty-day'); if (el) el.value = d.day; }
-    if (d.half) { const el = document.getElementById('lunch-duty-half'); if (el) el.value = d.half; }
+    renderLunchDutyEntries();
   }
   initLunchDuty();
   // ────────────────────────────────────────────────
@@ -2948,16 +3000,19 @@
     if (nowMin !== _lastLunchDutyMin) {
       const ld = getLunchDuty();
       const todayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
-      if (ld.enabled && ld.day === todayName && ld.period) {
-        const p = currentSchedulePeriods.find(p => p.name === ld.period);
-        if (p) {
-          const triggerMin = ld.half === '2nd Half'
+      if (ld.enabled) {
+        const triggered = (ld.entries || []).some(e => {
+          if (e.day !== todayName || !e.period) return false;
+          const p = currentSchedulePeriods.find(p => p.name === e.period);
+          if (!p) return false;
+          const triggerMin = e.half === '2nd Half'
             ? Math.round((p.start + p.end) / 2) - 5
             : p.start - 5;
-          if (nowMin === triggerMin) {
-            _lastLunchDutyMin = nowMin;
-            speakReminder('Lunch duty in 5 minutes');
-          }
+          return nowMin === triggerMin;
+        });
+        if (triggered) {
+          _lastLunchDutyMin = nowMin;
+          speakReminder('Lunch duty in 5 minutes');
         }
       }
     }
@@ -4018,6 +4073,15 @@
 <div id="widget-manager-panel" onclick="event.stopPropagation()">
   <div class="wm-header">Manage Widgets</div>
   <div class="wm-list" id="wm-list"></div>
+  <div class="wm-divider"></div>
+  <a class="wm-feedback-row" href="https://forms.cloud.microsoft/Pages/DesignPageV2.aspx?subpage=design&id=-x3OL5-ROEmquMR_D8kYLcE26z931ZRIlKG9WldLe9VUNEpVWTA0UVE4M0NKSDNUMTNGOVFHMERQMy4u" target="_blank" rel="noopener">
+    <div class="wm-icon">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    </div>
+    <span class="wm-label">Feedback</span>
+  </a>
 </div>
 
 </body>
