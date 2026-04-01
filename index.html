@@ -661,8 +661,13 @@
     .cal-tag.tag-event    { background: #2a1a3a; color: #b07af5; }
     .cal-tag.tag-other    { background: var(--gm-mid); color: var(--txt-dim); }
     .cal-tag.tag-gcal    { background: #0d2e3a; color: #5dcfea; }
+    .cal-tag.tag-gcal-0  { background: #0d2e3a; color: #5dcfea; }
+    .cal-tag.tag-gcal-1  { background: #1a2e0d; color: #7af55d; }
+    .cal-tag.tag-gcal-2  { background: #2e1a0d; color: #f5a05d; }
+    .cal-tag.tag-gcal-3  { background: #2e0d2e; color: #ea5dcf; }
     .cal-toggle-row {
       display: flex; gap: 0.4rem; padding: 0.3rem 0.85rem 0.4rem;
+      flex-wrap: wrap; align-items: center;
     }
     .cal-source-btn {
       font-size: 0.58rem; font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
@@ -679,8 +684,22 @@
       transition: max-height 0.25s ease, opacity 0.2s;
       border-bottom: 1px solid transparent;
     }
-    .cal-settings-row.open { max-height: 52px; opacity: 1; border-bottom-color: var(--gm-border); }
-    .cal-settings-inner { padding: 0.4rem 0.85rem; display: flex; gap: 0.4rem; align-items: center; }
+    .cal-settings-row.open { max-height: 400px; opacity: 1; border-bottom-color: var(--gm-border); }
+    .cal-settings-inner { padding: 0.4rem 0.85rem 0; display: flex; gap: 0.4rem; align-items: center; }
+    .cal-settings-inner:last-child { padding-bottom: 0.4rem; }
+    .cal-name-input { max-width: 90px; flex-shrink: 0; }
+    .cal-add-btn {
+      background: none; border: none; color: var(--txt-dim); cursor: pointer;
+      font-size: 1rem; line-height: 1; padding: 0 3px;
+      transition: color 0.15s;
+    }
+    .cal-add-btn:hover { color: var(--txt-bright); }
+    .cal-remove-btn {
+      background: none; border: none; color: var(--txt-dim); cursor: pointer;
+      font-size: 0.8rem; line-height: 1; padding: 0 2px; flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .cal-remove-btn:hover { color: var(--raider-red); }
     .cal-ical-input {
       flex: 1; min-width: 0;
       background: var(--gm-mid); border: 1px solid var(--gm-border);
@@ -1640,6 +1659,10 @@
                 </svg>
                 Video
               </button>
+            </div>
+            <div id="music-suggested-section">
+              <div class="music-section-label">Suggested</div>
+              <div class="music-recents" id="music-suggested"></div>
             </div>
             <div id="music-recents-section">
               <div class="music-section-label">Recent</div>
@@ -3088,46 +3111,76 @@
   let calGcalData  = {}; // same structure, from Google Calendar iCal
   let _calSettingsOpen = false;
 
-  const CAL_GCAL_URL_KEY   = 'walton-gcal-url';
-  const CAL_SHOW_SHEET_KEY = 'walton-cal-show-sheet';
-  const CAL_SHOW_GCAL_KEY  = 'walton-cal-show-gcal';
+  const CAL_SHOW_SHEET_KEY  = 'walton-cal-show-sheet';
+  const CAL_CALENDARS_KEY   = 'walton-gcal-calendars';
 
   function calGetShowSheet() { return localStorage.getItem(CAL_SHOW_SHEET_KEY) !== 'false'; }
-  function calGetShowGcal()  { return localStorage.getItem(CAL_SHOW_GCAL_KEY) === 'true'; }
-  function calGetGcalUrl()   { return localStorage.getItem(CAL_GCAL_URL_KEY) || ''; }
+
+  function calGetCalendars() {
+    try {
+      const stored = localStorage.getItem(CAL_CALENDARS_KEY);
+      if (stored) return JSON.parse(stored);
+      // Migrate old single-calendar format
+      const oldUrl = localStorage.getItem('walton-gcal-url') || '';
+      const oldOn  = localStorage.getItem('walton-cal-show-gcal') === 'true';
+      const cals   = oldUrl ? [{ id: 'migrated', name: 'Google', url: oldUrl, enabled: oldOn }] : [];
+      _saveCalendars(cals);
+      return cals;
+    } catch { return []; }
+  }
+
+  function _saveCalendars(cals) {
+    localStorage.setItem(CAL_CALENDARS_KEY, JSON.stringify(cals));
+  }
 
   function calToggleSheet() {
     localStorage.setItem(CAL_SHOW_SHEET_KEY, String(!calGetShowSheet()));
     renderCalendar();
   }
 
-  function calToggleGcal() {
-    const nowOn = !calGetShowGcal();
-    localStorage.setItem(CAL_SHOW_GCAL_KEY, String(nowOn));
-    if (nowOn && calGetGcalUrl() && !Object.keys(calGcalData).length) {
-      fetchGcalData();
-    } else {
-      renderCalendar();
-    }
+  function calToggleCalendar(id) {
+    const cals = calGetCalendars();
+    const cal  = cals.find(c => c.id === id);
+    if (!cal) return;
+    cal.enabled = !cal.enabled;
+    _saveCalendars(cals);
+    if (cal.enabled && cal.url && !calGcalData[id]) fetchGcalData(cal);
+    else renderCalendar();
+  }
+
+  function calAddCalendar() {
+    const cals = calGetCalendars();
+    cals.push({ id: Date.now().toString(), name: 'Calendar ' + (cals.length + 1), url: '', enabled: false });
+    _saveCalendars(cals);
+    renderCalendar();
+  }
+
+  function calRemoveCalendar(id) {
+    _saveCalendars(calGetCalendars().filter(c => c.id !== id));
+    delete calGcalData[id];
+    renderCalendar();
+  }
+
+  function calSaveCalendar(id) {
+    const nameEl = document.getElementById('cal-name-' + id);
+    const urlEl  = document.getElementById('cal-url-' + id);
+    if (!nameEl || !urlEl) return;
+    const cals = calGetCalendars();
+    const cal  = cals.find(c => c.id === id);
+    if (!cal) return;
+    cal.name = nameEl.value.trim() || cal.name;
+    cal.url  = urlEl.value.trim();
+    _saveCalendars(cals);
+    if (cal.enabled && cal.url) fetchGcalData(cal);
+    else renderCalendar();
   }
 
   function calToggleSettings() {
     _calSettingsOpen = !_calSettingsOpen;
-    const panel      = document.getElementById('cal-settings-row');
-    const chevron    = document.getElementById('cal-gcal-chevron');
+    const panel   = document.getElementById('cal-settings-row');
+    const chevron = document.getElementById('cal-gcal-chevron');
     if (panel)   panel.classList.toggle('open', _calSettingsOpen);
     if (chevron) chevron.classList.toggle('collapsed', !_calSettingsOpen);
-  }
-
-  function calSaveGcalUrl(url) {
-    url = url.trim();
-    localStorage.setItem(CAL_GCAL_URL_KEY, url);
-    if (url && calGetShowGcal()) {
-      fetchGcalData();
-    } else {
-      calGcalData = {};
-      renderCalendar();
-    }
   }
 
   function _extractCalId(input) {
@@ -3136,13 +3189,12 @@
     return m ? decodeURIComponent(m[1]) : input.trim();
   }
 
-  async function fetchGcalData() {
-    const stored = calGetGcalUrl();
-    if (!stored) return;
-    const calId  = _extractCalId(stored);
-    const now    = new Date();
-    const tMin   = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-    const tMax   = new Date(now.getFullYear() + 1, now.getMonth() + 1, 1).toISOString();
+  async function fetchGcalData(cal) {
+    if (!cal?.url) return;
+    const calId  = _extractCalId(cal.url);
+    const n      = now();
+    const tMin   = new Date(n.getFullYear(), n.getMonth() - 1, 1).toISOString();
+    const tMax   = new Date(n.getFullYear() + 1, n.getMonth() + 1, 1).toISOString();
     const apiUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`
                  + `?key=${SHEETS_API_KEY}&singleEvents=true&maxResults=500`
                  + `&timeMin=${encodeURIComponent(tMin)}&timeMax=${encodeURIComponent(tMax)}`;
@@ -3150,19 +3202,24 @@
       const res  = await fetch(apiUrl);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      calGcalData = {};
+      calGcalData[cal.id] = {};
       (json.items || []).forEach(item => {
         const dateStr = item.start?.date || item.start?.dateTime?.substring(0, 10);
         if (!dateStr || !item.summary) return;
         const [y, m, d] = dateStr.split('-').map(Number);
         const key = `${m}/${d}/${y}`;
-        if (!calGcalData[key]) calGcalData[key] = [];
-        calGcalData[key].push(item.summary);
+        if (!calGcalData[cal.id][key]) calGcalData[cal.id][key] = [];
+        calGcalData[cal.id][key].push(item.summary);
       });
     } catch(e) {
       console.warn('Google Calendar fetch failed:', e.message);
     }
     renderCalendar();
+  }
+
+  async function fetchAllGcalData() {
+    const cals = calGetCalendars().filter(c => c.enabled && c.url);
+    await Promise.all(cals.map(c => fetchGcalData(c)));
   }
 
   function _calDateKey(y, m, d) {
@@ -3214,13 +3271,16 @@
     for (let d = 1; d <= lastDay.getDate(); d++) {
       const dow         = new Date(year, month, d).getDay();
       const isToday     = year === today.getFullYear() && month === today.getMonth() && d === today.getDate();
-      const sheetLabels = calGetShowSheet() ? (calSheetData[_calDateKey(year, month, d)] || []) : [];
-      const gcalLabels  = calGetShowGcal()  ? (calGcalData[_calDateKey(year, month, d)]  || []) : [];
-      const weekend     = dow === 0 || dow === 6;
-      const tagsHTML    = [
+      const sheetLabels  = calGetShowSheet() ? (calSheetData[_calDateKey(year, month, d)] || []) : [];
+      const enabledCals  = calGetCalendars().filter(c => c.enabled);
+      const gcalTagsHTML = enabledCals.flatMap((c, i) =>
+        (calGcalData[c.id]?.[_calDateKey(year, month, d)] || []).map(l =>
+          `<span class="cal-tag tag-gcal-${i % 4}" title="${escHtml(l)}">${escHtml(l)}</span>`)
+      ).join('');
+      const weekend  = dow === 0 || dow === 6;
+      const tagsHTML = [
         ...sheetLabels.map(l => `<span class="cal-tag ${_calTagClass(l)}" title="${escHtml(l)}">${escHtml(l)}</span>`),
-        ...gcalLabels.map(l  => `<span class="cal-tag tag-gcal" title="${escHtml(l)}">${escHtml(l)}</span>`),
-      ].join('');
+      ].join('') + gcalTagsHTML;
       cells += `<div class="cal-cell${isToday ? ' cal-today' : ''}${weekend ? ' cal-weekend' : ''}">
         <span class="cal-num">${d}</span>
         ${tagsHTML}
@@ -3238,8 +3298,19 @@
     if (!body) return;
     const { dayNames, cells, monthName } = _calBuildCells(calYear, calMonth);
     const showSheet = calGetShowSheet();
-    const showGcal  = calGetShowGcal();
-    const gcalUrl   = calGetGcalUrl();
+    const cals      = calGetCalendars();
+    const calBtns   = cals.map(c =>
+      `<button class="cal-source-btn${c.enabled ? ' active' : ''}" onclick="calToggleCalendar('${c.id}')">${escHtml(c.name)}</button>`
+    ).join('');
+    const settingsRows = cals.map(c => `
+      <div class="cal-settings-inner">
+        <input class="cal-ical-input cal-name-input" id="cal-name-${c.id}" value="${escHtml(c.name)}" placeholder="Name"
+          onkeydown="if(event.key==='Enter')calSaveCalendar('${c.id}')"/>
+        <input class="cal-ical-input" id="cal-url-${c.id}" value="${escHtml(c.url)}" placeholder="Paste Google Calendar iCal URL…"
+          onkeydown="if(event.key==='Enter')calSaveCalendar('${c.id}')"/>
+        <button class="cal-ical-save-btn" onclick="calSaveCalendar('${c.id}')">Save</button>
+        <button class="cal-remove-btn" onclick="calRemoveCalendar('${c.id}')" title="Remove">✕</button>
+      </div>`).join('');
     body.innerHTML = `
       <div class="cal-nav">
         <button class="cal-nav-btn" onclick="calNav(-1)">&#8249;</button>
@@ -3248,19 +3319,14 @@
       </div>
       <div class="cal-toggle-row">
         <button class="cal-source-btn${showSheet ? ' active' : ''}" onclick="calToggleSheet()" title="Toggle school calendar">School</button>
-        <button class="cal-source-btn${showGcal ? ' active' : ''}" onclick="calToggleGcal()" title="Toggle Google Calendar">Google</button>
-        <svg id="cal-gcal-chevron" onclick="calToggleSettings()" class="widget-chevron${_calSettingsOpen ? '' : ' collapsed'}" style="cursor:pointer;margin-left:1px" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        ${calBtns}
+        <button class="cal-add-btn" onclick="calAddCalendar()" title="Add calendar">+</button>
+        <svg id="cal-gcal-chevron" onclick="calToggleSettings()" class="widget-chevron${_calSettingsOpen ? '' : ' collapsed'}" style="cursor:pointer;margin-left:auto" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
           <polyline points="6 9 12 15 18 9"/>
         </svg>
       </div>
       <div class="cal-settings-row${_calSettingsOpen ? ' open' : ''}" id="cal-settings-row">
-        <div class="cal-settings-inner">
-          <input class="cal-ical-input" id="cal-ical-input" type="text"
-            placeholder="Paste Google Calendar iCal URL…"
-            value="${escHtml(gcalUrl)}"
-            onkeydown="if(event.key==='Enter')calSaveGcalUrl(this.value)"/>
-          <button class="cal-ical-save-btn" onclick="calSaveGcalUrl(document.getElementById('cal-ical-input').value)">Save</button>
-        </div>
+        ${settingsRows}
       </div>
       <div class="cal-grid" onclick="calOpenModal()" title="Click to expand">
         ${dayNames.map(n => `<div class="cal-day-hdr">${n}</div>`).join('')}
@@ -3313,9 +3379,9 @@
   });
 
   fetchCalendarData();
-  if (calGetShowGcal() && calGetGcalUrl()) fetchGcalData();
-  setInterval(fetchCalendarData, 60 * 60 * 1000); // refresh hourly
-  setInterval(() => { if (calGetShowGcal() && calGetGcalUrl()) fetchGcalData(); }, 60 * 60 * 1000);
+  fetchAllGcalData();
+  setInterval(fetchCalendarData, 60 * 60 * 1000);
+  setInterval(fetchAllGcalData,  60 * 60 * 1000);
 
   // ══════════════════════════════════════════════
   //  TIMER WIDGET
@@ -3725,6 +3791,33 @@
     musicRenderRecents();
   }
 
+  const _musicSuggested = [
+    { id: 'FZrFxgxPECk', title: 'Live: SpaceX & NASA Artemis II Crew Launch Broadcast – International Crew to the Moon' },
+  ];
+
+  function musicRenderSuggested() {
+    const list = document.getElementById('music-suggested');
+    if (!list) return;
+    list.innerHTML = _musicSuggested.map((r, i) => `
+      <button class="music-recent-btn" onclick="musicPlaySuggested(${i})">
+        <span class="music-recent-title">${escHtml(r.title)}</span>
+      </button>`).join('');
+  }
+
+  function musicPlaySuggested(idx) {
+    const r = _musicSuggested[idx];
+    if (!r) return;
+    if (_ytPlayer) { _ytPlayer.loadVideoById(r.id); _ytShowBg(); }
+    else if (_ytApiReady) { _ytCreatePlayer(r.id); }
+    else {
+      _ytPending = r.id;
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
+    }
+  }
+
+  musicRenderSuggested();
   musicRenderRecents();
 
   // Called by YouTube IFrame API once loaded
