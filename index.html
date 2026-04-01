@@ -679,6 +679,7 @@
     }
     .cal-source-btn.active { background: var(--raider-red); color: #fff; border-color: var(--raider-red); }
     .cal-source-btn:hover:not(.active) { background: var(--gm-highlight); color: var(--txt-bright); }
+    .cal-source-btn.cal-err { border-color: #a05000; color: #f5a05d; }
     .cal-settings-row {
       overflow: hidden; max-height: 0; opacity: 0;
       transition: max-height 0.25s ease, opacity 0.2s;
@@ -720,6 +721,25 @@
     .cal-edit-btn:hover { background: var(--gm-highlight); }
     .cal-grid { cursor: pointer; }
     .cal-grid:hover { opacity: 0.88; }
+    .cal-week-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      border-top: 1px solid var(--gm-border);
+      gap: 1px; background: var(--gm-border);
+    }
+    .cal-week-cell {
+      background: var(--gm-dark);
+      padding: 5px 5px 6px;
+      min-height: 64px;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .cal-week-cell.cal-weekend { background: var(--gm-darkest); }
+    .cal-week-cell.cal-today .cal-num { background: var(--raider-red); color: #fff; }
+    .cal-week-dayname {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--txt-dim);
+      margin-bottom: 2px;
+    }
     /* Calendar modal */
     .cal-modal-overlay {
       position: fixed; inset: 0; z-index: 2000;
@@ -1595,9 +1615,12 @@
             </div>
             <span class="widget-title">Calendar</span>
           </div>
-          <svg class="widget-chevron" id="calendar-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <button id="cal-view-toggle-btn" onclick="calToggleView()" class="cal-source-btn" style="font-size:0.58rem"></button>
+            <svg class="widget-chevron" id="calendar-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
         </div>
         <div class="widget-body-collapsible" id="calendar-collapsible">
           <div class="widget-body" id="calendar-body">
@@ -2010,7 +2033,7 @@
       <button class="cal-nav-btn" onclick="calModalNav(1)">&#8250;</button>
       <button class="cal-modal-close" onclick="calCloseModal()" title="Close">&#x2715;</button>
     </div>
-    <div class="cal-grid" id="cal-modal-grid"></div>
+    <div id="cal-modal-grid"></div>
   </div>
 </div>
 
@@ -3114,7 +3137,14 @@
   let calSheetData = {}; // normalised date string → array of label strings
   let calGcalData  = {}; // same structure, from Google Calendar iCal
   let _calSettingsOpen = false;
-  const _calEditing = new Set(); // IDs of calendars currently being edited
+  const _calEditing = new Set();
+  const CAL_VIEW_KEY = 'walton-cal-view';
+  let calView = localStorage.getItem(CAL_VIEW_KEY) || 'month'; // 'month' | 'week'
+  // Week view anchor: start of the displayed week (Sunday)
+  let calWeekStart = _calWeekSunday(new Date());
+  function _calWeekSunday(d) { const s = new Date(d); s.setDate(s.getDate() - s.getDay()); s.setHours(0,0,0,0); return s; }
+  function calToggleView() { calView = calView === 'month' ? 'week' : 'month'; localStorage.setItem(CAL_VIEW_KEY, calView); renderCalendar(); }
+  function _calSyncViewBtn() { const b = document.getElementById('cal-view-toggle-btn'); if (b) b.textContent = calView === 'week' ? 'Month' : 'Week'; }
 
   const CAL_SHOW_SHEET_KEY  = 'walton-cal-show-sheet';
   const CAL_CALENDARS_KEY   = 'walton-gcal-calendars';
@@ -3124,12 +3154,14 @@
   function calGetCalendars() {
     try {
       const stored = localStorage.getItem(CAL_CALENDARS_KEY);
-      if (stored) return JSON.parse(stored);
-      // Migrate old single-calendar format
-      const oldUrl = localStorage.getItem('walton-gcal-url') || '';
-      const oldOn  = localStorage.getItem('walton-cal-show-gcal') === 'true';
-      const cals   = oldUrl ? [{ id: 'migrated', name: 'Google', url: oldUrl, enabled: oldOn }] : [];
-      _saveCalendars(cals);
+      let cals = stored ? JSON.parse(stored) : [];
+      // If empty, attempt migration from old single-calendar format
+      if (!cals.length) {
+        const oldUrl = localStorage.getItem('walton-gcal-url') || '';
+        const oldOn  = localStorage.getItem('walton-cal-show-gcal') === 'true';
+        if (oldUrl) cals = [{ id: 'migrated', name: 'Google', url: oldUrl, enabled: oldOn || true }];
+      }
+      if (!stored) _saveCalendars(cals);
       return cals;
     } catch { return []; }
   }
@@ -3198,43 +3230,53 @@
     if (chevron) chevron.classList.toggle('collapsed', !_calSettingsOpen);
   }
 
-  function _extractCalId(input) {
-    // Accept an iCal URL or a bare calendar ID / email
-    const m = input.match(/calendar\.google\.com\/calendar\/ical\/([^\/]+)/);
-    return m ? decodeURIComponent(m[1]) : input.trim();
+  function _parseIcalDate(str) {
+    if (str.length === 8) // all-day: 20240401
+      return new Date(+str.substr(0,4), +str.substr(4,2)-1, +str.substr(6,2));
+    const y = +str.substr(0,4), mo = +str.substr(4,2)-1, d = +str.substr(6,2);
+    const h = +str.substr(9,2), mi = +str.substr(11,2), s = +str.substr(13,2);
+    return str.endsWith('Z')
+      ? new Date(Date.UTC(y, mo, d, h, mi, s))
+      : new Date(y, mo, d, h, mi, s);
+  }
+
+  function _parseIcal(text) {
+    const data  = {};
+    const lines = text.replace(/\r\n[ \t]/g, '').split(/\r?\n/);
+    let inEvent = false, summary = '', dtstart = '', dtend = '';
+    for (const line of lines) {
+      if (line === 'BEGIN:VEVENT')  { inEvent = true; summary = dtstart = dtend = ''; continue; }
+      if (line === 'END:VEVENT') {
+        if (summary && dtstart) {
+          const start = _parseIcalDate(dtstart);
+          const end   = dtend ? _parseIcalDate(dtend) : new Date(start.getTime() + 86400000);
+          for (let dt = new Date(start); dt < end; dt.setDate(dt.getDate() + 1)) {
+            const key = `${dt.getMonth()+1}/${dt.getDate()}/${dt.getFullYear()}`;
+            if (!data[key]) data[key] = [];
+            if (!data[key].includes(summary)) data[key].push(summary);
+          }
+        }
+        inEvent = false; continue;
+      }
+      if (!inEvent) continue;
+      if (/^SUMMARY[;:]/.test(line))         summary = line.replace(/^SUMMARY[^:]*:/,'').replace(/\\[,;]/g, m => m[1]).replace(/\\n/g,' ');
+      if (/^DTSTART[;:]/.test(line) && !dtstart) dtstart = line.replace(/^DTSTART[^:]*:/,'');
+      if (/^DTEND[;:]/.test(line))           dtend   = line.replace(/^DTEND[^:]*:/,'');
+    }
+    return data;
   }
 
   async function fetchGcalData(cal) {
     if (!cal?.url) return;
-    const calId  = _extractCalId(cal.url);
-    const n      = now();
-    const tMin   = new Date(n.getFullYear(), n.getMonth() - 1, 1).toISOString();
-    const tMax   = new Date(n.getFullYear() + 1, n.getMonth() + 1, 1).toISOString();
-    const apiUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`
-                 + `?key=${SHEETS_API_KEY}&singleEvents=true&maxResults=500`
-                 + `&timeMin=${encodeURIComponent(tMin)}&timeMax=${encodeURIComponent(tMax)}`;
+    const proxied = `https://corsproxy.io/?url=${encodeURIComponent(cal.url)}`;
     try {
-      const res  = await fetch(apiUrl);
+      const res = await fetch(proxied);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      calGcalData[cal.id] = {};
-      (json.items || []).forEach(item => {
-        if (!item.summary) return;
-        const startStr = item.start?.date || item.start?.dateTime?.substring(0, 10);
-        const endStr   = item.end?.date   || item.end?.dateTime?.substring(0, 10);
-        if (!startStr) return;
-        // Walk every calendar day from start to end (end is exclusive for all-day events)
-        const startDate = new Date(startStr + 'T00:00:00');
-        const endDate   = endStr ? new Date(endStr + 'T00:00:00') : new Date(startDate.getTime() + 86400000);
-        for (let dt = new Date(startDate); dt < endDate; dt.setDate(dt.getDate() + 1)) {
-          const key = `${dt.getMonth() + 1}/${dt.getDate()}/${dt.getFullYear()}`;
-          if (!calGcalData[cal.id][key]) calGcalData[cal.id][key] = [];
-          if (!calGcalData[cal.id][key].includes(item.summary))
-            calGcalData[cal.id][key].push(item.summary);
-        }
-      });
+      const text = await res.text();
+      calGcalData[cal.id] = _parseIcal(text);
     } catch(e) {
-      console.warn('Google Calendar fetch failed:', e.message);
+      console.warn('Calendar fetch failed:', e.message);
+      calGcalData[cal.id] = { _error: e.message };
     }
     renderCalendar();
   }
@@ -3279,6 +3321,34 @@
     renderCalendar();
   }
 
+  function _calBuildWeek(weekStart) {
+    const today       = now();
+    const dayNames    = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const enabledCals = calGetCalendars().filter(c => c.enabled);
+    let cells = '';
+    for (let i = 0; i < 7; i++) {
+      const dt      = new Date(weekStart); dt.setDate(dt.getDate() + i);
+      const y = dt.getFullYear(), m = dt.getMonth(), d = dt.getDate(), dow = dt.getDay();
+      const isToday = y === today.getFullYear() && m === today.getMonth() && d === today.getDate();
+      const weekend = dow === 0 || dow === 6;
+      const sheetLabels  = calGetShowSheet() ? (calSheetData[_calDateKey(y, m, d)] || []) : [];
+      const gcalTagsHTML = enabledCals.flatMap((c, ci) =>
+        (calGcalData[c.id]?.[_calDateKey(y, m, d)] || []).map(l =>
+          `<span class="cal-tag tag-gcal-${ci % 4}" title="${escHtml(l)}">${escHtml(l)}</span>`)
+      ).join('');
+      const tagsHTML = sheetLabels.map(l =>
+        `<span class="cal-tag ${_calTagClass(l)}" title="${escHtml(l)}">${escHtml(l)}</span>`
+      ).join('') + gcalTagsHTML;
+      cells += `<div class="cal-week-cell${isToday ? ' cal-today' : ''}${weekend ? ' cal-weekend' : ''}">
+        <span class="cal-week-dayname">${dayNames[dow]}</span>
+        <span class="cal-num">${d}</span>
+        ${tagsHTML}
+      </div>`;
+    }
+    const monthLabel = weekStart.toLocaleString('default', { month: 'long', year: 'numeric' });
+    return { cells, monthLabel };
+  }
+
   function _calBuildCells(year, month) {
     const today    = new Date();
     const firstDay = new Date(year, month, 1);
@@ -3318,19 +3388,20 @@
   function renderCalendar() {
     const body = document.getElementById('calendar-body');
     if (!body) return;
-    const { dayNames, cells, monthName } = _calBuildCells(calYear, calMonth);
+    const isWeek    = calView === 'week';
     const showSheet = calGetShowSheet();
     const cals      = calGetCalendars();
-    const calBtns   = cals.map(c =>
-      `<button class="cal-source-btn${c.enabled ? ' active' : ''}" onclick="calToggleCalendar('${c.id}')">${escHtml(c.name)}</button>`
-    ).join('');
+    const calBtns   = cals.map(c => {
+      const hasError = calGcalData[c.id]?._error;
+      return `<button class="cal-source-btn${c.enabled ? ' active' : ''}${hasError ? ' cal-err' : ''}" onclick="calToggleCalendar('${c.id}')" title="${hasError ? 'Load failed: ' + escHtml(calGcalData[c.id]._error) : ''}">${escHtml(c.name)}${hasError ? ' ⚠' : ''}</button>`;
+    }).join('');
     const settingsRows = cals.map(c => {
       if (_calEditing.has(c.id)) {
         return `
           <div class="cal-settings-inner">
             <input class="cal-ical-input cal-name-input" id="cal-name-${c.id}" value="${escHtml(c.name)}" placeholder="Name"
               onkeydown="if(event.key==='Enter')calSaveCalendar('${c.id}')"/>
-            <input class="cal-ical-input" id="cal-url-${c.id}" value="${escHtml(c.url)}" placeholder="Paste Google Calendar iCal URL…"
+            <input class="cal-ical-input" id="cal-url-${c.id}" value="${escHtml(c.url)}" placeholder="Paste iCal / .ics URL…"
               onkeydown="if(event.key==='Enter')calSaveCalendar('${c.id}')"/>
             <button class="cal-ical-save-btn" onclick="calSaveCalendar('${c.id}')">Save</button>
             <button class="cal-remove-btn" onclick="calRemoveCalendar('${c.id}')" title="Remove">✕</button>
@@ -3344,10 +3415,24 @@
           <button class="cal-remove-btn" onclick="calRemoveCalendar('${c.id}')" title="Remove">✕</button>
         </div>`;
     }).join('');
+    let gridHTML;
+    let navLabel;
+    if (isWeek) {
+      const { cells, monthLabel } = _calBuildWeek(calWeekStart);
+      navLabel = monthLabel;
+      gridHTML = `<div class="cal-week-grid" onclick="calOpenModal()" title="Click to expand" style="cursor:pointer">${cells}</div>`;
+    } else {
+      const { dayNames, cells, monthName } = _calBuildCells(calYear, calMonth);
+      navLabel = `${monthName} ${calYear}`;
+      gridHTML = `<div class="cal-grid" onclick="calOpenModal()" title="Click to expand">
+        ${dayNames.map(n => `<div class="cal-day-hdr">${n}</div>`).join('')}
+        ${cells}
+      </div>`;
+    }
     body.innerHTML = `
       <div class="cal-nav">
         <button class="cal-nav-btn" onclick="calNav(-1)">&#8249;</button>
-        <span class="cal-month-label">${monthName} ${calYear}</span>
+        <span class="cal-month-label">${navLabel}</span>
         <button class="cal-nav-btn" onclick="calNav(1)">&#8250;</button>
       </div>
       <div class="cal-toggle-row">
@@ -3361,26 +3446,30 @@
       <div class="cal-settings-row${_calSettingsOpen ? ' open' : ''}" id="cal-settings-row">
         ${settingsRows}
       </div>
-      <div class="cal-grid" onclick="calOpenModal()" title="Click to expand">
-        ${dayNames.map(n => `<div class="cal-day-hdr">${n}</div>`).join('')}
-        ${cells}
-      </div>`;
+      ${gridHTML}`;
+    _calSyncViewBtn();
   }
 
   function calNav(dir) {
-    calMonth += dir;
-    if (calMonth > 11) { calMonth = 0;  calYear++; }
-    if (calMonth < 0)  { calMonth = 11; calYear--; }
+    if (calView === 'week') {
+      calWeekStart.setDate(calWeekStart.getDate() + dir * 7);
+    } else {
+      calMonth += dir;
+      if (calMonth > 11) { calMonth = 0;  calYear++; }
+      if (calMonth < 0)  { calMonth = 11; calYear--; }
+    }
     renderCalendar();
   }
 
   // ── Calendar modal ──
-  let calModalYear  = new Date().getFullYear();
-  let calModalMonth = new Date().getMonth();
+  let calModalYear      = now().getFullYear();
+  let calModalMonth     = now().getMonth();
+  let calModalWeekStart = _calWeekSunday(now());
 
   function calOpenModal() {
-    calModalYear  = calYear;
-    calModalMonth = calMonth;
+    calModalYear      = calYear;
+    calModalMonth     = calMonth;
+    calModalWeekStart = new Date(calWeekStart);
     _renderCalModal();
     document.getElementById('cal-modal-overlay').classList.add('open');
   }
@@ -3391,17 +3480,30 @@
   }
 
   function calModalNav(dir) {
-    calModalMonth += dir;
-    if (calModalMonth > 11) { calModalMonth = 0;  calModalYear++; }
-    if (calModalMonth < 0)  { calModalMonth = 11; calModalYear--; }
+    if (calView === 'week') {
+      calModalWeekStart.setDate(calModalWeekStart.getDate() + dir * 7);
+    } else {
+      calModalMonth += dir;
+      if (calModalMonth > 11) { calModalMonth = 0;  calModalYear++; }
+      if (calModalMonth < 0)  { calModalMonth = 11; calModalYear--; }
+    }
     _renderCalModal();
   }
 
   function _renderCalModal() {
-    const { dayNames, cells, monthName } = _calBuildCells(calModalYear, calModalMonth);
-    document.getElementById('cal-modal-label').textContent = `${monthName} ${calModalYear}`;
-    document.getElementById('cal-modal-grid').innerHTML =
-      dayNames.map(n => `<div class="cal-day-hdr">${n}</div>`).join('') + cells;
+    const grid = document.getElementById('cal-modal-grid');
+    const label = document.getElementById('cal-modal-label');
+    if (calView === 'week') {
+      const { cells, monthLabel } = _calBuildWeek(calModalWeekStart);
+      label.textContent = monthLabel;
+      grid.className = 'cal-week-grid';
+      grid.innerHTML = cells;
+    } else {
+      const { dayNames, cells, monthName } = _calBuildCells(calModalYear, calModalMonth);
+      label.textContent = `${monthName} ${calModalYear}`;
+      grid.className = 'cal-grid';
+      grid.innerHTML = dayNames.map(n => `<div class="cal-day-hdr">${n}</div>`).join('') + cells;
+    }
   }
 
   document.addEventListener('keydown', e => {
@@ -3411,6 +3513,7 @@
     }
   });
 
+  _calSyncViewBtn();
   fetchCalendarData();
   fetchAllGcalData();
   setInterval(fetchCalendarData, 60 * 60 * 1000);
@@ -3825,7 +3928,7 @@
   }
 
   const _musicSuggested = [
-    { id: 'FZrFxgxPECk', title: 'Live: SpaceX & NASA Artemis II Crew Launch Broadcast – International Crew to the Moon' },
+    { id: '3eMVaWoJtE0', title: 'Watch Live: Artemis II tanking operations begin ahead of planned launch to the moon' },
   ];
 
   function musicRenderSuggested() {
