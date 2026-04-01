@@ -714,6 +714,10 @@
       white-space: nowrap; transition: background 0.15s;
     }
     .cal-ical-save-btn:hover { background: var(--raider-red-glow); }
+    .cal-saved-name { font-family: 'Barlow Condensed', sans-serif; font-size: 0.72rem; font-weight: 700; color: var(--txt-mid); letter-spacing: 0.05em; flex-shrink: 0; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cal-saved-url  { font-size: 0.68rem; color: var(--txt-dim); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cal-edit-btn   { background: var(--gm-mid); color: var(--txt-mid); border: none; border-radius: 4px; padding: 4px 10px; font-size: 0.68rem; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background 0.15s; }
+    .cal-edit-btn:hover { background: var(--gm-highlight); }
     .cal-grid { cursor: pointer; }
     .cal-grid:hover { opacity: 0.88; }
     /* Calendar modal */
@@ -3110,6 +3114,7 @@
   let calSheetData = {}; // normalised date string → array of label strings
   let calGcalData  = {}; // same structure, from Google Calendar iCal
   let _calSettingsOpen = false;
+  const _calEditing = new Set(); // IDs of calendars currently being edited
 
   const CAL_SHOW_SHEET_KEY  = 'walton-cal-show-sheet';
   const CAL_CALENDARS_KEY   = 'walton-gcal-calendars';
@@ -3150,8 +3155,16 @@
 
   function calAddCalendar() {
     const cals = calGetCalendars();
-    cals.push({ id: Date.now().toString(), name: 'Calendar ' + (cals.length + 1), url: '', enabled: false });
+    const id   = Date.now().toString();
+    cals.push({ id, name: 'Calendar ' + (cals.length + 1), url: '', enabled: false });
     _saveCalendars(cals);
+    _calEditing.add(id);
+    _calSettingsOpen = true;
+    renderCalendar();
+  }
+
+  function calEditCalendar(id) {
+    _calEditing.add(id);
     renderCalendar();
   }
 
@@ -3170,8 +3183,10 @@
     if (!cal) return;
     cal.name = nameEl.value.trim() || cal.name;
     cal.url  = urlEl.value.trim();
+    cal.enabled = true;
     _saveCalendars(cals);
-    if (cal.enabled && cal.url) fetchGcalData(cal);
+    _calEditing.delete(id);
+    if (cal.url) fetchGcalData(cal);
     else renderCalendar();
   }
 
@@ -3204,12 +3219,19 @@
       const json = await res.json();
       calGcalData[cal.id] = {};
       (json.items || []).forEach(item => {
-        const dateStr = item.start?.date || item.start?.dateTime?.substring(0, 10);
-        if (!dateStr || !item.summary) return;
-        const [y, m, d] = dateStr.split('-').map(Number);
-        const key = `${m}/${d}/${y}`;
-        if (!calGcalData[cal.id][key]) calGcalData[cal.id][key] = [];
-        calGcalData[cal.id][key].push(item.summary);
+        if (!item.summary) return;
+        const startStr = item.start?.date || item.start?.dateTime?.substring(0, 10);
+        const endStr   = item.end?.date   || item.end?.dateTime?.substring(0, 10);
+        if (!startStr) return;
+        // Walk every calendar day from start to end (end is exclusive for all-day events)
+        const startDate = new Date(startStr + 'T00:00:00');
+        const endDate   = endStr ? new Date(endStr + 'T00:00:00') : new Date(startDate.getTime() + 86400000);
+        for (let dt = new Date(startDate); dt < endDate; dt.setDate(dt.getDate() + 1)) {
+          const key = `${dt.getMonth() + 1}/${dt.getDate()}/${dt.getFullYear()}`;
+          if (!calGcalData[cal.id][key]) calGcalData[cal.id][key] = [];
+          if (!calGcalData[cal.id][key].includes(item.summary))
+            calGcalData[cal.id][key].push(item.summary);
+        }
       });
     } catch(e) {
       console.warn('Google Calendar fetch failed:', e.message);
@@ -3302,15 +3324,26 @@
     const calBtns   = cals.map(c =>
       `<button class="cal-source-btn${c.enabled ? ' active' : ''}" onclick="calToggleCalendar('${c.id}')">${escHtml(c.name)}</button>`
     ).join('');
-    const settingsRows = cals.map(c => `
-      <div class="cal-settings-inner">
-        <input class="cal-ical-input cal-name-input" id="cal-name-${c.id}" value="${escHtml(c.name)}" placeholder="Name"
-          onkeydown="if(event.key==='Enter')calSaveCalendar('${c.id}')"/>
-        <input class="cal-ical-input" id="cal-url-${c.id}" value="${escHtml(c.url)}" placeholder="Paste Google Calendar iCal URL…"
-          onkeydown="if(event.key==='Enter')calSaveCalendar('${c.id}')"/>
-        <button class="cal-ical-save-btn" onclick="calSaveCalendar('${c.id}')">Save</button>
-        <button class="cal-remove-btn" onclick="calRemoveCalendar('${c.id}')" title="Remove">✕</button>
-      </div>`).join('');
+    const settingsRows = cals.map(c => {
+      if (_calEditing.has(c.id)) {
+        return `
+          <div class="cal-settings-inner">
+            <input class="cal-ical-input cal-name-input" id="cal-name-${c.id}" value="${escHtml(c.name)}" placeholder="Name"
+              onkeydown="if(event.key==='Enter')calSaveCalendar('${c.id}')"/>
+            <input class="cal-ical-input" id="cal-url-${c.id}" value="${escHtml(c.url)}" placeholder="Paste Google Calendar iCal URL…"
+              onkeydown="if(event.key==='Enter')calSaveCalendar('${c.id}')"/>
+            <button class="cal-ical-save-btn" onclick="calSaveCalendar('${c.id}')">Save</button>
+            <button class="cal-remove-btn" onclick="calRemoveCalendar('${c.id}')" title="Remove">✕</button>
+          </div>`;
+      }
+      return `
+        <div class="cal-settings-inner">
+          <span class="cal-saved-name" title="${escHtml(c.name)}">${escHtml(c.name)}</span>
+          <span class="cal-saved-url"  title="${escHtml(c.url)}">${escHtml(c.url) || '—'}</span>
+          <button class="cal-edit-btn" onclick="calEditCalendar('${c.id}')">Edit</button>
+          <button class="cal-remove-btn" onclick="calRemoveCalendar('${c.id}')" title="Remove">✕</button>
+        </div>`;
+    }).join('');
     body.innerHTML = `
       <div class="cal-nav">
         <button class="cal-nav-btn" onclick="calNav(-1)">&#8249;</button>
