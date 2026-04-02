@@ -919,6 +919,19 @@
       height: 100%; background: var(--raider-red); border-radius: 3px;
       transition: width 0.5s ease;
     }
+    .qotd-voted-badge {
+      position: absolute; inset: 0; border-radius: 8px;
+      background: rgba(0,0,0,0.55);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; pointer-events: none;
+    }
+    .qotd-voted-badge svg { color: #4caf50; }
+    .qotd-voted-badge span {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: #4caf50;
+    }
+    .qotd-qr { position: relative; }
     .qotd-footer {
       font-size: 0.78rem; color: var(--txt-dim);
       letter-spacing: 0.08em; text-transform: uppercase;
@@ -1770,10 +1783,10 @@
                 Video
               </button>
             </div>
-            <div id="music-suggested-section">
+            <!-- <div id="music-suggested-section">
               <div class="music-section-label">Suggested</div>
               <div class="music-recents" id="music-suggested"></div>
-            </div>
+            </div> -->
             <div id="music-recents-section">
               <div class="music-section-label">Recent</div>
               <div class="music-recents" id="music-recents"></div>
@@ -3649,12 +3662,12 @@
     let gridHTML;
     let navLabel;
     if (isWeek) {
-      const { cells, monthLabel } = _calBuildWeek(calWeekStart);
-      navLabel = monthLabel;
+      const { cells } = _calBuildWeek(calWeekStart);
+      navLabel = calWeekStart.toLocaleString('default', { month: 'long' });
       gridHTML = `<div class="cal-week-grid" onclick="calOpenModal()" title="Click to expand" style="cursor:pointer">${cells}</div>`;
     } else {
       const { dayNames, cells, monthName } = _calBuildCells(calYear, calMonth);
-      navLabel = `${monthName} ${calYear}`;
+      navLabel = monthName;
       gridHTML = `<div class="cal-grid" onclick="calOpenModal()" title="Click to expand">
         ${dayNames.map(n => `<div class="cal-day-hdr">${n}</div>`).join('')}
         ${cells}
@@ -3663,11 +3676,11 @@
     _calSyncHeaderToggle();
     _calUpdateTodayStrip();
     body.innerHTML = `
-      ${!isWeek ? `<div class="cal-nav">
+      <div class="cal-nav">
         <button class="cal-nav-btn" onclick="calNav(-1)">&#8249;</button>
         <span class="cal-month-label">${navLabel}</span>
         <button class="cal-nav-btn" onclick="calNav(1)">&#8250;</button>
-      </div>` : ''}
+      </div>
       <div class="cal-toggle-row">
         <button class="cal-source-btn${showSheet ? ' active' : ''}" onclick="calToggleSheet()" title="Toggle school calendar">School</button>
         ${calBtns}
@@ -3728,20 +3741,20 @@
     const label = document.getElementById('cal-modal-label');
     const modalNav = document.querySelector('#cal-modal .cal-nav');
     const navBtns = modalNav ? modalNav.querySelectorAll('.cal-nav-btn') : [];
-    const hideNav = calView === 'week';
-    if (label) label.style.display = hideNav ? 'none' : '';
-    navBtns.forEach(b => b.style.display = hideNav ? 'none' : '');
     const weekOpt  = document.getElementById('cal-modal-toggle-week');
     const monthOpt = document.getElementById('cal-modal-toggle-month');
     if (weekOpt)  weekOpt.classList.toggle('active',  calView === 'week');
     if (monthOpt) monthOpt.classList.toggle('active', calView === 'month');
     if (calView === 'week') {
-      const { cells, monthLabel } = _calBuildWeek(calModalWeekStart);
+      const { cells } = _calBuildWeek(calModalWeekStart);
+      if (label) label.textContent = calModalWeekStart.toLocaleString('default', { month: 'long' });
+      navBtns.forEach(b => b.style.display = '');
       grid.className = 'cal-week-grid';
       grid.innerHTML = cells;
     } else {
       const { dayNames, cells, monthName } = _calBuildCells(calModalYear, calModalMonth);
-      label.textContent = `${monthName} ${calModalYear}`;
+      if (label) { label.textContent = monthName; label.style.display = ''; }
+      navBtns.forEach(b => b.style.display = '');
       grid.className = 'cal-grid';
       grid.innerHTML = dayNames.map(n => `<div class="cal-day-hdr">${n}</div>`).join('') + cells;
     }
@@ -4174,29 +4187,29 @@
     { id: '3eMVaWoJtE0', title: 'Watch Live: Artemis II tanking operations begin ahead of planned launch to the moon' },
   ];
 
-  function musicRenderSuggested() {
-    const list = document.getElementById('music-suggested');
-    if (!list) return;
-    list.innerHTML = _musicSuggested.map((r, i) => `
-      <button class="music-recent-btn" onclick="musicPlaySuggested(${i})">
-        <span class="music-recent-title">${escHtml(r.title)}</span>
-      </button>`).join('');
-  }
+  // function musicRenderSuggested() {
+  //   const list = document.getElementById('music-suggested');
+  //   if (!list) return;
+  //   list.innerHTML = _musicSuggested.map((r, i) => `
+  //     <button class="music-recent-btn" onclick="musicPlaySuggested(${i})">
+  //       <span class="music-recent-title">${escHtml(r.title)}</span>
+  //     </button>`).join('');
+  // }
 
-  function musicPlaySuggested(idx) {
-    const r = _musicSuggested[idx];
-    if (!r) return;
-    if (_ytPlayer) { _ytPlayer.loadVideoById(r.id); _ytShowBg(); }
-    else if (_ytApiReady) { _ytCreatePlayer(r.id); }
-    else {
-      _ytPending = r.id;
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      document.head.appendChild(tag);
-    }
-  }
+  // function musicPlaySuggested(idx) {
+  //   const r = _musicSuggested[idx];
+  //   if (!r) return;
+  //   if (_ytPlayer) { _ytPlayer.loadVideoById(r.id); _ytShowBg(); }
+  //   else if (_ytApiReady) { _ytCreatePlayer(r.id); }
+  //   else {
+  //     _ytPending = r.id;
+  //     const tag = document.createElement('script');
+  //     tag.src = 'https://www.youtube.com/iframe_api';
+  //     document.head.appendChild(tag);
+  //   }
+  // }
 
-  musicRenderSuggested();
+  // musicRenderSuggested();
   musicRenderRecents();
 
   // Called by YouTube IFrame API once loaded
@@ -4381,6 +4394,21 @@
   const LETTERS = ['A','B','C','D','E','F'];
   let _qotdQuestion = null;
 
+  function _qotdDeviceId() {
+    let id = localStorage.getItem('qotd-device-id');
+    if (!id) { id = Math.random().toString(36).slice(2,10) + Date.now().toString(36); localStorage.setItem('qotd-device-id', id); }
+    return id;
+  }
+  function _qotdHasVoted(dayKey) { return localStorage.getItem(`qotd-voted-${dayKey}`) === '1'; }
+  function _qotdMarkVoted(dayKey) { localStorage.setItem(`qotd-voted-${dayKey}`, '1'); }
+  function qotdHandleVoteClick(dayKey, e) {
+    e.stopPropagation();
+    if (!QOTD_VOTE_URL) return;
+    _qotdMarkVoted(dayKey);
+    window.open(`${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}&voter=${_qotdDeviceId()}`, '_blank', 'noopener');
+    renderQOTD();
+  }
+
   function dayOfYear(d) {
     const start = new Date(d.getFullYear(), 0, 0);
     return Math.floor((d - start) / 86400000);
@@ -4457,6 +4485,8 @@
         <span>${escHtml(o)}</span>
       </div>`).join('');
 
+    const voted  = _qotdHasVoted(dayKey);
+    const votedBadge = `<div class="qotd-voted-badge"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Voted</span></div>`;
     const qrHTML = QOTD_VOTE_URL
       ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=88x88&margin=0&data=${encodeURIComponent(QOTD_VOTE_URL + '?date=' + encodeURIComponent(dayKey))}" alt="Vote QR"/>`
       : `<div class="qotd-qr-placeholder">Set up<br>vote URL</div>`;
@@ -4472,7 +4502,7 @@
 
     body.innerHTML = `
       <div class="qotd-body" onclick="qotdOpenModal()" style="cursor:pointer" title="Click to expand">
-        <div class="qotd-qr-wrap">${QOTD_VOTE_URL ? `<a href="${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}" target="_blank" rel="noopener" style="display:block;cursor:pointer;" onclick="event.stopPropagation()"><div class="qotd-qr">${qrHTML}</div></a>` : `<div class="qotd-qr">${qrHTML}</div>`}</div>
+        <div class="qotd-qr-wrap">${QOTD_VOTE_URL ? `<div class="qotd-qr" style="cursor:pointer" onclick="qotdHandleVoteClick('${escHtml(dayKey)}',event)">${qrHTML}</div>` : `<div class="qotd-qr">${qrHTML}</div>`}</div>
         <div class="qotd-question">${escHtml(text)}</div>
         <div class="qotd-results">${barsHTML}</div>
         <div class="qotd-footer">
@@ -4522,12 +4552,14 @@
   function qotdOpenModal() {
     if (!_qotdQuestion) return;
     const { text, options, dayKey } = _qotdQuestion;
+    const voted   = _qotdHasVoted(dayKey);
+    const votedBadge = `<div class="qotd-voted-badge"><svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Voted</span></div>`;
     const voteUrl = QOTD_VOTE_URL ? `${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}` : null;
     const qrHTML = voteUrl
       ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&margin=0&data=${encodeURIComponent(voteUrl)}" alt="Vote QR"/>`
       : `<div class="qotd-qr-placeholder">Set up<br>vote URL</div>`;
     const qrWrap = voteUrl
-      ? `<a href="${voteUrl}" target="_blank" rel="noopener" style="display:block;cursor:pointer;" onclick="event.stopPropagation()"><div class="qotd-modal-qr">${qrHTML}</div></a>`
+      ? `<div class="qotd-modal-qr" style="cursor:pointer;position:relative" onclick="qotdHandleVoteClick('${escHtml(dayKey)}',event)">${qrHTML}</div>`
       : `<div class="qotd-modal-qr">${qrHTML}</div>`;
     const barsHTML = options.map((o, i) => `
       <div class="qotd-modal-bar-row">
