@@ -600,7 +600,8 @@
        CALENDAR WIDGET
     ══════════════════════════════ */
     .cal-nav {
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.1rem;
       padding: 0.5rem 0.85rem 0.35rem;
     }
     .cal-month-label {
@@ -665,6 +666,17 @@
     .cal-tag.tag-gcal-1  { background: #1a2e0d; color: #7af55d; }
     .cal-tag.tag-gcal-2  { background: #2e1a0d; color: #f5a05d; }
     .cal-tag.tag-gcal-3  { background: #2e0d2e; color: #ea5dcf; }
+    .cal-today-strip {
+      display: none; flex-direction: column; gap: 0.3rem;
+      padding: 0.45rem 1.1rem 0.5rem;
+      border-top: 1px solid var(--gm-border);
+    }
+    .cal-today-strip.visible { display: flex; }
+    .cal-today-strip .cal-tag { align-self: flex-start; font-size: 0.8rem; padding: 2px 6px; }
+    .cal-today-strip-empty {
+      font-size: 0.672rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--txt-muted);
+    }
     .cal-toggle-row {
       display: flex; gap: 0.4rem; padding: 0.3rem 0.85rem 0.4rem;
       flex-wrap: wrap; align-items: center;
@@ -680,6 +692,23 @@
     .cal-source-btn.active { background: var(--raider-red); color: #fff; border-color: var(--raider-red); }
     .cal-source-btn:hover:not(.active) { background: var(--gm-highlight); color: var(--txt-bright); }
     .cal-source-btn.cal-err { border-color: #a05000; color: #f5a05d; }
+    .cal-view-toggle {
+      display: inline-flex; align-items: center;
+      background: var(--gm-mid); border: 1px solid var(--gm-border);
+      border-radius: 20px; padding: 2px; gap: 0;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.58rem; letter-spacing: 0.07em; text-transform: uppercase;
+    }
+    .cal-view-toggle-opt {
+      padding: 2px 8px; border-radius: 16px; cursor: pointer;
+      color: var(--txt-dim); border: none; background: none;
+      font: inherit; letter-spacing: inherit; text-transform: inherit;
+      transition: background 0.18s, color 0.18s;
+    }
+    .cal-view-toggle-opt.active {
+      background: var(--raider-red); color: #fff;
+    }
+    .cal-view-toggle-opt:not(.active):hover { color: var(--txt-bright); }
     .cal-settings-row {
       overflow: hidden; max-height: 0; opacity: 0;
       transition: max-height 0.25s ease, opacity 0.2s;
@@ -725,11 +754,13 @@
       display: grid; grid-template-columns: repeat(7, 1fr);
       border-top: 1px solid var(--gm-border);
       gap: 1px; background: var(--gm-border);
+      overflow: hidden;
     }
     .cal-week-cell {
       background: var(--gm-dark);
       padding: 5px 5px 6px;
-      min-height: 64px;
+      min-height: 64px; max-height: 140px;
+      min-width: 0; overflow: hidden;
       display: flex; flex-direction: column; gap: 2px;
     }
     .cal-week-cell.cal-weekend { background: var(--gm-darkest); }
@@ -759,6 +790,7 @@
     }
     .cal-modal-overlay.open .cal-modal { transform: scale(1); }
     .cal-modal .cal-nav {
+      justify-content: flex-start; gap: 0.1rem;
       padding: 0.9rem 1.2rem 0.7rem;
       border-bottom: 1px solid var(--gm-border);
     }
@@ -1332,6 +1364,53 @@
     }
 
     /* ══════════════════════════════
+       SCHEDULE MODAL
+    ══════════════════════════════ */
+    .sched-modal-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.72); backdrop-filter: blur(3px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .sched-modal-overlay.open { opacity: 1; pointer-events: all; }
+    .sched-modal {
+      background: var(--gm-base); border: 1px solid var(--gm-border);
+      border-radius: 10px; width: min(580px, 95vw); max-height: 85vh;
+      overflow: hidden; display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      transform: scale(0.96); transition: transform 0.2s;
+    }
+    .sched-modal-overlay.open .sched-modal { transform: scale(1); }
+    .sched-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.9rem 1.2rem 0.75rem;
+      border-bottom: 1px solid var(--gm-border); flex-shrink: 0;
+    }
+    .sched-modal-title {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 1.05rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--txt-bright);
+    }
+    .sched-modal-close {
+      background: none; border: none; color: var(--txt-dim);
+      cursor: pointer; font-size: 1.15rem; padding: 2px 6px;
+      border-radius: 4px; transition: color 0.15s;
+    }
+    .sched-modal-close:hover { color: var(--txt-bright); }
+    .sched-modal-body {
+      overflow-y: auto; flex: 1;
+      scrollbar-width: thin; scrollbar-color: var(--gm-border) transparent;
+    }
+    .sched-modal-body::-webkit-scrollbar { width: 4px; }
+    .sched-modal-body::-webkit-scrollbar-thumb { background: var(--gm-border); border-radius: 2px; }
+    .sched-modal .period-list { padding: 0.4rem 0; }
+    .sched-modal .period-row  { padding: 0.85rem 1.5rem; min-height: 3.2rem; }
+    .sched-modal .period-name { font-size: 1.25rem; }
+    .sched-modal .period-time { font-size: 1rem; }
+    .sched-modal .period-countdown { font-size: 1.05rem; }
+    .sched-modal .period-progress { border-radius: 0; }
+
+    /* ══════════════════════════════
        YOUTUBE VIDEO BACKGROUND
     ══════════════════════════════ */
     #yt-bg-wrap {
@@ -1616,12 +1695,16 @@
             <span class="widget-title">Calendar</span>
           </div>
           <div style="display:flex;align-items:center;gap:0.5rem;">
-            <button id="cal-view-toggle-btn" onclick="calToggleView()" class="cal-source-btn" style="font-size:0.58rem"></button>
+            <div class="cal-view-toggle" id="cal-header-view-toggle">
+              <button class="cal-view-toggle-opt" id="cal-header-toggle-week"  onclick="calToggleView();event.stopPropagation()">Week</button>
+              <button class="cal-view-toggle-opt" id="cal-header-toggle-month" onclick="calToggleView();event.stopPropagation()">Month</button>
+            </div>
             <svg class="widget-chevron" id="calendar-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
           </div>
         </div>
+        <div class="cal-today-strip" id="cal-today-strip"></div>
         <div class="widget-body-collapsible" id="calendar-collapsible">
           <div class="widget-body" id="calendar-body">
             <div class="weather-loading"><div class="spin"></div>Loading calendar…</div>
@@ -2024,6 +2107,17 @@
   </div>
 </div>
 
+<!-- Schedule expanded modal -->
+<div class="sched-modal-overlay" id="sched-modal-overlay" onclick="schedCloseModal(event)">
+  <div class="sched-modal" id="sched-modal">
+    <div class="sched-modal-header">
+      <span class="sched-modal-title" id="sched-modal-title">Bell Schedule</span>
+      <button class="sched-modal-close" onclick="schedCloseModal()" title="Close">&#x2715;</button>
+    </div>
+    <div class="sched-modal-body" id="sched-modal-body"></div>
+  </div>
+</div>
+
 <!-- Calendar expanded modal -->
 <div class="cal-modal-overlay" id="cal-modal-overlay" onclick="calCloseModal(event)">
   <div class="cal-modal" id="cal-modal">
@@ -2031,6 +2125,10 @@
       <button class="cal-nav-btn" onclick="calModalNav(-1)">&#8249;</button>
       <span class="cal-month-label" id="cal-modal-label"></span>
       <button class="cal-nav-btn" onclick="calModalNav(1)">&#8250;</button>
+      <div class="cal-view-toggle" id="cal-modal-view-toggle" style="margin-left:auto">
+        <button class="cal-view-toggle-opt" id="cal-modal-toggle-week"  onclick="calModalToggleView()">Week</button>
+        <button class="cal-view-toggle-opt" id="cal-modal-toggle-month" onclick="calModalToggleView()">Month</button>
+      </div>
       <button class="cal-modal-close" onclick="calCloseModal()" title="Close">&#x2715;</button>
     </div>
     <div id="cal-modal-grid"></div>
@@ -2095,6 +2193,11 @@
     if (id === 'music') {
       const hc = document.getElementById('music-header-controls');
       if (hc) hc.classList.toggle('visible', isCollapsed);
+    }
+    if (id === 'calendar') {
+      const toggle = document.getElementById('cal-header-view-toggle');
+      if (toggle) toggle.style.display = isCollapsed ? 'none' : '';
+      _calUpdateTodayStrip();
     }
     if (id === 'announcements') {
       if (isCollapsed) startAnnTicker();
@@ -2473,11 +2576,26 @@
 
     const badge = document.getElementById('schedule-badge');
     if (badge) badge.textContent = tabName;
-    body.innerHTML = `<div class="period-list">${rows}</div>`;
+    const listHTML = `<div class="period-list" onclick="schedOpenModal()" title="Click to expand" style="cursor:pointer">${rows}</div>`;
+    body.innerHTML = listHTML;
+    const modalBody = document.getElementById('sched-modal-body');
+    if (modalBody) {
+      modalBody.innerHTML = `<div class="period-list">${rows}</div>`;
+      const title = document.getElementById('sched-modal-title');
+      if (title) title.textContent = tabName || 'Bell Schedule';
+    }
     currentSchedulePeriods = periods;
     currentScheduleTab     = tabName;
     renderLunchDutyEntries();
     updateSchedStrip();
+  }
+
+  function schedOpenModal() {
+    document.getElementById('sched-modal-overlay')?.classList.add('open');
+  }
+  function schedCloseModal(e) {
+    if (e && e.target !== document.getElementById('sched-modal-overlay') && !e.target.closest('.sched-modal-close')) return;
+    document.getElementById('sched-modal-overlay')?.classList.remove('open');
   }
 
   // ══════════════════════════════════════════════
@@ -2741,6 +2859,7 @@
     stopAnnTicker();
     if (!annItems.length) return;
     updateAnnTicker();
+    if (annItems.length === 1) return;
     annTimer = setInterval(() => {
       const textEl = document.getElementById('ann-ticker-text');
       if (textEl) textEl.classList.remove('visible');
@@ -2763,7 +2882,7 @@
     const isCollapsed = document.getElementById('announcements-collapsible')?.classList.contains('collapsed');
     if (!isCollapsed) { ticker.classList.remove('visible'); stopAnnTicker(); return; }
     textEl.textContent  = annItems[annIndex];
-    counter.textContent = `${annIndex + 1}/${annItems.length}`;
+    counter.textContent = annItems.length > 1 ? `${annIndex + 1}/${annItems.length}` : '';
     ticker.classList.add('visible');
     setTimeout(() => textEl.classList.add('visible'), 20);
   }
@@ -3144,7 +3263,41 @@
   let calWeekStart = _calWeekSunday(new Date());
   function _calWeekSunday(d) { const s = new Date(d); s.setDate(s.getDate() - s.getDay()); s.setHours(0,0,0,0); return s; }
   function calToggleView() { calView = calView === 'month' ? 'week' : 'month'; localStorage.setItem(CAL_VIEW_KEY, calView); renderCalendar(); }
+  function calModalToggleView() { calToggleView(); _renderCalModal(); }
   function _calSyncViewBtn() { const b = document.getElementById('cal-view-toggle-btn'); if (b) b.textContent = calView === 'week' ? 'Month' : 'Week'; }
+  function _calSyncHeaderToggle() {
+    const w = document.getElementById('cal-header-toggle-week');
+    const m = document.getElementById('cal-header-toggle-month');
+    if (w) w.classList.toggle('active', calView === 'week');
+    if (m) m.classList.toggle('active', calView === 'month');
+  }
+
+  function _calUpdateTodayStrip() {
+    const strip = document.getElementById('cal-today-strip');
+    if (!strip) return;
+    const isCollapsed = document.getElementById('calendar-collapsible')?.classList.contains('collapsed');
+    if (!isCollapsed) { strip.classList.remove('visible'); return; }
+    const t = now();
+    const key = _calDateKey(t.getFullYear(), t.getMonth(), t.getDate());
+    const sheetLabels = calGetShowSheet() ? (calSheetData[key] || []) : [];
+    const enabledCals = calGetCalendars().filter(c => c.enabled);
+    const gcalItems = enabledCals.flatMap((c, i) =>
+      (calGcalData[c.id]?.[key] || []).map(e => ({ label: e.label, time: e.time, sortKey: e.sortKey, cls: `tag-gcal-${i % 4}` }))
+    );
+    const allItems = [
+      ...sheetLabels.map(l => ({ label: l, time: null, sortKey: -1, cls: '' })),
+      ...gcalItems,
+    ].sort((a, b) => a.sortKey - b.sortKey);
+    if (!allItems.length) {
+      strip.innerHTML = `<span class="cal-today-strip-empty">No events today</span>`;
+    } else {
+      strip.innerHTML = allItems.map(({ label, time, cls }) => {
+        const display = time ? `${time} · ${label}` : label;
+        return `<span class="cal-tag ${cls}" title="${escHtml(display)}">${escHtml(display)}</span>`;
+      }).join('');
+    }
+    strip.classList.add('visible');
+  }
 
   const CAL_SHOW_SHEET_KEY  = 'walton-cal-show-sheet';
   const CAL_CALENDARS_KEY   = 'walton-gcal-calendars';
@@ -3240,28 +3393,106 @@
       : new Date(y, mo, d, h, mi, s);
   }
 
+  function _expandRrule(rule, start, end, exdates, summary, timeStr, sortKey, data) {
+    const params   = Object.fromEntries(rule.split(';').map(p => p.split('=')));
+    const freq     = params.FREQ;
+    const interval = parseInt(params.INTERVAL || '1', 10);
+    const count    = params.COUNT ? parseInt(params.COUNT, 10) : null;
+    const until    = params.UNTIL ? _parseIcalDate(params.UNTIL) : null;
+    const duration = end ? end.getTime() - start.getTime() : 86400000;
+    const DOW      = { SU:0, MO:1, TU:2, WE:3, TH:4, FR:5, SA:6 };
+    const byDay    = params.BYDAY
+      ? params.BYDAY.split(',').map(d => DOW[d.replace(/[^A-Z]/g,'')]).filter(d => d !== undefined)
+      : null;
+    const excluded = new Set(exdates.map(str => {
+      const d = _parseIcalDate(str.trim());
+      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    }));
+    const winStart = new Date(); winStart.setFullYear(winStart.getFullYear() - 1);
+    const winEnd   = new Date(); winEnd.setFullYear(winEnd.getFullYear() + 2);
+    const safety   = count || 1000;
+
+    function addOcc(occ) {
+      const exKey = `${occ.getFullYear()}-${occ.getMonth()}-${occ.getDate()}`;
+      if (excluded.has(exKey)) return;
+      const occEnd = new Date(occ.getTime() + duration);
+      for (let dt = new Date(occ); dt < occEnd; dt.setDate(dt.getDate() + 1)) {
+        const key = `${dt.getMonth()+1}/${dt.getDate()}/${dt.getFullYear()}`;
+        if (!data[key]) data[key] = [];
+        if (!data[key].some(e => e.label === summary && e.sortKey === sortKey))
+          data[key].push({ label: summary, time: timeStr, sortKey });
+      }
+    }
+
+    let n = 0;
+    if (freq === 'DAILY') {
+      for (const cur = new Date(start); n < safety && cur <= winEnd; cur.setDate(cur.getDate() + interval)) {
+        if (until && cur > until) break;
+        if (cur >= winStart) addOcc(cur);
+        n++;
+      }
+    } else if (freq === 'WEEKLY') {
+      const days    = (byDay || [start.getDay()]).sort((a, b) => a - b);
+      const anchor  = new Date(start);
+      anchor.setDate(anchor.getDate() - anchor.getDay()); // rewind to Sunday of start week
+      anchor.setHours(start.getHours(), start.getMinutes(), start.getSeconds(), 0);
+      outer: for (const wk = new Date(anchor); wk <= winEnd; wk.setDate(wk.getDate() + 7 * interval)) {
+        for (const dow of days) {
+          const occ = new Date(wk); occ.setDate(wk.getDate() + dow);
+          if (occ < start) continue;
+          if (until && occ > until) break outer;
+          if (occ > winEnd) break outer;
+          if (count && n >= count) break outer;
+          if (occ >= winStart) addOcc(occ);
+          n++;
+        }
+      }
+    } else if (freq === 'MONTHLY') {
+      for (const cur = new Date(start); n < safety && cur <= winEnd; cur.setMonth(cur.getMonth() + interval)) {
+        if (until && cur > until) break;
+        if (cur >= winStart) addOcc(cur);
+        n++;
+      }
+    } else if (freq === 'YEARLY') {
+      for (const cur = new Date(start); n < safety && cur <= winEnd; cur.setFullYear(cur.getFullYear() + interval)) {
+        if (until && cur > until) break;
+        if (cur >= winStart) addOcc(cur);
+        n++;
+      }
+    }
+  }
+
   function _parseIcal(text) {
     const data  = {};
-    const lines = text.replace(/\r\n[ \t]/g, '').split(/\r?\n/);
-    let inEvent = false, summary = '', dtstart = '', dtend = '';
+    const lines = text.replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, '').split(/\r?\n/);
+    let inEvent = false, summary = '', dtstart = '', dtend = '', rrule = '', exdates = [];
     for (const line of lines) {
-      if (line === 'BEGIN:VEVENT')  { inEvent = true; summary = dtstart = dtend = ''; continue; }
+      if (line === 'BEGIN:VEVENT')  { inEvent = true; summary = dtstart = dtend = rrule = ''; exdates = []; continue; }
       if (line === 'END:VEVENT') {
         if (summary && dtstart) {
-          const start = _parseIcalDate(dtstart);
-          const end   = dtend ? _parseIcalDate(dtend) : new Date(start.getTime() + 86400000);
-          for (let dt = new Date(start); dt < end; dt.setDate(dt.getDate() + 1)) {
-            const key = `${dt.getMonth()+1}/${dt.getDate()}/${dt.getFullYear()}`;
-            if (!data[key]) data[key] = [];
-            if (!data[key].includes(summary)) data[key].push(summary);
+          const start    = _parseIcalDate(dtstart);
+          const end      = dtend ? _parseIcalDate(dtend) : new Date(start.getTime() + 86400000);
+          const isAllDay = dtstart.length === 8;
+          const timeStr  = isAllDay ? null : start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+          const sortKey  = isAllDay ? -1 : start.getHours() * 60 + start.getMinutes();
+          if (rrule) {
+            _expandRrule(rrule, start, end, exdates, summary, timeStr, sortKey, data);
+          } else {
+            for (let dt = new Date(start); dt < end; dt.setDate(dt.getDate() + 1)) {
+              const key = `${dt.getMonth()+1}/${dt.getDate()}/${dt.getFullYear()}`;
+              if (!data[key]) data[key] = [];
+              if (!data[key].some(e => e.label === summary)) data[key].push({ label: summary, time: timeStr, sortKey });
+            }
           }
         }
         inEvent = false; continue;
       }
       if (!inEvent) continue;
-      if (/^SUMMARY[;:]/.test(line))         summary = line.replace(/^SUMMARY[^:]*:/,'').replace(/\\[,;]/g, m => m[1]).replace(/\\n/g,' ');
-      if (/^DTSTART[;:]/.test(line) && !dtstart) dtstart = line.replace(/^DTSTART[^:]*:/,'');
-      if (/^DTEND[;:]/.test(line))           dtend   = line.replace(/^DTEND[^:]*:/,'');
+      if (/^SUMMARY[;:]/.test(line))              summary = line.replace(/^SUMMARY[^:]*:/,'').replace(/\\[,;]/g, m => m[1]).replace(/\\n/g,' ');
+      if (/^DTSTART[;:]/.test(line) && !dtstart)  dtstart = line.replace(/^DTSTART[^:]*:/,'');
+      if (/^DTEND[;:]/.test(line))                dtend   = line.replace(/^DTEND[^:]*:/,'');
+      if (/^RRULE[;:]/.test(line))                rrule   = line.replace(/^RRULE[^:]*:/,'');
+      if (/^EXDATE[;:]/.test(line))               exdates.push(...line.replace(/^EXDATE[^:]*:/,'').split(','));
     }
     return data;
   }
@@ -3333,8 +3564,8 @@
       const weekend = dow === 0 || dow === 6;
       const sheetLabels  = calGetShowSheet() ? (calSheetData[_calDateKey(y, m, d)] || []) : [];
       const gcalTagsHTML = enabledCals.flatMap((c, ci) =>
-        (calGcalData[c.id]?.[_calDateKey(y, m, d)] || []).map(l =>
-          `<span class="cal-tag tag-gcal-${ci % 4}" title="${escHtml(l)}">${escHtml(l)}</span>`)
+        (calGcalData[c.id]?.[_calDateKey(y, m, d)] || []).map(e =>
+          `<span class="cal-tag tag-gcal-${ci % 4}" title="${escHtml(e.label)}">${escHtml(e.label)}</span>`)
       ).join('');
       const tagsHTML = sheetLabels.map(l =>
         `<span class="cal-tag ${_calTagClass(l)}" title="${escHtml(l)}">${escHtml(l)}</span>`
@@ -3366,8 +3597,8 @@
       const sheetLabels  = calGetShowSheet() ? (calSheetData[_calDateKey(year, month, d)] || []) : [];
       const enabledCals  = calGetCalendars().filter(c => c.enabled);
       const gcalTagsHTML = enabledCals.flatMap((c, i) =>
-        (calGcalData[c.id]?.[_calDateKey(year, month, d)] || []).map(l =>
-          `<span class="cal-tag tag-gcal-${i % 4}" title="${escHtml(l)}">${escHtml(l)}</span>`)
+        (calGcalData[c.id]?.[_calDateKey(year, month, d)] || []).map(e =>
+          `<span class="cal-tag tag-gcal-${i % 4}" title="${escHtml(e.label)}">${escHtml(e.label)}</span>`)
       ).join('');
       const weekend  = dow === 0 || dow === 6;
       const tagsHTML = [
@@ -3429,12 +3660,14 @@
         ${cells}
       </div>`;
     }
+    _calSyncHeaderToggle();
+    _calUpdateTodayStrip();
     body.innerHTML = `
-      <div class="cal-nav">
+      ${!isWeek ? `<div class="cal-nav">
         <button class="cal-nav-btn" onclick="calNav(-1)">&#8249;</button>
         <span class="cal-month-label">${navLabel}</span>
         <button class="cal-nav-btn" onclick="calNav(1)">&#8250;</button>
-      </div>
+      </div>` : ''}
       <div class="cal-toggle-row">
         <button class="cal-source-btn${showSheet ? ' active' : ''}" onclick="calToggleSheet()" title="Toggle school calendar">School</button>
         ${calBtns}
@@ -3493,9 +3726,17 @@
   function _renderCalModal() {
     const grid = document.getElementById('cal-modal-grid');
     const label = document.getElementById('cal-modal-label');
+    const modalNav = document.querySelector('#cal-modal .cal-nav');
+    const navBtns = modalNav ? modalNav.querySelectorAll('.cal-nav-btn') : [];
+    const hideNav = calView === 'week';
+    if (label) label.style.display = hideNav ? 'none' : '';
+    navBtns.forEach(b => b.style.display = hideNav ? 'none' : '');
+    const weekOpt  = document.getElementById('cal-modal-toggle-week');
+    const monthOpt = document.getElementById('cal-modal-toggle-month');
+    if (weekOpt)  weekOpt.classList.toggle('active',  calView === 'week');
+    if (monthOpt) monthOpt.classList.toggle('active', calView === 'month');
     if (calView === 'week') {
       const { cells, monthLabel } = _calBuildWeek(calModalWeekStart);
-      label.textContent = monthLabel;
       grid.className = 'cal-week-grid';
       grid.innerHTML = cells;
     } else {
@@ -3510,6 +3751,7 @@
     if (e.key === 'Escape') {
       document.getElementById('cal-modal-overlay')?.classList.remove('open');
       document.getElementById('qotd-modal-overlay')?.classList.remove('open');
+      document.getElementById('sched-modal-overlay')?.classList.remove('open');
     }
   });
 
@@ -3555,14 +3797,13 @@
   function timerSetArc(remain, total) {
     const arc = document.getElementById('timer-arc');
     if (!arc) return;
-    const pct = total > 0 ? remain / total : 1;
+    const pct    = total > 0 ? remain / total : 1;
     const offset = TIMER_CIRCUMFERENCE * (1 - pct);
     arc.style.strokeDasharray  = TIMER_CIRCUMFERENCE;
     arc.style.strokeDashoffset = offset;
-
     arc.classList.remove('done','warning');
-    if (timerDone)          arc.classList.add('done');
-    else if (pct <= 0.25)   arc.classList.add('warning');
+    if (timerDone)        arc.classList.add('done');
+    else if (pct <= 0.25) arc.classList.add('warning');
   }
 
   function timerUpdateDisplay() {
@@ -3622,6 +3863,7 @@
       startLabel.textContent = timerRemain < timerTotal && timerRemain > 0 ? 'Resume' : 'Start';
       playIcon.innerHTML = `<polygon points="5,3 19,12 5,21"/>`;
     }
+
   }
 
   function timerSet(seconds) {
@@ -3730,7 +3972,8 @@
   }
 
   function timerDigitsEdit() {
-    if (timerRunning || timerDone) return;
+    if (timerRunning) return;
+    if (timerDone) { timerReset(); }
     timerEditing = true;
     timerEditBuf = [];
     const digits = document.getElementById('timer-digits');
