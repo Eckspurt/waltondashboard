@@ -920,16 +920,17 @@
       transition: width 0.5s ease;
     }
     .qotd-voted-badge {
-      position: absolute; inset: 0; border-radius: 8px;
-      background: rgba(0,0,0,0.55);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 4px; pointer-events: none;
+      position: absolute; bottom: -6px; right: -6px;
+      background: #4caf50; border-radius: 20px;
+      display: flex; align-items: center; gap: 3px;
+      padding: 2px 6px 2px 4px; pointer-events: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
     }
-    .qotd-voted-badge svg { color: #4caf50; }
+    .qotd-voted-badge svg { color: #fff; flex-shrink: 0; }
     .qotd-voted-badge span {
       font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
-      font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
-      color: #4caf50;
+      font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #fff;
     }
     .qotd-qr { position: relative; }
     .qotd-footer {
@@ -1375,6 +1376,79 @@
       pointer-events: none;
       animation: timerDoneFlash 0.9s ease forwards;
     }
+
+    /* ══════════════════════════════
+       TODO WIDGET
+    ══════════════════════════════ */
+    .todo-add-row {
+      display: flex; gap: 0.5rem; padding: 0.75rem 1.1rem 0.5rem;
+    }
+    .todo-input {
+      flex: 1; background: var(--gm-mid); border: 1px solid var(--gm-border);
+      border-radius: 6px; color: var(--txt-bright); font-family: 'Barlow', sans-serif;
+      font-size: 0.84rem; padding: 0.35rem 0.6rem;
+      outline: none; transition: border-color 0.15s;
+    }
+    .todo-input:focus { border-color: var(--raider-red); }
+    .todo-input::placeholder { color: var(--txt-muted); }
+    .todo-add-btn {
+      background: var(--raider-red); color: #fff; border: none;
+      border-radius: 6px; padding: 0.35rem 0.75rem; cursor: pointer;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase;
+      transition: background 0.15s;
+    }
+    .todo-add-btn:hover { background: var(--raider-red-glow); }
+    .todo-list { display: flex; flex-direction: column; }
+    .todo-section-label {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.62rem;
+      font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--txt-muted); padding: 0.5rem 1.1rem 0.2rem;
+    }
+    .todo-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.45rem 1.1rem; border-bottom: 1px solid var(--gm-border);
+      transition: background 0.12s;
+    }
+    .todo-item:last-child { border-bottom: none; }
+    .todo-item:hover { background: var(--gm-mid); }
+    .todo-item.todo-done .todo-text {
+      text-decoration: line-through; color: var(--txt-dim); opacity: 0.6;
+    }
+    /* Custom checkbox */
+    .todo-check-wrap {
+      width: 15px; height: 15px; flex-shrink: 0; cursor: pointer;
+      position: relative;
+    }
+    .todo-check-wrap input {
+      position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+    }
+    .todo-check-box {
+      width: 15px; height: 15px; border-radius: 3px;
+      border: 1.5px solid var(--gm-highlight);
+      background: var(--gm-mid);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .todo-check-wrap input:checked + .todo-check-box {
+      background: var(--raider-red); border-color: var(--raider-red);
+    }
+    .todo-check-box svg { display: none; }
+    .todo-check-wrap input:checked + .todo-check-box svg { display: block; }
+    .todo-text {
+      flex: 1; font-size: 0.875rem; color: var(--txt-bright);
+      line-height: 1.35; word-break: break-word;
+    }
+    .todo-move-btn, .todo-del-btn {
+      background: none; border: none; cursor: pointer; padding: 2px 4px;
+      border-radius: 3px; color: var(--txt-dim); line-height: 1;
+      transition: color 0.12s, background 0.12s; flex-shrink: 0;
+    }
+    .todo-move-btn:hover { color: var(--txt-bright); background: var(--gm-highlight); }
+    .todo-del-btn:hover  { color: var(--raider-red); background: var(--gm-highlight); }
+    .todo-item[draggable] { cursor: grab; }
+    .todo-item.todo-dragging { opacity: 0.4; }
+    .todo-item.todo-drag-over { border-top: 2px solid var(--raider-red); }
 
     /* ══════════════════════════════
        SCHEDULE MODAL
@@ -2105,6 +2179,35 @@
       </div>
     </div>
 
+    <!-- Todo Widget -->
+    <div class="widget-item" data-id="todo">
+      <div class="widget" id="todo-widget" style="animation-delay:0.32s">
+        <div class="widget-header widget-drag-handle">
+          <div class="widget-header-left">
+            <div class="widget-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/>
+                <polyline points="4 6 5 7 7 5"/><polyline points="4 12 5 13 7 11"/><polyline points="4 18 5 19 7 17"/>
+              </svg>
+            </div>
+            <span class="widget-title">To-Do</span>
+          </div>
+          <svg class="widget-chevron" id="todo-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="widget-body-collapsible" id="todo-collapsible">
+          <div class="widget-body" style="padding:0">
+            <div class="todo-add-row">
+              <input class="todo-input" id="todo-input" placeholder="Add a task…" onkeydown="if(event.key==='Enter')todoAdd()"/>
+              <button class="todo-add-btn" onclick="todoAdd()">Add</button>
+            </div>
+            <div class="todo-list" id="todo-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- end col-2 -->
 
 </main>
@@ -2679,12 +2782,12 @@
   const DEFAULT_VISIBILITY = {
     schedule: true, classboard: true, calendar: true,
     announcements: true, timer: true, music: true,
-    weather: true, leaderboard: true, qotd: true,
+    weather: true, leaderboard: true, qotd: true, todo: true,
   };
 
   const DEFAULT_MOBILE_VISIBILITY = {
     weather: true, schedule: true, calendar: true, announcements: true,
-    classboard: false, timer: false, music: false, leaderboard: false, qotd: false,
+    classboard: false, timer: false, music: false, leaderboard: false, qotd: false, todo: false,
   };
   let dragItem = null;
 
@@ -3512,11 +3615,20 @@
 
   async function fetchGcalData(cal) {
     if (!cal?.url) return;
-    const proxied = `https://corsproxy.io/?url=${encodeURIComponent(cal.url)}`;
+    const proxies = [
+      `https://corsproxy.io/?url=${encodeURIComponent(cal.url)}`,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(cal.url)}`,
+    ];
+    let text = null;
+    for (const proxied of proxies) {
+      try {
+        const res = await fetch(proxied);
+        if (res.ok) { text = await res.text(); break; }
+        if (res.status !== 429 && res.status !== 503) throw new Error(`HTTP ${res.status}`);
+      } catch(e) { if (proxied === proxies[proxies.length - 1]) throw e; }
+    }
+    if (!text) { calGcalData[cal.id] = { _error: 'All proxies rate-limited' }; renderCalendar(); return; }
     try {
-      const res = await fetch(proxied);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const text = await res.text();
       calGcalData[cal.id] = _parseIcal(text);
     } catch(e) {
       console.warn('Calendar fetch failed:', e.message);
@@ -4486,7 +4598,7 @@
       </div>`).join('');
 
     const voted  = _qotdHasVoted(dayKey);
-    const votedBadge = `<div class="qotd-voted-badge"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Voted</span></div>`;
+    const votedBadge = `<div class="qotd-voted-badge"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Voted</span></div>`;
     const qrHTML = QOTD_VOTE_URL
       ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=88x88&margin=0&data=${encodeURIComponent(QOTD_VOTE_URL + '?date=' + encodeURIComponent(dayKey))}" alt="Vote QR"/>`
       : `<div class="qotd-qr-placeholder">Set up<br>vote URL</div>`;
@@ -4553,7 +4665,7 @@
     if (!_qotdQuestion) return;
     const { text, options, dayKey } = _qotdQuestion;
     const voted   = _qotdHasVoted(dayKey);
-    const votedBadge = `<div class="qotd-voted-badge"><svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Voted</span></div>`;
+    const votedBadge = `<div class="qotd-voted-badge"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Voted</span></div>`;
     const voteUrl = QOTD_VOTE_URL ? `${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}` : null;
     const qrHTML = voteUrl
       ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&margin=0&data=${encodeURIComponent(voteUrl)}" alt="Vote QR"/>`
@@ -4587,8 +4699,123 @@
   }
 
   fetchQOTD();
-  setInterval(fetchQOTDResults, 30 * 1000); // refresh results every 30s
-  setInterval(fetchQOTD, 60 * 60 * 1000);   // refresh question hourly
+  setInterval(fetchQOTDResults, 30 * 1000);
+  setInterval(fetchQOTD, 60 * 60 * 1000);
+
+  // ══════════════════════════════════════════════
+  //  TODO WIDGET
+  // ══════════════════════════════════════════════
+  const TODO_KEY = 'walton-todo-items';
+
+  function todoLoad() {
+    try { return JSON.parse(localStorage.getItem(TODO_KEY) || '[]'); } catch(e) { return []; }
+  }
+  function todoSave(items) { localStorage.setItem(TODO_KEY, JSON.stringify(items)); }
+
+  function todoAdd() {
+    const input = document.getElementById('todo-input');
+    const text  = input.value.trim();
+    if (!text) return;
+    const items = todoLoad();
+    items.push({ id: Date.now(), text, done: false });
+    todoSave(items);
+    input.value = '';
+    todoRender();
+  }
+
+  function todoToggle(id) {
+    const items = todoLoad().map(i => i.id === id ? { ...i, done: !i.done } : i);
+    todoSave(items);
+    todoRender();
+  }
+
+  function todoDelete(id) {
+    todoSave(todoLoad().filter(i => i.id !== id));
+    todoRender();
+  }
+
+  function todoMove(id, dir) {
+    const items   = todoLoad();
+    const pending = items.filter(i => !i.done);
+    const done    = items.filter(i =>  i.done);
+    const idx     = pending.findIndex(i => i.id === id);
+    if (idx === -1) return;
+    const target  = idx + dir;
+    if (target < 0 || target >= pending.length) return;
+    [pending[idx], pending[target]] = [pending[target], pending[idx]];
+    todoSave([...pending, ...done]);
+    todoRender();
+  }
+
+  let _todoDragId = null;
+  let _todoDragOverId = null;
+
+  function todoRender() {
+    const list    = document.getElementById('todo-list');
+    if (!list) return;
+    const items   = todoLoad();
+    const pending = items.filter(i => !i.done);
+    const done    = items.filter(i =>  i.done);
+
+    function itemHTML(item, moveable) {
+      const upDisabled  = !moveable || pending.indexOf(item) === 0;
+      const downDisabled = !moveable || pending.indexOf(item) === pending.length - 1;
+      return `<div class="todo-item${item.done ? ' todo-done' : ''}"
+                   data-id="${item.id}"
+                   draggable="${moveable ? 'true' : 'false'}"
+                   ondragstart="todoDragStart(${item.id})"
+                   ondragover="todoDragOver(event,${item.id})"
+                   ondragleave="todoDragLeave(${item.id})"
+                   ondrop="todoDrop(${item.id})"
+                   ondragend="todoDragEnd()">
+        <label class="todo-check-wrap">
+          <input type="checkbox" ${item.done ? 'checked' : ''} onchange="todoToggle(${item.id})"/>
+          <div class="todo-check-box">
+            <svg width="9" height="9" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </label>
+        <span class="todo-text">${escHtml(item.text)}</span>
+        ${moveable ? `
+        <button class="todo-move-btn" onclick="todoMove(${item.id},-1)" ${upDisabled ? 'disabled style="opacity:0.25"' : ''} title="Move up">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+        </button>
+        <button class="todo-move-btn" onclick="todoMove(${item.id},1)" ${downDisabled ? 'disabled style="opacity:0.25"' : ''} title="Move down">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>` : ''}
+        <button class="todo-del-btn" onclick="todoDelete(${item.id})" title="Remove">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>`;
+    }
+
+    let html = pending.map(i => itemHTML(i, true)).join('');
+    if (done.length) {
+      html += `<div class="todo-section-label">Completed</div>`;
+      html += done.map(i => itemHTML(i, false)).join('');
+    }
+    list.innerHTML = html || `<div style="padding:0.75rem 1.1rem;font-size:0.75rem;color:var(--txt-muted);letter-spacing:0.15em;text-transform:uppercase">No tasks yet</div>`;
+  }
+
+  function todoDragStart(id)         { _todoDragId = id; document.querySelector(`.todo-item[data-id="${id}"]`)?.classList.add('todo-dragging'); }
+  function todoDragOver(e, id)       { e.preventDefault(); if (id !== _todoDragId) { _todoDragOverId = id; document.querySelector(`.todo-item[data-id="${id}"]`)?.classList.add('todo-drag-over'); } }
+  function todoDragLeave(id)         { document.querySelector(`.todo-item[data-id="${id}"]`)?.classList.remove('todo-drag-over'); }
+  function todoDragEnd()             { document.querySelectorAll('.todo-item').forEach(el => el.classList.remove('todo-dragging','todo-drag-over')); _todoDragId = _todoDragOverId = null; }
+  function todoDrop(targetId) {
+    todoDragLeave(targetId);
+    if (!_todoDragId || _todoDragId === targetId) return;
+    const items   = todoLoad();
+    const pending = items.filter(i => !i.done);
+    const done    = items.filter(i =>  i.done);
+    const fromIdx = pending.findIndex(i => i.id === _todoDragId);
+    const toIdx   = pending.findIndex(i => i.id === targetId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const [moved] = pending.splice(fromIdx, 1);
+    pending.splice(toIdx, 0, moved);
+    todoSave([...pending, ...done]);
+    todoRender();
+  }
+
+  todoRender();
 
   // ══════════════════════════════════════════════
   //  WIDGET MANAGER
@@ -4623,6 +4850,10 @@
     {
       id: 'weather', label: 'Weather',
       icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`
+    },
+    {
+      id: 'todo', label: 'To-Do',
+      icon: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><polyline points="4 6 5 7 7 5"/><polyline points="4 12 5 13 7 11"/><polyline points="4 18 5 19 7 17"/></svg>`
     },
     {
       id: 'leaderboard', label: 'Step Challenge',
