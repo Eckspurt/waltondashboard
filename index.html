@@ -3615,23 +3615,37 @@
 
   async function fetchGcalData(cal) {
     if (!cal?.url) return;
-    const proxies = [
-      `https://corsproxy.io/?url=${encodeURIComponent(cal.url)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(cal.url)}`,
+    const encoded = encodeURIComponent(cal.url);
+    const timeout = ms => new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
+    async function tryUrl(url, jsonPath) {
+      const res = await Promise.race([fetch(url), timeout(10000)]);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (jsonPath) {
+        const json = await res.json();
+        const val = jsonPath.split('.').reduce((o, k) => o?.[k], json);
+        if (!val) throw new Error('empty');
+        return val;
+      }
+      return res.text();
+    }
+    const attempts = [
+      () => tryUrl(`https://corsproxy.io/?url=${encoded}`),
+      () => tryUrl(`https://api.allorigins.win/raw?url=${encoded}`),
+      () => tryUrl(`https://api.allorigins.win/get?url=${encoded}`, 'contents'),
+      () => tryUrl(`https://api.codetabs.com/v1/proxy?quest=${encoded}`),
     ];
     let text = null;
-    for (const proxied of proxies) {
-      try {
-        const res = await fetch(proxied);
-        if (res.ok) { text = await res.text(); break; }
-        if (res.status !== 429 && res.status !== 503) throw new Error(`HTTP ${res.status}`);
-      } catch(e) { if (proxied === proxies[proxies.length - 1]) throw e; }
+    for (const attempt of attempts) {
+      try { text = await attempt(); if (text?.includes('BEGIN:VCALENDAR')) break; text = null; }
+      catch(e) { /* try next */ }
     }
-    if (!text) { calGcalData[cal.id] = { _error: 'All proxies rate-limited' }; renderCalendar(); return; }
+    if (!text) {
+      calGcalData[cal.id] = { _error: 'Calendar unavailable — check URL or try again' };
+      renderCalendar(); return;
+    }
     try {
       calGcalData[cal.id] = _parseIcal(text);
     } catch(e) {
-      console.warn('Calendar fetch failed:', e.message);
       calGcalData[cal.id] = { _error: e.message };
     }
     renderCalendar();
