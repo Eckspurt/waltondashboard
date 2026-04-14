@@ -497,6 +497,31 @@
       margin-bottom: 0.4rem; letter-spacing: 0.1em;
     }
 
+    /* ── Grade selector bar ── */
+    .sched-grade-bar {
+      display: flex; gap: 4px; flex-wrap: wrap;
+      padding: 0.5rem 0.75rem 0.4rem;
+      border-bottom: 1px solid var(--gm-border);
+      background: var(--gm-dark);
+    }
+    .sched-grade-pill {
+      padding: 0.22rem 0.7rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--txt-dim);
+      background: var(--gm-mid);
+      border: 1px solid var(--gm-border);
+      border-radius: 20px; cursor: pointer;
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
+    }
+    .sched-grade-pill:hover { color: var(--txt-mid); border-color: var(--gm-highlight); }
+    .sched-grade-pill.active {
+      color: var(--raider-white);
+      background: var(--raider-red-dim);
+      border-color: var(--raider-red);
+    }
+
     /* ── Schedule reminders ── */
     .sched-reminders-toggle {
       display: flex; align-items: center; justify-content: space-between;
@@ -809,7 +834,7 @@
     .cal-modal .cal-tag      { font-size: 0.66rem; padding: 2px 5px; }
 
     /* ══════════════════════════════
-       LEADERBOARD WIDGET
+       LEADERBOARD / STEP CHALLENGE WIDGET
     ══════════════════════════════ */
     .lb-tabs {
       display: flex; overflow-x: auto; scrollbar-width: none;
@@ -845,6 +870,7 @@
       display: flex; align-items: center; gap: 0.7rem;
       padding: 0.45rem 0.65rem;
       background: var(--gm-mid);
+      border-radius: 4px;
     }
     .lb-rank {
       font-family: 'Barlow Condensed', sans-serif;
@@ -854,15 +880,9 @@
       color: var(--txt-dim);
       border-radius: 50%;
     }
-    .lb-row:nth-child(1) .lb-rank {
-      background: #f5c842; color: #1a1200;
-    }
-    .lb-row:nth-child(2) .lb-rank {
-      background: #8a9bb0; color: #0d1520;
-    }
-    .lb-row:nth-child(3) .lb-rank {
-      background: #c87e4a; color: #1a0a00;
-    }
+    .lb-row:nth-child(1) .lb-rank { background: #f5c842; color: #1a1200; }
+    .lb-row:nth-child(2) .lb-rank { background: #8a9bb0; color: #0d1520; }
+    .lb-row:nth-child(3) .lb-rank { background: #c87e4a; color: #1a0a00; }
     .lb-name {
       font-family: 'Barlow Condensed', sans-serif;
       font-weight: 600; font-size: 1.064rem;
@@ -870,6 +890,18 @@
       flex: 1; min-width: 0;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    .lb-dept-tag {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.65rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--txt-dim);
+      background: var(--gm-light);
+      border-radius: 3px; padding: 1px 5px;
+      flex-shrink: 0;
+      display: none;
+    }
+    .lb-tab[data-dept="overall"] ~ * .lb-dept-tag,
+    .lb-dept-tag.show { display: block; }
     .lb-steps {
       font-family: 'Barlow Condensed', sans-serif;
       font-weight: 700; font-size: 0.986rem;
@@ -881,6 +913,73 @@
       color: var(--txt-dim);
       font-size: 0.784rem; letter-spacing: 0.18em; text-transform: uppercase;
     }
+    .lb-month-label {
+      font-size: 0.65rem; color: var(--txt-dim);
+      letter-spacing: 0.14em; text-transform: uppercase;
+      text-align: center; padding: 0.4rem 0 0.1rem;
+    }
+
+    /* Connect / status panel */
+    .lb-connect-panel {
+      padding: 1rem 1.1rem;
+      display: flex; flex-direction: column; gap: 0.65rem;
+    }
+    .lb-field-label {
+      font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--txt-dim); margin-bottom: 2px;
+    }
+    .lb-field {
+      width: 100%;
+      background: var(--gm-mid); border: 1px solid var(--gm-border);
+      border-radius: 5px; color: var(--txt-bright);
+      font-family: 'Barlow', sans-serif; font-size: 0.84rem;
+      padding: 0.4rem 0.65rem;
+      outline: none; transition: border-color 0.15s;
+    }
+    .lb-field:focus { border-color: var(--gm-highlight); }
+    .lb-connect-btn {
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      background: #00B0B9; border: none; border-radius: 6px;
+      color: #fff; font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.85rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.55rem 1rem; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .lb-connect-btn:hover { background: #00979e; }
+    .lb-connect-btn:disabled { background: var(--gm-highlight); cursor: not-allowed; }
+
+    .lb-status-bar {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.55rem 1.1rem;
+      background: var(--gm-dark);
+      border-bottom: 1px solid var(--gm-border);
+      font-size: 0.75rem;
+    }
+    .lb-status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #4caf50; flex-shrink: 0;
+    }
+    .lb-status-text { color: var(--txt-mid); flex: 1; }
+    .lb-status-steps {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.9rem;
+      color: var(--txt-bright);
+    }
+    .lb-sync-btn {
+      background: none; border: 1px solid var(--gm-border);
+      border-radius: 4px; color: var(--txt-dim);
+      font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 2px 7px; cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .lb-sync-btn:hover { color: var(--txt-mid); border-color: var(--gm-highlight); }
+    .lb-sync-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .lb-disconnect {
+      background: none; border: none; color: var(--txt-muted);
+      font-size: 0.62rem; cursor: pointer; text-decoration: underline;
+      padding: 0; align-self: center;
+    }
+    .lb-disconnect:hover { color: var(--txt-dim); }
 
     /* ══════════════════════════════
        QUESTION OF THE DAY WIDGET
@@ -1900,6 +1999,7 @@
           <span class="sched-strip-times" id="sched-strip-times"></span>
         </div>
         <div class="widget-body-collapsible" id="schedule-collapsible">
+          <div class="sched-grade-bar" id="sched-grade-bar" style="display:none"></div>
           <div class="widget-body" id="schedule-body">
             <div class="weather-loading"><div class="spin"></div>Loading schedule…</div>
           </div>
@@ -2078,9 +2178,57 @@
           </svg>
         </div>
         <div class="widget-body-collapsible" id="leaderboard-collapsible">
-          <div id="lb-body" class="lb-body">
-            <div class="weather-loading"><div class="spin"></div>Loading leaderboard…</div>
+
+          <!-- Connect panel (shown when not logged in) -->
+          <div id="lb-connect-panel" class="lb-connect-panel" style="display:none">
+            <div>
+              <div class="lb-field-label">Your Name</div>
+              <input id="lb-name-input" class="lb-field" type="text" placeholder="First Last" autocomplete="off"/>
+            </div>
+            <div>
+              <div class="lb-field-label">Department</div>
+              <select id="lb-dept-select" class="lb-field">
+                <option value="">-- Select department --</option>
+                <option>Administration</option>
+                <option>Clerical</option>
+                <option>Counseling</option>
+                <option>CTAE</option>
+                <option>English</option>
+                <option>Fine Arts</option>
+                <option>Library</option>
+                <option>Math</option>
+                <option>Nurse</option>
+                <option>Officer</option>
+                <option>PE</option>
+                <option>Science</option>
+                <option>Social Studies</option>
+                <option>Special Education</option>
+                <option>World Language</option>
+              </select>
+            </div>
+            <button class="lb-connect-btn" id="lb-connect-btn" onclick="lbFitbitLogin()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm12 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+              Connect Fitbit
+            </button>
           </div>
+
+          <!-- Status bar (shown when logged in) -->
+          <div id="lb-status-bar" class="lb-status-bar" style="display:none">
+            <span class="lb-status-dot" id="lb-status-dot"></span>
+            <span class="lb-status-text" id="lb-status-text">Connected</span>
+            <span class="lb-status-steps" id="lb-status-steps"></span>
+            <button class="lb-sync-btn" id="lb-sync-btn" onclick="lbSyncSteps()">Sync</button>
+            <button class="lb-disconnect" onclick="lbDisconnect()">disconnect</button>
+          </div>
+
+          <!-- Tabs -->
+          <div class="lb-tabs" id="lb-tabs" style="display:none"></div>
+
+          <!-- List -->
+          <div id="lb-body" class="lb-body">
+            <div class="weather-loading"><div class="spin"></div>Loading…</div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -2230,6 +2378,7 @@
       <span class="sched-modal-title" id="sched-modal-title">Bell Schedule</span>
       <button class="sched-modal-close" onclick="schedCloseModal()" title="Close">&#x2715;</button>
     </div>
+    <div class="sched-grade-bar" id="sched-grade-bar-modal" style="display:none;border-top:none"></div>
     <div class="sched-modal-body" id="sched-modal-body"></div>
   </div>
 </div>
@@ -2548,12 +2697,70 @@
     return json.values || [];
   }
 
+  // Multi-grade schedule support
+  const SCHED_GRADE_KEY    = 'sched_grade_idx';
+  let _schedGradeOptions   = []; // [{label, tab}]
+  let _schedRawRows        = []; // cached raw rows for grade switching without re-fetch
+
+  // Detect side-by-side layout: row[0] has grade labels at indices 0, 3, 6, 9
+  function _schedDetectMultiGrade(rows) {
+    if (!rows?.length) return null;
+    const hdr = rows[0];
+    const isLabel = s => s && !s.includes(':') && !/^(period|start|end|time)\b/i.test(s);
+    const labels = [0, 3, 6, 9].map(i => (hdr[i] || '').trim()).filter(isLabel);
+    return labels.length >= 2 ? labels : null;
+  }
+
+  // Parse one grade's columns from the raw rows (offset = gradeIdx * 3)
+  function _schedParseGradeColumns(rows, gradeIdx) {
+    const off = gradeIdx * 3;
+    return rows
+      .filter(r => {
+        const name = (r[off] || '').trim();
+        const t = parseTime(r[off + 1]);
+        return name && Number.isFinite(t);
+      })
+      .map(r => ({
+        name:     r[off].trim(),
+        start:    parseTime(r[off + 1]),
+        end:      parseTime(r[off + 2]),
+        startStr: formatTime(r[off + 1]),
+        endStr:   formatTime(r[off + 2]),
+      }));
+  }
+
+  function _schedRenderGradeBar(options) {
+    _schedGradeOptions = options;
+    const active = Math.min(parseInt(localStorage.getItem(SCHED_GRADE_KEY) || '0'), Math.max(options.length - 1, 0));
+    const show = options.length > 1;
+    ['sched-grade-bar', 'sched-grade-bar-modal'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.style.display = show ? '' : 'none';
+      if (!show) return;
+      el.innerHTML = options.map((opt, i) =>
+        `<button class="sched-grade-pill${i === active ? ' active' : ''}"
+          onclick="schedSelectGrade(${i})">${opt.label}</button>`
+      ).join('');
+    });
+  }
+
+  function schedSelectGrade(idx) {
+    localStorage.setItem(SCHED_GRADE_KEY, String(idx));
+    document.querySelectorAll('.sched-grade-pill').forEach((el, i) => {
+      el.classList.toggle('active', i === idx);
+    });
+    const periods = _schedParseGradeColumns(_schedRawRows, idx);
+    renderSchedule(periods, _schedGradeOptions[idx]?.label || '');
+  }
+
   async function fetchSchedule() {
     const body = document.getElementById('schedule-body');
 
     const now     = new Date();
     const weekday = now.getDay();
     if (weekday === 0 || weekday === 6) {
+      _schedRenderGradeBar([]);
       body.innerHTML = `<div class="schedule-no-school">
         <strong>No School Today</strong>Enjoy your weekend!
       </div>`;
@@ -2596,23 +2803,35 @@
         tabToUse = 'Daily';
         scheduleRows = await fetchSheetData('Daily');
       }
-      const dataRows = scheduleRows[0] && scheduleRows[0][0].toLowerCase().includes('period')
-        ? scheduleRows.slice(1) : scheduleRows;
+      _schedRawRows = scheduleRows;
 
-      if (!dataRows.length) {
+      // Detect side-by-side multi-grade layout (cols 0-2, 3-5, 6-8, 9-11)
+      const gradeLabels = _schedDetectMultiGrade(scheduleRows);
+      let periods;
+      if (gradeLabels) {
+        const gradeOptions = gradeLabels.map(label => ({ label, tab: tabToUse }));
+        _schedRenderGradeBar(gradeOptions);
+        const savedIdx = Math.min(
+          parseInt(localStorage.getItem(SCHED_GRADE_KEY) || '0'),
+          gradeOptions.length - 1
+        );
+        periods = _schedParseGradeColumns(scheduleRows, savedIdx);
+      } else {
+        _schedRenderGradeBar([]);
+        const dataRows = scheduleRows[0] && scheduleRows[0][0].toLowerCase().includes('period')
+          ? scheduleRows.slice(1) : scheduleRows;
+        periods = dataRows
+          .filter(r => r[0] && r[1] && r[2])
+          .map(r => ({
+            name: r[0].trim(), start: parseTime(r[1]), end: parseTime(r[2]),
+            startStr: formatTime(r[1]), endStr: formatTime(r[2]),
+          }));
+      }
+
+      if (!periods.length) {
         body.innerHTML = `<div class="schedule-no-school"><strong>No Schedule</strong>No periods found for today.</div>`;
         return;
       }
-
-      const periods = dataRows
-        .filter(r => r[0] && r[1] && r[2])
-        .map(r => ({
-          name:  r[0].trim(),
-          start: parseTime(r[1]),
-          end:   parseTime(r[2]),
-          startStr: formatTime(r[1]),
-          endStr:   formatTime(r[2]),
-        }));
 
       renderSchedule(periods, tabToUse);
 
@@ -2715,57 +2934,369 @@
   }
 
   // ══════════════════════════════════════════════
-  //  LEADERBOARD
+  //  STEP CHALLENGE — FITBIT PKCE OAUTH
   // ══════════════════════════════════════════════
-  const LB_SPREADSHEET_ID = '19Uz7R_0vXKFq58Jt1ZN_gkuidnbQezZKvbkQAZyOXuQ';
-  const LB_BASE = `https://sheets.googleapis.com/v4/spreadsheets/${LB_SPREADSHEET_ID}`;
+  const LB_FITBIT_CLIENT_ID  = '23VCQB';
+  const LB_FITBIT_REDIRECT   = 'https://waltondashboard.com/';
+  const LB_FITBIT_SCOPES     = 'activity';
+  const LB_APPS_SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbzPLACEHOLDER/exec';
+  const LB_SPREADSHEET_ID    = '19Uz7R_0vXKFq58Jt1ZN_gkuidnbQezZKvbkQAZyOXuQ';
 
-  async function initLeaderboard() {
-    const body = document.getElementById('lb-body');
-    body.innerHTML = `<div class="weather-loading"><div class="spin"></div>Loading…</div>`;
+  const LB_DEPARTMENTS = [
+    'Administration','Clerical','Counseling','CTAE','English',
+    'Fine Arts','Library','Math','Nurse','Officer','PE',
+    'Science','Social Studies','Special Education','World Language'
+  ];
+
+  // localStorage keys
+  const LBK_ACCESS   = 'lb_fitbit_access';
+  const LBK_REFRESH  = 'lb_fitbit_refresh';
+  const LBK_EXPIRY   = 'lb_fitbit_expiry';
+  const LBK_NAME     = 'lb_user_name';
+  const LBK_DEPT     = 'lb_user_dept';
+  const LBK_VERIFIER = 'lb_pkce_verifier';
+  const LBK_TAB      = 'lb_active_tab';
+
+  let _lbActiveTab = 'overall';
+  let _lbAllEntries = [];
+
+  // ── PKCE helpers ──────────────────────────────
+  function _lbRandBytes(n) {
+    const arr = new Uint8Array(n);
+    crypto.getRandomValues(arr);
+    return arr;
+  }
+  function _lbBase64url(buf) {
+    return btoa(String.fromCharCode(...new Uint8Array(buf)))
+      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
+  function lbGenVerifier() {
+    return _lbBase64url(_lbRandBytes(48));
+  }
+  async function lbGenChallenge(verifier) {
+    const enc  = new TextEncoder().encode(verifier);
+    const hash = await crypto.subtle.digest('SHA-256', enc);
+    return _lbBase64url(hash);
+  }
+
+  // ── OAuth login ───────────────────────────────
+  async function lbFitbitLogin() {
+    const nameEl = document.getElementById('lb-name-input');
+    const deptEl = document.getElementById('lb-dept-select');
+    const name   = nameEl?.value.trim();
+    const dept   = deptEl?.value;
+    if (!name) { nameEl?.focus(); return; }
+    if (!dept) { deptEl?.focus(); return; }
+    localStorage.setItem(LBK_NAME, name);
+    localStorage.setItem(LBK_DEPT, dept);
+
+    const verifier   = lbGenVerifier();
+    const challenge  = await lbGenChallenge(verifier);
+    localStorage.setItem(LBK_VERIFIER, verifier);
+
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: LB_FITBIT_CLIENT_ID,
+      redirect_uri: LB_FITBIT_REDIRECT,
+      scope: LB_FITBIT_SCOPES,
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
+      state: 'fitbit_cb',
+    });
+    window.location.href = `https://www.fitbit.com/oauth2/authorize?${params}`;
+  }
+
+  // ── Handle redirect callback ──────────────────
+  async function lbHandleCallback() {
+    const url    = new URL(window.location.href);
+    const code   = url.searchParams.get('code');
+    const state  = url.searchParams.get('state');
+    if (!code || state !== 'fitbit_cb') return false;
+
+    // Clean URL immediately
+    window.history.replaceState({}, '', window.location.pathname);
+
+    const verifier = localStorage.getItem(LBK_VERIFIER);
+    localStorage.removeItem(LBK_VERIFIER);
+    if (!verifier) { lbShowConnect('Could not complete login — please try again.'); return false; }
+
+    lbSetStatus('Connecting…', false);
     try {
-      const url  = `${LB_BASE}/values/Sheet1?key=${SHEETS_API_KEY}&_=${Date.now()}`;
-      const res  = await fetch(url);
+      const body = new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id:  LB_FITBIT_CLIENT_ID,
+        redirect_uri: LB_FITBIT_REDIRECT,
+        code,
+        code_verifier: verifier,
+      });
+      const res = await fetch('https://api.fitbit.com/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+      });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error?.message || res.statusText);
+        throw new Error(err.errors?.[0]?.message || res.statusText);
       }
-      const json = await res.json();
-      const rows = json.values || [];
-      // Skip header row if first cell looks like a label
-      const firstLower = (rows[0]?.[0] || '').toString().trim().toLowerCase();
-      const data = ['department','dept','name','team'].includes(firstLower) ? rows.slice(1) : rows;
-      const entries = data
-        .filter(r => r[0] && r[1])
-        .map(r => ({
-          name:  r[0].trim(),
-          steps: parseInt(String(r[1]).replace(/,/g, '')) || 0
-        }))
-        .filter(e => e.steps > 0);
-      entries.sort((a, b) => b.steps - a.steps);
-      renderLb(entries);
+      const data = await res.json();
+      _lbSaveTokens(data);
+      await lbSyncSteps();
     } catch(e) {
-      body.innerHTML = `<div class="lb-empty">Unable to load leaderboard.<br><span style="font-size:0.672rem;color:var(--txt-muted)">${e.message}</span></div>`;
+      lbShowConnect(`Login failed: ${e.message}`);
+    }
+    return true;
+  }
+
+  function _lbSaveTokens(data) {
+    localStorage.setItem(LBK_ACCESS,  data.access_token);
+    localStorage.setItem(LBK_REFRESH, data.refresh_token);
+    localStorage.setItem(LBK_EXPIRY,  Date.now() + (data.expires_in - 60) * 1000);
+  }
+
+  // ── Token refresh ─────────────────────────────
+  async function lbGetValidToken() {
+    const expiry = parseInt(localStorage.getItem(LBK_EXPIRY) || '0');
+    if (Date.now() < expiry) return localStorage.getItem(LBK_ACCESS);
+
+    const refresh = localStorage.getItem(LBK_REFRESH);
+    if (!refresh) throw new Error('No refresh token — please reconnect Fitbit.');
+
+    const body = new URLSearchParams({
+      grant_type:    'refresh_token',
+      client_id:     LB_FITBIT_CLIENT_ID,
+      refresh_token: refresh,
+    });
+    const res = await fetch('https://api.fitbit.com/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+    });
+    if (!res.ok) {
+      localStorage.removeItem(LBK_ACCESS);
+      localStorage.removeItem(LBK_REFRESH);
+      localStorage.removeItem(LBK_EXPIRY);
+      throw new Error('Session expired — please reconnect Fitbit.');
+    }
+    const data = await res.json();
+    _lbSaveTokens(data);
+    return data.access_token;
+  }
+
+  // ── Fetch monthly steps from Fitbit ───────────
+  async function lbFetchMonthlySteps() {
+    const token = await lbGetValidToken();
+    const now   = new Date();
+    const y     = now.getFullYear();
+    const m     = String(now.getMonth() + 1).padStart(2, '0');
+    const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+    const start = `${y}-${m}-01`;
+    const end   = `${y}-${m}-${String(lastDay).padStart(2,'0')}`;
+
+    const res = await fetch(
+      `https://api.fitbit.com/1/user/-/activities/steps/date/${start}/${end}.json`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.errors?.[0]?.message || `Fitbit API error ${res.status}`);
+    }
+    const data = await res.json();
+    const days = data['activities-steps'] || [];
+    const total = days.reduce((sum, d) => sum + (parseInt(d.value) || 0), 0);
+    return { total, month: `${y}-${m}`, label: now.toLocaleString('default', { month: 'long' }) + ' ' + y };
+  }
+
+  // ── Submit steps to Apps Script ───────────────
+  async function lbSubmitSteps(name, dept, steps, month) {
+    if (!LB_APPS_SCRIPT_URL.includes('PLACEHOLDER')) {
+      await fetch(LB_APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, department: dept, steps, month }),
+      });
     }
   }
 
-  function renderLb(entries) {
+  // ── Fetch leaderboard from Sheets ─────────────
+  async function lbFetchLeaderboard() {
+    const url  = `https://sheets.googleapis.com/v4/spreadsheets/${LB_SPREADSHEET_ID}/values/Sheet1?key=${SHEETS_API_KEY}&_=${Date.now()}`;
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error('Could not load leaderboard');
+    const json = await res.json();
+    const rows = (json.values || []).slice(1); // skip header
+    // Columns: timestamp | name | department | steps | month
+    // Keep only current month
+    const now   = new Date();
+    const curMo = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    // Aggregate: for each name, keep the entry with the highest steps (latest sync)
+    const map   = new Map();
+    for (const r of rows) {
+      const [, name, dept, stepsStr, month] = r;
+      if (!name || !dept || (month && !month.startsWith(curMo))) continue;
+      const steps = parseInt(String(stepsStr || '0').replace(/,/g,'')) || 0;
+      const key   = name.trim().toLowerCase();
+      if (!map.has(key) || steps > map.get(key).steps) {
+        map.set(key, { name: name.trim(), dept: dept.trim(), steps });
+      }
+    }
+    return [...map.values()].sort((a, b) => b.steps - a.steps);
+  }
+
+  // ── Sync: fetch steps → submit → refresh board ─
+  async function lbSyncSteps() {
+    const name = localStorage.getItem(LBK_NAME);
+    const dept = localStorage.getItem(LBK_DEPT);
+    if (!name || !dept) { lbShowConnect(); return; }
+
+    const syncBtn = document.getElementById('lb-sync-btn');
+    if (syncBtn) { syncBtn.disabled = true; syncBtn.textContent = '…'; }
+    lbSetStatus('Syncing…', false);
+
+    try {
+      const { total, month, label } = await lbFetchMonthlySteps();
+      await lbSubmitSteps(name, dept, total, month);
+      lbShowStatusBar(name, dept, total, label);
+      await lbRefreshBoard();
+    } catch(e) {
+      if (e.message.includes('reconnect')) {
+        lbShowConnect(e.message);
+      } else {
+        lbSetStatus(`Sync error: ${e.message}`, true);
+        await lbRefreshBoard().catch(() => {});
+      }
+    } finally {
+      if (syncBtn) { syncBtn.disabled = false; syncBtn.textContent = 'Sync'; }
+    }
+  }
+
+  // ── Refresh leaderboard display only ──────────
+  async function lbRefreshBoard() {
     const body = document.getElementById('lb-body');
-    if (!entries || !entries.length) {
-      body.innerHTML = `<div class="lb-empty">No data yet</div>`;
+    try {
+      _lbAllEntries = await lbFetchLeaderboard();
+      lbRenderTabs();
+      lbRenderList(_lbActiveTab);
+    } catch(e) {
+      if (body) body.innerHTML = `<div class="lb-empty">Unable to load.<br><small style="color:var(--txt-muted)">${escLb(e.message)}</small></div>`;
+    }
+  }
+
+  // ── Render tabs ────────────────────────────────
+  function lbRenderTabs() {
+    const tabsEl = document.getElementById('lb-tabs');
+    if (!tabsEl) return;
+    tabsEl.style.display = '';
+
+    const depts = [...new Set(_lbAllEntries.map(e => e.dept))].sort();
+    const tabs  = ['overall', ...LB_DEPARTMENTS.filter(d => depts.includes(d))];
+
+    tabsEl.innerHTML = tabs.map(t => {
+      const label = t === 'overall' ? 'Overall' : t;
+      return `<button class="lb-tab${t === _lbActiveTab ? ' active' : ''}"
+        onclick="lbSwitchTab('${escLb(t)}')">${escLb(label)}</button>`;
+    }).join('');
+  }
+
+  function lbSwitchTab(tab) {
+    _lbActiveTab = tab;
+    localStorage.setItem(LBK_TAB, tab);
+    document.querySelectorAll('#lb-tabs .lb-tab').forEach(el => {
+      el.classList.toggle('active', el.textContent === (tab === 'overall' ? 'Overall' : tab));
+    });
+    lbRenderList(tab);
+  }
+
+  // ── Render list for a tab ─────────────────────
+  function lbRenderList(tab) {
+    const body = document.getElementById('lb-body');
+    if (!body) return;
+    const showDept = tab === 'overall';
+    let entries = tab === 'overall'
+      ? _lbAllEntries
+      : _lbAllEntries.filter(e => e.dept === tab);
+
+    if (!entries.length) {
+      body.innerHTML = `<div class="lb-empty">No data yet${tab !== 'overall' ? ' for ' + escLb(tab) : ''}</div>`;
       return;
     }
-    const rows = entries.map((e, i) => `
+    const now = new Date();
+    const monthLabel = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const rows = entries.slice(0, 25).map((e, i) => `
       <div class="lb-row">
         <span class="lb-rank">${i + 1}</span>
         <span class="lb-name">${escLb(e.name)}</span>
+        ${showDept ? `<span class="lb-dept-tag show">${escLb(e.dept)}</span>` : ''}
         <span class="lb-steps">${e.steps.toLocaleString()}</span>
       </div>`).join('');
-    body.innerHTML = `<div class="lb-list">${rows}</div>`;
+    body.innerHTML = `<div class="lb-month-label">${monthLabel}</div><div class="lb-list">${rows}</div>`;
+  }
+
+  // ── UI helpers ────────────────────────────────
+  function lbShowConnect(msg) {
+    document.getElementById('lb-connect-panel').style.display = '';
+    document.getElementById('lb-status-bar').style.display    = 'none';
+    document.getElementById('lb-tabs').style.display          = 'none';
+    const nameVal = localStorage.getItem(LBK_NAME) || '';
+    const deptVal = localStorage.getItem(LBK_DEPT) || '';
+    const ni = document.getElementById('lb-name-input');
+    const di = document.getElementById('lb-dept-select');
+    if (ni) ni.value = nameVal;
+    if (di) di.value = deptVal;
+    const body = document.getElementById('lb-body');
+    if (msg && body) body.innerHTML = `<div class="lb-empty">${escLb(msg)}</div>`;
+    else if (body) body.innerHTML = '';
+  }
+
+  function lbShowStatusBar(name, dept, steps, monthLabel) {
+    document.getElementById('lb-connect-panel').style.display = 'none';
+    document.getElementById('lb-status-bar').style.display    = '';
+    const st = document.getElementById('lb-status-text');
+    const ss = document.getElementById('lb-status-steps');
+    if (st) st.textContent = `${name} · ${dept}`;
+    if (ss) ss.textContent = steps.toLocaleString() + ' steps';
+  }
+
+  function lbSetStatus(msg, isError) {
+    const st  = document.getElementById('lb-status-text');
+    const dot = document.getElementById('lb-status-dot');
+    if (st)  st.textContent = msg;
+    if (dot) dot.style.background = isError ? '#e53935' : '#4caf50';
+  }
+
+  function lbDisconnect() {
+    [LBK_ACCESS, LBK_REFRESH, LBK_EXPIRY].forEach(k => localStorage.removeItem(k));
+    _lbAllEntries = [];
+    lbShowConnect();
+    lbRefreshBoard();
   }
 
   function escLb(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Init ──────────────────────────────────────
+  async function initLeaderboard() {
+    _lbActiveTab = localStorage.getItem(LBK_TAB) || 'overall';
+
+    // 1. Handle OAuth callback if present
+    const wasCallback = await lbHandleCallback();
+    if (wasCallback) return;
+
+    // 2. Restore state
+    const access  = localStorage.getItem(LBK_ACCESS);
+    const name    = localStorage.getItem(LBK_NAME);
+    const dept    = localStorage.getItem(LBK_DEPT);
+
+    if (access && name && dept) {
+      // Show status bar with cached data, then sync
+      lbShowStatusBar(name, dept, 0, '');
+      document.getElementById('lb-status-steps').textContent = '';
+      await lbSyncSteps();
+    } else {
+      lbShowConnect();
+      lbRefreshBoard();
+    }
   }
 
   // ══════════════════════════════════════════════
@@ -3038,7 +3569,7 @@
   initDragAndDrop();
   updatePlaceholders();
   initLeaderboard();
-  setInterval(initLeaderboard, 5 * 60 * 1000);
+  setInterval(lbRefreshBoard, 5 * 60 * 1000);
 
   fetchAnnouncements();
   setInterval(fetchAnnouncements, 5 * 60 * 1000);
@@ -3487,8 +4018,16 @@
     cal.enabled = true;
     _saveCalendars(cals);
     _calEditing.delete(id);
-    if (cal.url) fetchGcalData(cal);
-    else renderCalendar();
+    if (cal.url) {
+      const btn = document.getElementById('cal-save-btn-' + id);
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<div class="spin" style="width:10px;height:10px;border-width:1.5px;display:inline-block;vertical-align:middle"></div>`;
+      }
+      fetchGcalData(cal);
+    } else {
+      renderCalendar();
+    }
   }
 
   function calToggleSettings() {
@@ -3773,7 +4312,7 @@
               onkeydown="if(event.key==='Enter')calSaveCalendar('${c.id}')"/>
             <input class="cal-ical-input" id="cal-url-${c.id}" value="${escHtml(c.url)}" placeholder="Paste iCal / .ics URL…"
               onkeydown="if(event.key==='Enter')calSaveCalendar('${c.id}')"/>
-            <button class="cal-ical-save-btn" onclick="calSaveCalendar('${c.id}')">Save</button>
+            <button class="cal-ical-save-btn" id="cal-save-btn-${c.id}" onclick="calSaveCalendar('${c.id}')">Save</button>
             <button class="cal-remove-btn" onclick="calRemoveCalendar('${c.id}')" title="Remove">✕</button>
           </div>`;
       }
