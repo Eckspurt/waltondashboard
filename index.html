@@ -2754,7 +2754,9 @@
     renderSchedule(periods, _schedGradeOptions[idx]?.label || '');
   }
 
-  async function fetchSchedule() {
+  const SCHED_CACHE_KEY = 'walton-sched-cache';
+
+  async function fetchSchedule(force = false) {
     const body = document.getElementById('schedule-body');
 
     const now     = new Date();
@@ -2765,6 +2767,33 @@
         <strong>No School Today</strong>Enjoy your weekend!
       </div>`;
       return;
+    }
+
+    // Cache key = date string — data only changes day-to-day
+    const todayKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+    if (!force) {
+      try {
+        const cached = JSON.parse(localStorage.getItem(SCHED_CACHE_KEY) || 'null');
+        if (cached?.date === todayKey && cached.rows?.length) {
+          _schedRawRows = cached.rows;
+          const gradeLabels = _schedDetectMultiGrade(cached.rows);
+          if (gradeLabels) {
+            const gradeOptions = gradeLabels.map(label => ({ label, tab: cached.tab }));
+            _schedRenderGradeBar(gradeOptions);
+            const savedIdx = Math.min(parseInt(localStorage.getItem(SCHED_GRADE_KEY) || '0'), gradeOptions.length - 1);
+            renderSchedule(_schedParseGradeColumns(cached.rows, savedIdx), gradeOptions[savedIdx].label);
+          } else {
+            _schedRenderGradeBar([]);
+            const data = cached.rows[0]?.[0]?.toLowerCase().includes('period') ? cached.rows.slice(1) : cached.rows;
+            const periods = data.filter(r => r[0] && r[1] && r[2]).map(r => ({
+              name: r[0].trim(), start: parseTime(r[1]), end: parseTime(r[2]),
+              startStr: formatTime(r[1]), endStr: formatTime(r[2]),
+            }));
+            renderSchedule(periods, cached.tab);
+          }
+          return;
+        }
+      } catch(e) { /* ignore bad cache */ }
     }
 
     try {
@@ -2804,6 +2833,7 @@
         scheduleRows = await fetchSheetData('Daily');
       }
       _schedRawRows = scheduleRows;
+      try { localStorage.setItem(SCHED_CACHE_KEY, JSON.stringify({ date: todayKey, tab: tabToUse, rows: scheduleRows })); } catch(e) {}
 
       // Detect side-by-side multi-grade layout (cols 0-2, 3-5, 6-8, 9-11)
       const gradeLabels = _schedDetectMultiGrade(scheduleRows);
@@ -3890,7 +3920,9 @@
   setInterval(checkBell, 1000);
 
   fetchSchedule();
-  setInterval(() => { fetchSchedule(); updateSchedStrip(); }, 60 * 1000);
+  setInterval(() => { updateSchedStrip(); }, 60 * 1000);
+  // Re-fetch schedule from Sheets once per hour (cache serves the rest)
+  setInterval(() => { fetchSchedule(true); }, 60 * 60 * 1000);
 
   fetchWeather();
   setInterval(fetchWeather, 10 * 60 * 1000);
