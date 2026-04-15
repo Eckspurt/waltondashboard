@@ -2815,7 +2815,13 @@
       return;
     }
 
-    const grades = [...new Set(rows.map(r => r.grade).filter(Boolean))].sort();
+    const GRADE_ORDER = ['9th','10th','11th','12th'];
+    const grades = [...new Set(rows.map(r => r.grade).filter(Boolean))]
+      .sort((a, b) => {
+        const ai = GRADE_ORDER.indexOf(a), bi = GRADE_ORDER.indexOf(b);
+        if (ai !== -1 && bi !== -1) return ai - bi;
+        return ai !== -1 ? -1 : bi !== -1 ? 1 : a.localeCompare(b);
+      });
     if (grades.length > 1) {
       const gradeOptions = grades.map(g => ({ label: g, tab: tabName }));
       _schedRenderGradeBar(gradeOptions);
@@ -5047,14 +5053,15 @@
   // ══════════════════════════════════════════════
   //  QUESTION OF THE DAY
   // ══════════════════════════════════════════════
-  const QOTD_SHEET_ID  = '1lnIig3Fw_1O_-iN5ihkEN1bUIjQhsjFuu2ueTRpoh_s';
-  const QOTD_BASE      = `https://sheets.googleapis.com/v4/spreadsheets/${QOTD_SHEET_ID}/values`;
-  // Paste your Apps Script Web App URL here after deploying it:
-  const QOTD_VOTE_URL  = 'https://script.google.com/macros/s/AKfycbza2s0S0cqr1l7eio5_cyRvqDoumSkyY42605cEOUrmHPCMo-_HAkqhvFdCJXqV41wL/exec';
+  const QOTD_VOTE_URL = 'https://waltondashboard.com/vote.html';
 
   const LETTERS = ['A','B','C','D','E','F'];
   let _qotdQuestion = null;
 
+  function _qotdTodayISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
   function _qotdDeviceId() {
     let id = localStorage.getItem('qotd-device-id');
     if (!id) { id = Math.random().toString(36).slice(2,10) + Date.now().toString(36); localStorage.setItem('qotd-device-id', id); }
@@ -5062,76 +5069,54 @@
   }
   function _qotdHasVoted(dayKey) { return localStorage.getItem(`qotd-voted-${dayKey}`) === '1'; }
   function _qotdMarkVoted(dayKey) { localStorage.setItem(`qotd-voted-${dayKey}`, '1'); }
+
   function qotdHandleVoteClick(dayKey, e) {
     e.stopPropagation();
     if (!QOTD_VOTE_URL) return;
     _qotdMarkVoted(dayKey);
-    window.open(`${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}&voter=${_qotdDeviceId()}`, '_blank', 'noopener');
+    window.open(`${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}&voter=${encodeURIComponent(_qotdDeviceId())}`, '_blank', 'noopener');
     renderQOTD();
-  }
-
-  function dayOfYear(d) {
-    const start = new Date(d.getFullYear(), 0, 0);
-    return Math.floor((d - start) / 86400000);
   }
 
   async function fetchQOTD() {
     const body = document.getElementById('qotd-body');
     if (!body) return;
+    const today = _qotdTodayISO();
     try {
-      const now    = new Date();
-      const todayN = String(dayOfYear(now)); // "85" etc.
-      const url    = `${QOTD_BASE}/${encodeURIComponent('Questions')}?key=${SHEETS_API_KEY}&_=${Date.now()}`;
-      const res    = await fetch(url);
-      const json   = await res.json();
-      if (json.error) throw new Error(json.error.message);
-      const rows     = json.values || [];
-      // Skip header row if first cell is non-numeric (e.g. "Day")
-      const dataRows = isNaN(rows[0]?.[0]) ? rows.slice(1) : rows;
-
-      const found = dataRows.find(r => r[0] && String(r[0]).trim() === todayN);
-
-      if (!found) {
-        body.innerHTML = `<div class="qotd-no-question">No question for today (day ${todayN})</div>`;
+      const rows = await supabaseGet('qotd_questions', `date=eq.${today}&select=date,question,options`);
+      if (!rows.length) {
+        body.innerHTML = `<div class="qotd-no-question">No question for today</div>`;
         _qotdQuestion = null;
         return;
       }
-
-      // r[0]=day#, r[1]=question, r[2..]=options
-      let options = found.slice(2).map(o => o?.trim()).filter(Boolean);
+      const row = rows[0];
+      let options = Array.isArray(row.options) ? row.options : JSON.parse(row.options);
 
       // Resolve "[Last Week's Winner]" placeholder
       if (options.some(o => /last week/i.test(o))) {
-        const targetDay  = String(Number(todayN) - 7);
-        const targetRow  = dataRows.find(r => r[0] && String(r[0]).trim() === targetDay);
-        const statsUrl   = `${QOTD_BASE}/${encodeURIComponent('Stats')}?key=${SHEETS_API_KEY}&_=${Date.now()}`;
-        const statsJson  = await (await fetch(statsUrl)).json();
-        const statsRows  = statsJson.values || [];
-        const statsDR    = isNaN(statsRows[0]?.[0]) ? statsRows.slice(1) : statsRows;
-        const statsRow   = statsDR.find(r => r[0] && String(r[0]).trim() === targetDay);
-        let winner = null;
-        if (statsRow && targetRow) {
-          let max = -1, winnerIdx = -1;
-          for (let j = 1; j <= 6; j++) {
-            const v = parseInt(statsRow[j]) || 0;
-            if (v > max) { max = v; winnerIdx = j - 1; }
+        const lastWeek = new Date(); lastWeek.setDate(lastWeek.getDate() - 7);
+        const lwISO = `${lastWeek.getFullYear()}-${String(lastWeek.getMonth()+1).padStart(2,'0')}-${String(lastWeek.getDate()).padStart(2,'0')}`;
+        try {
+          const [lwQ, lwVotes] = await Promise.all([
+            supabaseGet('qotd_questions', `date=eq.${lwISO}&select=options`),
+            supabaseGet('qotd_votes',     `date=eq.${lwISO}&select=option_index`),
+          ]);
+          if (lwQ.length && lwVotes.length) {
+            const lwOpts = Array.isArray(lwQ[0].options) ? lwQ[0].options : JSON.parse(lwQ[0].options);
+            const counts = lwOpts.map((_, i) => lwVotes.filter(v => v.option_index === i).length);
+            const winnerIdx = counts.indexOf(Math.max(...counts));
+            if (counts[winnerIdx] > 0) {
+              options = options.map(o => /last week/i.test(o) ? lwOpts[winnerIdx] : o);
+            }
           }
-          const prevOpts = targetRow.slice(2).map(o => o?.trim()).filter(Boolean);
-          if (winnerIdx >= 0 && max > 0) winner = prevOpts[winnerIdx] || null;
-        }
-        if (winner) options = options.map(o => /last week/i.test(o) ? winner : o);
+        } catch(e) { /* leave placeholder as-is */ }
       }
 
-      _qotdQuestion = {
-        dayKey:  todayN,
-        text:    found[1]?.trim() || '',
-        options,
-      };
+      _qotdQuestion = { dayKey: today, text: row.question, options };
       renderQOTD();
       fetchQOTDResults();
     } catch(e) {
-      const body = document.getElementById('qotd-body');
-      if (body) body.innerHTML = `<div class="qotd-no-question" style="font-size:0.7rem;text-transform:none;letter-spacing:0">Error: ${e.message}</div>`;
+      body.innerHTML = `<div class="qotd-no-question" style="font-size:0.7rem;text-transform:none;letter-spacing:0">Error: ${e.message}</div>`;
     }
   }
 
@@ -5139,19 +5124,11 @@
     const body = document.getElementById('qotd-body');
     if (!body || !_qotdQuestion) return;
     const { text, options, dayKey } = _qotdQuestion;
-
-    const optionsHTML = options.map((o, i) => `
-      <div class="qotd-option">
-        <span class="qotd-option-letter">${LETTERS[i]}.</span>
-        <span>${escHtml(o)}</span>
-      </div>`).join('');
-
-    const voted  = _qotdHasVoted(dayKey);
+    const voted = _qotdHasVoted(dayKey);
     const votedBadge = `<div class="qotd-voted-badge"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Voted</span></div>`;
     const qrHTML = QOTD_VOTE_URL
       ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=88x88&margin=0&data=${encodeURIComponent(QOTD_VOTE_URL + '?date=' + encodeURIComponent(dayKey))}" alt="Vote QR"/>`
       : `<div class="qotd-qr-placeholder">Set up<br>vote URL</div>`;
-
     const barsHTML = options.map((o, i) => `
       <div class="qotd-bar-row">
         <div class="qotd-bar-label">
@@ -5160,10 +5137,11 @@
         </div>
         <div class="qotd-bar-track"><div class="qotd-bar-fill" id="qotd-bar-${i}" style="width:0%"></div></div>
       </div>`).join('');
-
     body.innerHTML = `
       <div class="qotd-body" onclick="qotdOpenModal()" style="cursor:pointer" title="Click to expand">
-        <div class="qotd-qr-wrap">${QOTD_VOTE_URL ? `<div class="qotd-qr" style="cursor:pointer" onclick="qotdHandleVoteClick('${escHtml(dayKey)}',event)">${qrHTML}</div>` : `<div class="qotd-qr">${qrHTML}</div>`}</div>
+        <div class="qotd-qr-wrap">${QOTD_VOTE_URL
+          ? `<div class="qotd-qr" style="cursor:pointer" onclick="qotdHandleVoteClick('${escHtml(dayKey)}',event)">${qrHTML}${voted ? votedBadge : ''}</div>`
+          : `<div class="qotd-qr">${qrHTML}</div>`}</div>
         <div class="qotd-question">${escHtml(text)}</div>
         <div class="qotd-results">${barsHTML}</div>
         <div class="qotd-footer">
@@ -5176,51 +5154,39 @@
   async function fetchQOTDResults() {
     if (!_qotdQuestion) return;
     try {
-      const url  = `${QOTD_BASE}/${encodeURIComponent('Stats')}?key=${SHEETS_API_KEY}&_=${Date.now()}`;
-      const res  = await fetch(url);
-      const json = await res.json();
-      const rows = json.values || [];
-      const dataRows = rows[0]?.[0]?.toLowerCase().includes('date') ? rows.slice(1) : rows;
-
-      let counts = _qotdQuestion.options.map(() => 0);
-      const found = dataRows.find(r => r[0] && String(r[0]).trim() === _qotdQuestion.dayKey);
-      if (found) counts = _qotdQuestion.options.map((_, i) => parseInt(found[i + 1]) || 0);
-
+      const votes = await supabaseGet('qotd_votes', `date=eq.${_qotdQuestion.dayKey}&select=option_index`);
+      const counts = _qotdQuestion.options.map((_, i) => votes.filter(v => v.option_index === i).length);
       const total = counts.reduce((a, b) => a + b, 0);
-      const timeStr = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      const timeStr = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
       counts.forEach((c, i) => {
         const pct = total ? Math.round((c / total) * 100) : 0;
-        const bar = document.getElementById(`qotd-bar-${i}`);
-        const lbl = document.getElementById(`qotd-pct-${i}`);
-        if (bar) bar.style.width = pct + '%';
-        if (lbl) lbl.textContent = total ? `${c} (${pct}%)` : '—';
-        const mbar = document.getElementById(`qotd-modal-bar-${i}`);
-        const mlbl = document.getElementById(`qotd-modal-pct-${i}`);
-        if (mbar) mbar.style.width = pct + '%';
-        if (mlbl) mlbl.textContent = total ? `${c} (${pct}%)` : '—';
+        ['', 'modal-'].forEach(pfx => {
+          const bar = document.getElementById(`qotd-${pfx}bar-${i}`);
+          const lbl = document.getElementById(`qotd-${pfx}pct-${i}`);
+          if (bar) bar.style.width = pct + '%';
+          if (lbl) lbl.textContent = total ? `${c} (${pct}%)` : '—';
+        });
       });
-      const totalEl   = document.getElementById('qotd-total');
-      const updatedEl = document.getElementById('qotd-updated');
-      if (totalEl)   totalEl.textContent   = `${total} vote${total !== 1 ? 's' : ''}`;
-      if (updatedEl) updatedEl.textContent = `Updated ${timeStr}`;
-      const mtotalEl   = document.getElementById('qotd-modal-total');
-      const mupdatedEl = document.getElementById('qotd-modal-updated');
-      if (mtotalEl)   mtotalEl.textContent   = `${total} vote${total !== 1 ? 's' : ''}`;
-      if (mupdatedEl) mupdatedEl.textContent = `Updated ${timeStr}`;
-    } catch(e) { /* silently ignore refresh errors */ }
+      ['', 'modal-'].forEach(pfx => {
+        const tel = document.getElementById(`qotd-${pfx}total`);
+        const uel = document.getElementById(`qotd-${pfx}updated`);
+        if (tel) tel.textContent = `${total} vote${total !== 1 ? 's' : ''}`;
+        if (uel) uel.textContent = `Updated ${timeStr}`;
+      });
+    } catch(e) { /* silently ignore */ }
   }
 
   function qotdOpenModal() {
     if (!_qotdQuestion) return;
     const { text, options, dayKey } = _qotdQuestion;
-    const voted   = _qotdHasVoted(dayKey);
+    const voted = _qotdHasVoted(dayKey);
     const votedBadge = `<div class="qotd-voted-badge"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Voted</span></div>`;
     const voteUrl = QOTD_VOTE_URL ? `${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}` : null;
     const qrHTML = voteUrl
       ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&margin=0&data=${encodeURIComponent(voteUrl)}" alt="Vote QR"/>`
       : `<div class="qotd-qr-placeholder">Set up<br>vote URL</div>`;
     const qrWrap = voteUrl
-      ? `<div class="qotd-modal-qr" style="cursor:pointer;position:relative" onclick="qotdHandleVoteClick('${escHtml(dayKey)}',event)">${qrHTML}</div>`
+      ? `<div class="qotd-modal-qr" style="cursor:pointer;position:relative" onclick="qotdHandleVoteClick('${escHtml(dayKey)}',event)">${qrHTML}${voted ? votedBadge : ''}</div>`
       : `<div class="qotd-modal-qr">${qrHTML}</div>`;
     const barsHTML = options.map((o, i) => `
       <div class="qotd-modal-bar-row">

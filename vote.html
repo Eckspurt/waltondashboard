@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Question of the Day</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0d1628;
+      color: #eef2f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .card {
+      width: 100%; max-width: 480px;
+      background: #111e35;
+      border: 1px solid #2a4270;
+      border-radius: 12px;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .logo {
+      font-size: 0.7rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #5e7a9a;
+      text-align: center;
+    }
+    .question {
+      font-size: 1.25rem;
+      font-weight: 600;
+      line-height: 1.45;
+      text-align: center;
+      color: #eef2f8;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.6rem; }
+    .opt {
+      display: flex; align-items: center; gap: 0.75rem;
+      width: 100%;
+      background: #1e3258;
+      border: 1px solid #2a4270;
+      color: #eef2f8;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .opt:hover:not(:disabled)  { background: #2a4270; border-color: #3a5585; }
+    .opt.picked  { background: #8b1515; border-color: #cc2222; }
+    .opt:disabled { opacity: 0.5; cursor: not-allowed; }
+    .letter {
+      font-weight: 800;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      min-width: 1.5em;
+      color: #b0c2d8;
+      flex-shrink: 0;
+    }
+    .opt.picked .letter { color: #fff; }
+    .msg {
+      text-align: center;
+      font-size: 1rem;
+      color: #b0c2d8;
+      min-height: 1.5rem;
+    }
+    .msg.error { color: #e57373; }
+    .thanks {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .thanks-check {
+      width: 56px; height: 56px;
+      background: #1a4a2a;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .thanks-check svg { color: #4caf50; }
+    .thanks h2 { font-size: 1.4rem; color: #eef2f8; }
+    .thanks p  { font-size: 0.9rem; color: #5e7a9a; }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #2a4270;
+      border-top-color: #5e7a9a;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 1rem auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="logo">Walton High School &mdash; Question of the Day</div>
+  <div class="spinner" id="spinner"></div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://cnuifibctivvdmxhtcfj.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_BdccknKAwSQKfgbvjK0elw_utfpB4Qc';
+  const LETTERS = ['A','B','C','D','E','F'];
+
+  const params   = new URLSearchParams(location.search);
+  const date     = params.get('date') || todayISO();
+  const voterId  = params.get('voter') || getVoterId();
+  const lsKey    = 'qotd-page-voted-' + date;
+
+  function todayISO() {
+    const d = new Date();
+    return d.getFullYear() + '-' +
+      String(d.getMonth()+1).padStart(2,'0') + '-' +
+      String(d.getDate()).padStart(2,'0');
+  }
+
+  function getVoterId() {
+    let id = localStorage.getItem('qotd-device-id');
+    if (!id) {
+      id = Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+      localStorage.setItem('qotd-device-id', id);
+    }
+    return id;
+  }
+
+  async function sbGet(table, query) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    if (!res.ok) throw new Error('Network error');
+    return res.json();
+  }
+
+  async function sbPost(table, body) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=ignore-duplicates',
+      },
+      body: JSON.stringify(body),
+    });
+    return res.ok || res.status === 409;
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showThanks(alreadyVoted) {
+    document.getElementById('card').innerHTML = `
+      <div class="logo">Walton High School &mdash; Question of the Day</div>
+      <div class="thanks">
+        <div class="thanks-check">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <h2>${alreadyVoted ? 'Already voted!' : 'Thanks for voting!'}</h2>
+        <p>Your response has been recorded.</p>
+      </div>`;
+  }
+
+  function showError(msg) {
+    document.getElementById('card').innerHTML = `
+      <div class="logo">Walton High School &mdash; Question of the Day</div>
+      <div class="msg error">${esc(msg)}</div>`;
+  }
+
+  async function init() {
+    // Already voted? Show thanks immediately.
+    if (localStorage.getItem(lsKey)) { showThanks(true); return; }
+
+    // Check server-side too
+    try {
+      const existing = await sbGet('qotd_votes',
+        `date=eq.${date}&voter_id=eq.${encodeURIComponent(voterId)}&select=id&limit=1`);
+      if (existing.length) { localStorage.setItem(lsKey, '1'); showThanks(true); return; }
+    } catch(e) {}
+
+    // Load question
+    let question, options;
+    try {
+      const rows = await sbGet('qotd_questions', `date=eq.${date}&select=question,options`);
+      if (!rows.length) { showError('No question found for today.'); return; }
+      question = rows[0].question;
+      options  = typeof rows[0].options === 'string' ? JSON.parse(rows[0].options) : rows[0].options;
+    } catch(e) { showError('Unable to load question. Please try again.'); return; }
+
+    // Render voting UI
+    const card = document.getElementById('card');
+    card.innerHTML = `
+      <div class="logo">Walton High School &mdash; Question of the Day</div>
+      <div class="question">${esc(question)}</div>
+      <div class="options" id="opts">
+        ${options.map((o, i) => `
+          <button class="opt" onclick="vote(${i}, this)">
+            <span class="letter">${LETTERS[i]}</span>${esc(o)}
+          </button>`).join('')}
+      </div>
+      <div class="msg" id="msg"></div>`;
+  }
+
+  let _voting = false;
+  async function vote(idx, btn) {
+    if (_voting) return;
+    _voting = true;
+    document.querySelectorAll('.opt').forEach(b => b.disabled = true);
+    btn.classList.add('picked');
+
+    const ok = await sbPost('qotd_votes', { date, option_index: idx, voter_id: voterId });
+    if (ok) {
+      localStorage.setItem(lsKey, '1');
+      showThanks(false);
+    } else {
+      document.getElementById('msg').textContent = 'Something went wrong. Please try again.';
+      document.getElementById('msg').classList.add('error');
+      document.querySelectorAll('.opt').forEach(b => { b.disabled = false; });
+      btn.classList.remove('picked');
+      _voting = false;
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
