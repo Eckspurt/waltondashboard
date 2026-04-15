@@ -2644,6 +2644,23 @@
   const SPREADSHEET_ID   = '1mZtMjdd-t5y6ebproGrIb_qLzqPUZ_qEKrdUoZl0qIU';
   const SHEETS_BASE      = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values`;
 
+  const SUPABASE_URL = 'https://cnuifibctivvdmxhtcfj.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_BdccknKAwSQKfgbvjK0elw_utfpB4Qc';
+
+  async function supabaseGet(table, params = '') {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+      }
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || res.statusText);
+    }
+    return res.json();
+  }
+
   function parseTime(str) {
     if (!str) return null;
     str = str.trim();
@@ -2698,36 +2715,8 @@
   }
 
   // Multi-grade schedule support
-  const SCHED_GRADE_KEY    = 'sched_grade_idx';
-  let _schedGradeOptions   = []; // [{label, tab}]
-  let _schedRawRows        = []; // cached raw rows for grade switching without re-fetch
-
-  // Detect side-by-side layout: row[0] has grade labels at indices 0, 3, 6, 9
-  function _schedDetectMultiGrade(rows) {
-    if (!rows?.length) return null;
-    const hdr = rows[0];
-    const isLabel = s => s && !s.includes(':') && !/^(period|start|end|time)\b/i.test(s);
-    const labels = [0, 3, 6, 9].map(i => (hdr[i] || '').trim()).filter(isLabel);
-    return labels.length >= 2 ? labels : null;
-  }
-
-  // Parse one grade's columns from the raw rows (offset = gradeIdx * 3)
-  function _schedParseGradeColumns(rows, gradeIdx) {
-    const off = gradeIdx * 3;
-    return rows
-      .filter(r => {
-        const name = (r[off] || '').trim();
-        const t = parseTime(r[off + 1]);
-        return name && Number.isFinite(t);
-      })
-      .map(r => ({
-        name:     r[off].trim(),
-        start:    parseTime(r[off + 1]),
-        end:      parseTime(r[off + 2]),
-        startStr: formatTime(r[off + 1]),
-        endStr:   formatTime(r[off + 2]),
-      }));
-  }
+  const SCHED_GRADE_KEY  = 'sched_grade_idx';
+  let _schedGradeOptions = []; // [{label, tab}]
 
   function _schedRenderGradeBar(options) {
     _schedGradeOptions = options;
@@ -2750,8 +2739,14 @@
     document.querySelectorAll('.sched-grade-pill').forEach((el, i) => {
       el.classList.toggle('active', i === idx);
     });
-    const periods = _schedParseGradeColumns(_schedRawRows, idx);
-    renderSchedule(periods, _schedGradeOptions[idx]?.label || '');
+    try {
+      const cached = JSON.parse(localStorage.getItem(SCHED_CACHE_KEY) || 'null');
+      const grade = _schedGradeOptions[idx]?.label;
+      if (cached?.periods && grade) {
+        const filtered = cached.periods.filter(r => r.grade === grade);
+        renderSchedule(_schedRowsToPeriods(filtered), grade);
+      }
+    } catch(e) {}
   }
 
   const SCHED_CACHE_KEY = 'walton-sched-cache';
@@ -2769,101 +2764,38 @@
       return;
     }
 
-    // Cache key = date string — data only changes day-to-day
-    const todayKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+    // Serve from cache (keyed by date) — only bypass when force=true
+    const todayKey = now.toISOString().split('T')[0]; // YYYY-MM-DD
     if (!force) {
       try {
         const cached = JSON.parse(localStorage.getItem(SCHED_CACHE_KEY) || 'null');
-        if (cached?.date === todayKey && cached.rows?.length) {
-          _schedRawRows = cached.rows;
-          const gradeLabels = _schedDetectMultiGrade(cached.rows);
-          if (gradeLabels) {
-            const gradeOptions = gradeLabels.map(label => ({ label, tab: cached.tab }));
-            _schedRenderGradeBar(gradeOptions);
-            const savedIdx = Math.min(parseInt(localStorage.getItem(SCHED_GRADE_KEY) || '0'), gradeOptions.length - 1);
-            renderSchedule(_schedParseGradeColumns(cached.rows, savedIdx), gradeOptions[savedIdx].label);
-          } else {
-            _schedRenderGradeBar([]);
-            const data = cached.rows[0]?.[0]?.toLowerCase().includes('period') ? cached.rows.slice(1) : cached.rows;
-            const periods = data.filter(r => r[0] && r[1] && r[2]).map(r => ({
-              name: r[0].trim(), start: parseTime(r[1]), end: parseTime(r[2]),
-              startStr: formatTime(r[1]), endStr: formatTime(r[2]),
-            }));
-            renderSchedule(periods, cached.tab);
-          }
+        if (cached?.date === todayKey && cached.tab && cached.periods?.length) {
+          _schedApplySupabasePeriods(cached.periods, cached.tab);
           return;
         }
       } catch(e) { /* ignore bad cache */ }
     }
 
     try {
-      const todayStr = `${now.getMonth()+1}/${now.getDate()}/${now.getFullYear()}`;
-      const altFormats = [
-        todayStr,
-        `${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}/${now.getFullYear()}`,
-        `${now.getMonth()+1}/${now.getDate()}/${String(now.getFullYear()).slice(-2)}`,
-        `${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}/${String(now.getFullYear()).slice(-2)}`,
-        now.toISOString().split('T')[0],
-      ];
-
+      // 1. Look up today's schedule name in schedule_calendar
       let tabToUse = 'Daily';
-      try {
-        const calRows = await fetchSheetData('Calendar');
-        const dataRows = calRows[0] && calRows[0][0].toLowerCase().includes('date')
-          ? calRows.slice(1) : calRows;
+      const calData = await supabaseGet('schedule_calendar', `date=eq.${todayKey}&select=tab_name`);
+      if (calData[0]?.tab_name) tabToUse = calData[0].tab_name;
 
-        for (const row of dataRows) {
-          if (!row[0] || !row[1]) continue;
-          const cellDate = row[0].trim();
-          if (altFormats.includes(cellDate)) {
-            tabToUse = row[1].trim();
-            break;
-          }
-        }
-      } catch(e) {
-        console.warn('Calendar tab read failed, using Daily');
-      }
+      // 2. Fetch all periods for this schedule
+      let rows = await supabaseGet('schedule_periods',
+        `tab_name=eq.${encodeURIComponent(tabToUse)}&order=sort_order.asc`);
 
-      let scheduleRows;
-      try {
-        scheduleRows = await fetchSheetData(tabToUse);
-      } catch(e) {
-        console.warn(`Schedule tab "${tabToUse}" not found, falling back to Daily`);
+      // Fallback to Daily if not found
+      if (!rows.length && tabToUse !== 'Daily') {
         tabToUse = 'Daily';
-        scheduleRows = await fetchSheetData('Daily');
-      }
-      _schedRawRows = scheduleRows;
-      try { localStorage.setItem(SCHED_CACHE_KEY, JSON.stringify({ date: todayKey, tab: tabToUse, rows: scheduleRows })); } catch(e) {}
-
-      // Detect side-by-side multi-grade layout (cols 0-2, 3-5, 6-8, 9-11)
-      const gradeLabels = _schedDetectMultiGrade(scheduleRows);
-      let periods;
-      if (gradeLabels) {
-        const gradeOptions = gradeLabels.map(label => ({ label, tab: tabToUse }));
-        _schedRenderGradeBar(gradeOptions);
-        const savedIdx = Math.min(
-          parseInt(localStorage.getItem(SCHED_GRADE_KEY) || '0'),
-          gradeOptions.length - 1
-        );
-        periods = _schedParseGradeColumns(scheduleRows, savedIdx);
-      } else {
-        _schedRenderGradeBar([]);
-        const dataRows = scheduleRows[0] && scheduleRows[0][0].toLowerCase().includes('period')
-          ? scheduleRows.slice(1) : scheduleRows;
-        periods = dataRows
-          .filter(r => r[0] && r[1] && r[2])
-          .map(r => ({
-            name: r[0].trim(), start: parseTime(r[1]), end: parseTime(r[2]),
-            startStr: formatTime(r[1]), endStr: formatTime(r[2]),
-          }));
+        rows = await supabaseGet('schedule_periods',
+          `tab_name=eq.Daily&order=sort_order.asc`);
       }
 
-      if (!periods.length) {
-        body.innerHTML = `<div class="schedule-no-school"><strong>No Schedule</strong>No periods found for today.</div>`;
-        return;
-      }
+      try { localStorage.setItem(SCHED_CACHE_KEY, JSON.stringify({ date: todayKey, tab: tabToUse, periods: rows })); } catch(e) {}
 
-      renderSchedule(periods, tabToUse);
+      _schedApplySupabasePeriods(rows, tabToUse);
 
     } catch(e) {
       console.error(e);
@@ -2872,6 +2804,38 @@
         <span style="font-size:0.672rem;color:var(--txt-dim);letter-spacing:0.05em;text-transform:none;">${e.message}</span>
       </div>`;
     }
+  }
+
+  // Convert Supabase rows → periods and handle multi-grade
+  function _schedApplySupabasePeriods(rows, tabName) {
+    const body = document.getElementById('schedule-body');
+    if (!rows.length) {
+      body.innerHTML = `<div class="schedule-no-school"><strong>No Schedule</strong>No periods found for today.</div>`;
+      _schedRenderGradeBar([]);
+      return;
+    }
+
+    const grades = [...new Set(rows.map(r => r.grade).filter(Boolean))].sort();
+    if (grades.length > 1) {
+      const gradeOptions = grades.map(g => ({ label: g, tab: tabName }));
+      _schedRenderGradeBar(gradeOptions);
+      const savedIdx = Math.min(parseInt(localStorage.getItem(SCHED_GRADE_KEY) || '0'), grades.length - 1);
+      const filtered = rows.filter(r => r.grade === grades[savedIdx]);
+      renderSchedule(_schedRowsToPeriods(filtered), grades[savedIdx]);
+    } else {
+      _schedRenderGradeBar([]);
+      renderSchedule(_schedRowsToPeriods(rows), tabName);
+    }
+  }
+
+  function _schedRowsToPeriods(rows) {
+    return rows.map(r => ({
+      name:     r.period_name,
+      start:    parseTime(r.start_time),
+      end:      parseTime(r.end_time),
+      startStr: formatTime(r.start_time),
+      endStr:   formatTime(r.end_time),
+    }));
   }
 
   let currentSchedulePeriods = null;
@@ -3602,7 +3566,7 @@
   setInterval(lbRefreshBoard, 5 * 60 * 1000);
 
   fetchAnnouncements();
-  setInterval(fetchAnnouncements, 5 * 60 * 1000);
+  setInterval(fetchAnnouncements, 30 * 60 * 1000);
 
   // ── Bell sound ──
   const BELL_STYLE_KEY = 'walton-bell-style';
