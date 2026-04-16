@@ -1538,16 +1538,24 @@
       flex: 1; font-size: 0.875rem; color: var(--txt-bright);
       line-height: 1.35; word-break: break-word;
     }
-    .todo-move-btn, .todo-del-btn {
+    .todo-move-btn, .todo-edit-btn, .todo-del-btn {
       background: none; border: none; cursor: pointer; padding: 2px 4px;
       border-radius: 3px; color: var(--txt-dim); line-height: 1;
       transition: color 0.12s, background 0.12s; flex-shrink: 0;
     }
-    .todo-move-btn:hover { color: var(--txt-bright); background: var(--gm-highlight); }
+    .todo-move-btn:hover, .todo-edit-btn:hover { color: var(--txt-bright); background: var(--gm-highlight); }
     .todo-del-btn:hover  { color: var(--raider-red); background: var(--gm-highlight); }
     .todo-item[draggable] { cursor: grab; }
     .todo-item.todo-dragging { opacity: 0.4; }
     .todo-item.todo-drag-over { border-top: 2px solid var(--raider-red); }
+    .todo-edit-input {
+      flex: 1; background: var(--gm-light); border: 1px solid var(--raider-red);
+      border-radius: 4px; color: var(--txt-bright); font-family: 'Barlow', sans-serif;
+      font-size: 0.875rem; padding: 1px 6px; outline: none;
+    }
+    @media (min-width: 601px) { .todo-move-btn { display: none; } }
+    .todo-item .todo-edit-btn { display: none; }
+    .todo-item:hover .todo-edit-btn { display: inline-flex; }
 
     /* ══════════════════════════════
        SCHEDULE MODAL
@@ -5294,6 +5302,9 @@
         </button>
         <button class="todo-move-btn" onclick="todoMove(${item.id},1)" ${downDisabled ? 'disabled style="opacity:0.25"' : ''} title="Move down">
           <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button class="todo-edit-btn" onclick="todoEdit(${item.id})" title="Edit">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>` : ''}
         <button class="todo-del-btn" onclick="todoDelete(${item.id})" title="Remove">
           <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -5303,10 +5314,45 @@
 
     let html = pending.map(i => itemHTML(i, true)).join('');
     if (done.length) {
-      html += `<div class="todo-section-label">Completed</div>`;
+      html += `<div class="todo-section-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:1.1rem">
+        <span>Completed</span>
+        <button onclick="todoClearDone()" style="background:none;border:none;cursor:pointer;color:var(--txt-muted);font-family:'Barlow Condensed',sans-serif;font-size:0.62rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:1px 0;" onmouseover="this.style.color='var(--raider-red)'" onmouseout="this.style.color='var(--txt-muted)'">Remove All</button>
+      </div>`;
       html += done.map(i => itemHTML(i, false)).join('');
     }
     list.innerHTML = html || `<div style="padding:0.75rem 1.1rem;font-size:0.75rem;color:var(--txt-muted);letter-spacing:0.15em;text-transform:uppercase">No tasks yet</div>`;
+  }
+
+  function todoClearDone() {
+    todoSave(todoLoad().filter(i => !i.done));
+    todoRender();
+  }
+
+  function todoEdit(id) {
+    const span = document.querySelector(`.todo-item[data-id="${id}"] .todo-text`);
+    if (!span) return;
+    const current = span.textContent;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = current;
+    input.className = 'todo-edit-input';
+    span.replaceWith(input);
+    input.focus();
+    input.select();
+    function commit() {
+      const val = input.value.trim();
+      if (val && val !== current) {
+        const items = todoLoad();
+        const item = items.find(i => i.id === id);
+        if (item) { item.text = val; todoSave(items); }
+      }
+      todoRender();
+    }
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  { input.blur(); }
+      if (e.key === 'Escape') { input.value = current; input.blur(); }
+    });
   }
 
   function todoDragStart(id)         { _todoDragId = id; document.querySelector(`.todo-item[data-id="${id}"]`)?.classList.add('todo-dragging'); }
