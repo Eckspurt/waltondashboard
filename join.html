@@ -173,21 +173,25 @@
 
   function showSuccess(name) {
     document.getElementById('card').innerHTML = `
-      <div class="logo">Walton High School &mdash; Step Challenge</div>
+      <div class="logo">Walton High School</div>
       <div class="success">
-        <div class="check">
-          <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <polyline points="20 6 9 17 4 12"/>
+        <div class="check" style="background:#4a3800">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f0b429" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8a5 5 0 0 0-10 0v6"/>
+            <path d="M18 8v6"/>
+            <rect x="2" y="14" width="20" height="6" rx="2"/>
+            <line x1="8" y1="14" x2="8" y2="20"/>
+            <line x1="12" y1="14" x2="12" y2="20"/>
+            <line x1="16" y1="14" x2="16" y2="20"/>
           </svg>
         </div>
-        <h1>You're signed up!</h1>
-        <p class="subtitle">Welcome to the challenge, ${esc(name)}! Scan the QR code or tap the button below to connect your Fitbit.</p>
+        <h1>One more step!</h1>
+        <p class="subtitle">Almost there, ${esc(name)}! Connect your Fitbit to start tracking your steps on the leaderboard.</p>
         <hr class="divider" style="width:100%"/>
         <div class="qr-label">Scan to connect Fitbit</div>
         <div class="qr-wrap">
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=0d1628&bgcolor=ffffff&data=https%3A%2F%2Fwaltondashboard.com%2Ffitbit.html" alt="QR code"/>
         </div>
-        <div class="url">waltondashboard.com/fitbit.html</div>
         <a class="btn btn-primary" href="https://waltondashboard.com/fitbit.html">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm12 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
           Connect Fitbit

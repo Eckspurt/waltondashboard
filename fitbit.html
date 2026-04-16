@@ -42,7 +42,7 @@
     .spinner {
       width: 36px; height: 36px;
       border: 3px solid #2a4270;
-      border-top-color: #00B0B9;
+      border-top-color: #c0392b;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
     }
@@ -93,8 +93,8 @@
       font-family: inherit;
       transition: background 0.15s, opacity 0.15s;
     }
-    .btn-fitbit { background: #00B0B9; color: #fff; }
-    .btn-fitbit:hover { background: #00979e; }
+    .btn-fitbit { background: #c0392b; color: #fff; }
+    .btn-fitbit:hover { background: #a93226; }
     .btn-fitbit:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-sync { background: #1e3258; border: 1px solid #2a4270; color: #eef2f8; }
     .btn-sync:hover { background: #2a4270; }
@@ -157,7 +157,10 @@
     if (!refresh) throw new Error('no_refresh');
     const res = await fetch('https://api.fitbit.com/oauth2/token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + btoa(FITBIT_CLIENT_ID + ':'),
+      },
       body: new URLSearchParams({ grant_type: 'refresh_token', client_id: FITBIT_CLIENT_ID, refresh_token: refresh }),
     });
     if (!res.ok) { clearTokens(); throw new Error('no_refresh'); }
@@ -221,7 +224,7 @@
 
   function showConnect(errMsg) {
     card().innerHTML = `
-      <div class="logo">Walton High School &mdash; Step Challenge</div>
+      <div class="logo">Walton High School</div>
       <h1>Connect Your Fitbit</h1>
       <p class="subtitle">Sync your monthly steps to the Walton Step Challenge leaderboard.</p>
       ${errMsg ? `<p class="msg error">${esc(errMsg)}</p>` : ''}
@@ -239,7 +242,7 @@
       ? `<img src="${esc(avatar)}" alt=""/>`
       : initials;
     card().innerHTML = `
-      <div class="logo">Walton High School &mdash; Step Challenge</div>
+      <div class="logo">Walton High School</div>
       <div class="check">
         <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
           <polyline points="20 6 9 17 4 12"/>
@@ -267,7 +270,7 @@
 
   function showSpinner() {
     card().innerHTML = `
-      <div class="logo">Walton High School &mdash; Step Challenge</div>
+      <div class="logo">Walton High School</div>
       <div class="spinner"></div>`;
   }
 
@@ -302,7 +305,10 @@
     try {
       const res = await fetch('https://api.fitbit.com/oauth2/token', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' + btoa(FITBIT_CLIENT_ID + ':'),
+        },
         body: new URLSearchParams({
           grant_type: 'authorization_code',
           client_id: FITBIT_CLIENT_ID,
