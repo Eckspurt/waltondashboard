@@ -98,20 +98,6 @@
       display: flex; align-items: center; justify-content: center;
     }
     .check svg { color: #4caf50; }
-    .qr-label {
-      font-size: 0.7rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: #5e7a9a;
-    }
-    .qr-wrap {
-      background: #fff;
-      border-radius: 10px;
-      padding: 12px;
-      display: inline-flex;
-    }
-    .qr-wrap img { display: block; width: 200px; height: 200px; }
-    .url { font-size: 0.85rem; color: #5e7a9a; }
     .steps {
       width: 100%;
       display: flex;
@@ -184,10 +170,6 @@
         <h1>One more step!</h1>
         <p class="subtitle">Almost there, ${esc(name)}! Connect your Fitbit to start tracking your steps on the leaderboard.</p>
         <hr class="divider" style="width:100%"/>
-        <div class="qr-label">Scan to connect Fitbit</div>
-        <div class="qr-wrap">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=0d1628&bgcolor=ffffff&data=https%3A%2F%2Fwaltondashboard.com%2Ffitbit.html" alt="QR code"/>
-        </div>
         <a class="btn btn-primary" href="https://waltondashboard.com/fitbit.html">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm12 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
           Connect Fitbit
