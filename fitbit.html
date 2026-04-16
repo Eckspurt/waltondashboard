@@ -226,13 +226,13 @@
   function showConnect(errMsg) {
     card().innerHTML = `
       <div class="logo">Walton High School</div>
-      <h1>Connect Your Fitbit</h1>
+      <h1>Connect Your Fitbit Account</h1>
       <p class="subtitle">Sync your monthly steps to the Walton Step Challenge leaderboard.</p>
       ${errMsg ? `<p class="msg error">${esc(errMsg)}</p>` : ''}
       <hr class="divider" style="width:100%"/>
       <button class="btn btn-fitbit" onclick="startLogin()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm12 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
-        Connect Fitbit
+        Connect
       </button>
       <a class="btn btn-board" href="https://waltondashboard.com">View Leaderboard</a>`;
   }
