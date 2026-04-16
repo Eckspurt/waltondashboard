@@ -920,66 +920,21 @@
     }
 
     /* Connect / status panel */
-    .lb-connect-panel {
-      padding: 1rem 1.1rem;
-      display: flex; flex-direction: column; gap: 0.65rem;
+    .lb-join-bar {
+      padding: 0.75rem 1.1rem;
+      border-bottom: 1px solid var(--gm-border);
     }
-    .lb-field-label {
-      font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--txt-dim); margin-bottom: 2px;
-    }
-    .lb-field {
-      width: 100%;
-      background: var(--gm-mid); border: 1px solid var(--gm-border);
-      border-radius: 5px; color: var(--txt-bright);
-      font-family: 'Barlow', sans-serif; font-size: 0.84rem;
-      padding: 0.4rem 0.65rem;
-      outline: none; transition: border-color 0.15s;
-    }
-    .lb-field:focus { border-color: var(--gm-highlight); }
     .lb-connect-btn {
       display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      width: 100%;
       background: #00B0B9; border: none; border-radius: 6px;
       color: #fff; font-family: 'Barlow Condensed', sans-serif;
       font-size: 0.85rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
       padding: 0.55rem 1rem; cursor: pointer;
+      text-decoration: none;
       transition: background 0.15s;
     }
     .lb-connect-btn:hover { background: #00979e; }
-    .lb-connect-btn:disabled { background: var(--gm-highlight); cursor: not-allowed; }
-
-    .lb-status-bar {
-      display: flex; align-items: center; gap: 0.6rem;
-      padding: 0.55rem 1.1rem;
-      background: var(--gm-dark);
-      border-bottom: 1px solid var(--gm-border);
-      font-size: 0.75rem;
-    }
-    .lb-status-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #4caf50; flex-shrink: 0;
-    }
-    .lb-status-text { color: var(--txt-mid); flex: 1; }
-    .lb-status-steps {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700; font-size: 0.9rem;
-      color: var(--txt-bright);
-    }
-    .lb-sync-btn {
-      background: none; border: 1px solid var(--gm-border);
-      border-radius: 4px; color: var(--txt-dim);
-      font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
-      padding: 2px 7px; cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
-    }
-    .lb-sync-btn:hover { color: var(--txt-mid); border-color: var(--gm-highlight); }
-    .lb-sync-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-    .lb-disconnect {
-      background: none; border: none; color: var(--txt-muted);
-      font-size: 0.62rem; cursor: pointer; text-decoration: underline;
-      padding: 0; align-self: center;
-    }
-    .lb-disconnect:hover { color: var(--txt-dim); }
 
     /* ══════════════════════════════
        QUESTION OF THE DAY WIDGET
@@ -2187,50 +2142,16 @@
         </div>
         <div class="widget-body-collapsible" id="leaderboard-collapsible">
 
-          <!-- Connect panel (shown when not logged in) -->
-          <div id="lb-connect-panel" class="lb-connect-panel" style="display:none">
-            <div>
-              <div class="lb-field-label">Your Name</div>
-              <input id="lb-name-input" class="lb-field" type="text" placeholder="First Last" autocomplete="off"/>
-            </div>
-            <div>
-              <div class="lb-field-label">Department</div>
-              <select id="lb-dept-select" class="lb-field">
-                <option value="">-- Select department --</option>
-                <option>Administration</option>
-                <option>Clerical</option>
-                <option>Counseling</option>
-                <option>CTAE</option>
-                <option>English</option>
-                <option>Fine Arts</option>
-                <option>Library</option>
-                <option>Math</option>
-                <option>Nurse</option>
-                <option>Officer</option>
-                <option>PE</option>
-                <option>Science</option>
-                <option>Social Studies</option>
-                <option>Special Education</option>
-                <option>World Language</option>
-              </select>
-            </div>
-            <button class="lb-connect-btn" id="lb-connect-btn" onclick="lbFitbitLogin()">
+          <!-- Join button -->
+          <div class="lb-join-bar">
+            <a class="lb-connect-btn" href="https://forms.office.com/Pages/ResponsePage.aspx?id=-x3OL5-ROEmquMR_D8kYLSrRadQ1M7RKkeRsg8sarjpURU9QREFLVDlYREFUVEs1RlJaRjQwVkM3Mi4u" target="_blank" rel="noopener">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm12 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
               Connect Fitbit
-            </button>
-          </div>
-
-          <!-- Status bar (shown when logged in) -->
-          <div id="lb-status-bar" class="lb-status-bar" style="display:none">
-            <span class="lb-status-dot" id="lb-status-dot"></span>
-            <span class="lb-status-text" id="lb-status-text">Connected</span>
-            <span class="lb-status-steps" id="lb-status-steps"></span>
-            <button class="lb-sync-btn" id="lb-sync-btn" onclick="lbSyncSteps()">Sync</button>
-            <button class="lb-disconnect" onclick="lbDisconnect()">disconnect</button>
+            </a>
           </div>
 
           <!-- Tabs -->
-          <div class="lb-tabs" id="lb-tabs" style="display:none"></div>
+          <div class="lb-tabs" id="lb-tabs"></div>
 
           <!-- List -->
           <div id="lb-body" class="lb-body">
@@ -2947,8 +2868,6 @@
   const LB_FITBIT_CLIENT_ID  = '23VCQB';
   const LB_FITBIT_REDIRECT   = 'https://waltondashboard.com/';
   const LB_FITBIT_SCOPES     = 'activity';
-  const LB_APPS_SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbzPLACEHOLDER/exec';
-  const LB_SPREADSHEET_ID    = '19Uz7R_0vXKFq58Jt1ZN_gkuidnbQezZKvbkQAZyOXuQ';
 
   const LB_DEPARTMENTS = [
     'Administration','Clerical','Counseling','CTAE','English',
@@ -3021,8 +2940,9 @@
     const state  = url.searchParams.get('state');
     if (!code || state !== 'fitbit_cb') return false;
 
-    // Clean URL immediately
-    window.history.replaceState({}, '', window.location.pathname);
+    // Forward to connect.html which handles the full OAuth flow
+    window.location.replace('/fitbit.html' + window.location.search);
+    return true;
 
     const verifier = localStorage.getItem(LBK_VERIFIER);
     localStorage.removeItem(LBK_VERIFIER);
@@ -3114,41 +3034,30 @@
     return { total, month: `${y}-${m}`, label: now.toLocaleString('default', { month: 'long' }) + ' ' + y };
   }
 
-  // ── Submit steps to Apps Script ───────────────
+  // ── Submit steps to Supabase ──────────────────
   async function lbSubmitSteps(name, dept, steps, month) {
-    if (!LB_APPS_SCRIPT_URL.includes('PLACEHOLDER')) {
-      await fetch(LB_APPS_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, department: dept, steps, month }),
-      });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/step_challenge`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({ month, name, department: dept, steps, updated_at: new Date().toISOString() }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `Supabase error ${res.status}`);
     }
   }
 
-  // ── Fetch leaderboard from Sheets ─────────────
+  // ── Fetch leaderboard from Supabase ───────────
   async function lbFetchLeaderboard() {
-    const url  = `https://sheets.googleapis.com/v4/spreadsheets/${LB_SPREADSHEET_ID}/values/Sheet1?key=${SHEETS_API_KEY}&_=${Date.now()}`;
-    const res  = await fetch(url);
-    if (!res.ok) throw new Error('Could not load leaderboard');
-    const json = await res.json();
-    const rows = (json.values || []).slice(1); // skip header
-    // Columns: timestamp | name | department | steps | month
-    // Keep only current month
     const now   = new Date();
     const curMo = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    // Aggregate: for each name, keep the entry with the highest steps (latest sync)
-    const map   = new Map();
-    for (const r of rows) {
-      const [, name, dept, stepsStr, month] = r;
-      if (!name || !dept || (month && !month.startsWith(curMo))) continue;
-      const steps = parseInt(String(stepsStr || '0').replace(/,/g,'')) || 0;
-      const key   = name.trim().toLowerCase();
-      if (!map.has(key) || steps > map.get(key).steps) {
-        map.set(key, { name: name.trim(), dept: dept.trim(), steps });
-      }
-    }
-    return [...map.values()].sort((a, b) => b.steps - a.steps);
+    const rows  = await supabaseGet('step_challenge', `month=eq.${curMo}&order=steps.desc&select=name,department,steps`);
+    return rows.map(r => ({ name: r.name, dept: r.department, steps: r.steps }));
   }
 
   // ── Sync: fetch steps → submit → refresh board ─
@@ -3286,25 +3195,7 @@
   // ── Init ──────────────────────────────────────
   async function initLeaderboard() {
     _lbActiveTab = localStorage.getItem(LBK_TAB) || 'overall';
-
-    // 1. Handle OAuth callback if present
-    const wasCallback = await lbHandleCallback();
-    if (wasCallback) return;
-
-    // 2. Restore state
-    const access  = localStorage.getItem(LBK_ACCESS);
-    const name    = localStorage.getItem(LBK_NAME);
-    const dept    = localStorage.getItem(LBK_DEPT);
-
-    if (access && name && dept) {
-      // Show status bar with cached data, then sync
-      lbShowStatusBar(name, dept, 0, '');
-      document.getElementById('lb-status-steps').textContent = '';
-      await lbSyncSteps();
-    } else {
-      lbShowConnect();
-      lbRefreshBoard();
-    }
+    await lbRefreshBoard();
   }
 
   // ══════════════════════════════════════════════

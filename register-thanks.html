@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Step Challenge — You're Registered!</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0d1628;
+      color: #eef2f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .card {
+      width: 100%; max-width: 480px;
+      background: #111e35;
+      border: 1px solid #2a4270;
+      border-radius: 12px;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      text-align: center;
+    }
+    .logo {
+      font-size: 0.7rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #5e7a9a;
+    }
+    .check {
+      width: 64px; height: 64px;
+      background: #1a4a2a;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .check svg { color: #4caf50; }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #eef2f8;
+    }
+    .subtitle {
+      font-size: 0.95rem;
+      color: #b0c2d8;
+      line-height: 1.55;
+    }
+    .divider {
+      width: 100%;
+      border: none;
+      border-top: 1px solid #2a4270;
+    }
+    .qr-label {
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #5e7a9a;
+    }
+    .qr-wrap {
+      background: #fff;
+      border-radius: 10px;
+      padding: 12px;
+      display: inline-flex;
+    }
+    .qr-wrap img {
+      display: block;
+      width: 200px; height: 200px;
+    }
+    .url {
+      font-size: 0.9rem;
+      color: #5e7a9a;
+      letter-spacing: 0.04em;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #1e3258;
+      border: 1px solid #2a4270;
+      color: #eef2f8;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn:hover { background: #2a4270; border-color: #3a5585; }
+    .steps {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      text-align: left;
+    }
+    .step {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      font-size: 0.9rem;
+      color: #b0c2d8;
+      line-height: 1.5;
+    }
+    .step-num {
+      background: #1e3258;
+      border: 1px solid #2a4270;
+      border-radius: 50%;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #5e7a9a;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Walton High School &mdash; Step Challenge</div>
+
+  <div class="check">
+    <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </div>
+
+  <h1>You're registered!</h1>
+  <p class="subtitle">Scan the QR code below or tap the button to connect your Fitbit and start tracking your steps. You can rescan anytime to sync your latest step count.</p>
+
+  <hr class="divider"/>
+
+  <div class="qr-label">Scan to connect</div>
+  <div class="qr-wrap">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=0d1628&bgcolor=ffffff&data=https%3A%2F%2Fwaltondashboard.com%2Ffitbit.html" alt="QR code for waltondashboard.com/fitbit.html"/>
+  </div>
+  <div class="url">waltondashboard.com/fitbit.html</div>
+
+  <a class="btn" href="https://waltondashboard.com/fitbit.html">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm12 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+    Open Dashboard
+  </a>
+
+  <hr class="divider"/>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <span>Visit <strong>waltondashboard.com/fitbit.html</strong> or scan the QR code above.</span>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <span>Click <strong>Connect Fitbit</strong> and sign in with your <strong>personal Fitbit account</strong>.</span>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <span>Your name and steps are pulled automatically from Fitbit — no typing needed.</span>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <span>Return to <strong>waltondashboard.com/fitbit.html</strong> anytime to sync your latest steps.</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
