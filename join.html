@@ -280,7 +280,8 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm12 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
         Connect Fitbit
       </button>
-      <a class="btn btn-secondary" href="https://waltondashboard.com">View Leaderboard</a>`;
+      <a class="btn btn-secondary" href="https://waltondashboard.com">View Leaderboard</a>
+      <button class="disconnect" onclick="startOver()">start over</button>`;
   }
 
   // ── Render: spinner ───────────────────────────
@@ -316,7 +317,8 @@
         Sync Steps
       </button>
       <a class="btn btn-primary" href="https://waltondashboard.com">View Leaderboard</a>
-      <button class="disconnect" onclick="disconnect()">disconnect</button>`;
+      <button class="disconnect" onclick="disconnect()">disconnect</button>
+      <button class="disconnect" onclick="startOver()">start over</button>`;
   }
 
   // ── Form submit ───────────────────────────────
@@ -434,6 +436,13 @@
     const name = localStorage.getItem(LBK_NAME);
     if (name) showConnectFitbit(name);
     else showForm();
+  }
+
+  // ── Start over ────────────────────────────────
+  function startOver() {
+    [LBK_ACCESS, LBK_REFRESH, LBK_EXPIRY, LBK_VERIFIER, LBK_NAME, LBK_DEPT, LBK_FITBIT_ID]
+      .forEach(k => localStorage.removeItem(k));
+    showForm();
   }
 
   // ── Init ──────────────────────────────────────
