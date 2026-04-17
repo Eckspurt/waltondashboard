@@ -25,195 +25,433 @@
       padding: 2rem 1.5rem;
       display: flex;
       flex-direction: column;
+      align-items: center;
       gap: 1.25rem;
+      text-align: center;
     }
     .logo {
       font-size: 0.7rem;
       letter-spacing: 0.22em;
       text-transform: uppercase;
       color: #5e7a9a;
-      text-align: center;
     }
-    h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: #eef2f8;
-      text-align: center;
-    }
-    .subtitle {
-      font-size: 0.9rem;
-      color: #b0c2d8;
-      line-height: 1.55;
-      text-align: center;
-    }
-    .divider { border: none; border-top: 1px solid #2a4270; }
+    h1 { font-size: 1.4rem; font-weight: 700; color: #eef2f8; }
+    .subtitle { font-size: 0.9rem; color: #b0c2d8; line-height: 1.55; }
+    .divider { width: 100%; border: none; border-top: 1px solid #2a4270; }
+
+    /* Form fields */
+    .fields { width: 100%; display: flex; flex-direction: column; gap: 0.85rem; text-align: left; }
     .field { display: flex; flex-direction: column; gap: 0.35rem; }
     .field label {
-      font-size: 0.65rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: #5e7a9a;
+      font-size: 0.65rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: #5e7a9a;
     }
     .field input, .field select {
       width: 100%;
-      background: #1e3258;
-      border: 1px solid #2a4270;
-      border-radius: 6px;
-      color: #eef2f8;
-      font-family: inherit;
-      font-size: 0.95rem;
-      padding: 0.6rem 0.85rem;
-      outline: none;
-      transition: border-color 0.15s;
-      appearance: none;
+      background: #1e3258; border: 1px solid #2a4270; border-radius: 6px;
+      color: #eef2f8; font-family: inherit; font-size: 0.95rem;
+      padding: 0.6rem 0.85rem; outline: none;
+      transition: border-color 0.15s; appearance: none;
     }
     .field input::placeholder { color: #5e7a9a; }
     .field input:focus, .field select:focus { border-color: #c0392b; }
     .field select option { background: #1e3258; }
+
+    /* Spinner */
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid #2a4270; border-top-color: #c0392b;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Check icon */
+    .check {
+      width: 64px; height: 64px; background: #1a4a2a; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .check svg { color: #4caf50; }
+
+    /* Profile card */
+    .profile {
+      width: 100%; background: #1e3258; border: 1px solid #2a4270;
+      border-radius: 8px; padding: 0.85rem 1rem;
+      display: flex; align-items: center; gap: 0.85rem; text-align: left;
+    }
+    .profile-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #2a4270;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1rem; color: #b0c2d8;
+      flex-shrink: 0; overflow: hidden;
+    }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-name { font-size: 0.95rem; font-weight: 600; color: #eef2f8; }
+    .profile-steps { font-size: 0.8rem; color: #5e7a9a; margin-top: 2px; }
+
+    /* Buttons */
     .btn {
-      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-      width: 100%;
-      border: none; border-radius: 6px;
-      font-family: inherit;
-      font-size: 0.9rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      width: 100%; border-radius: 6px;
+      font-family: inherit; font-size: 0.9rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
       padding: 0.7rem 1rem; cursor: pointer;
+      text-decoration: none; border: none;
       transition: background 0.15s, opacity 0.15s;
     }
     .btn-primary { background: #c0392b; color: #fff; }
     .btn-primary:hover { background: #a93226; }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-secondary {
-      background: transparent; border: 1px solid #2a4270;
-      color: #b0c2d8; text-decoration: none;
-    }
+    .btn-secondary { background: transparent; border: 1px solid #2a4270; color: #b0c2d8; }
     .btn-secondary:hover { background: #1e3258; color: #eef2f8; }
-    .msg { font-size: 0.85rem; color: #e57373; text-align: center; min-height: 1.2rem; }
+    .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* ── Success state ── */
-    .success { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; text-align: center; }
-    .check {
-      width: 64px; height: 64px;
-      background: #1a4a2a;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
+    .msg { font-size: 0.85rem; color: #b0c2d8; min-height: 1.2rem; }
+    .msg.error { color: #e57373; }
+    .disconnect {
+      background: none; border: none; color: #5e7a9a;
+      font-size: 0.75rem; cursor: pointer; text-decoration: underline; font-family: inherit;
     }
-    .check svg { color: #4caf50; }
-    .steps {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-      text-align: left;
-    }
-    .step {
-      display: flex; gap: 0.75rem; align-items: flex-start;
-      font-size: 0.875rem; color: #b0c2d8; line-height: 1.5;
-    }
-    .step-num {
-      background: #1e3258; border: 1px solid #2a4270; border-radius: 50%;
-      width: 24px; height: 24px; flex-shrink: 0; margin-top: 1px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.72rem; font-weight: 700; color: #5e7a9a;
-    }
+    .disconnect:hover { color: #b0c2d8; }
   </style>
 </head>
 <body>
 <div class="card" id="card">
   <div class="logo">Walton High School</div>
-  <h1>Join the Step Challenge</h1>
-  <p class="subtitle">Enter your info below to sign up. You'll then get a link to connect your Fitbit and start tracking.</p>
-  <hr class="divider"/>
-  <div class="field">
-    <label for="name-input">Full Name</label>
-    <input id="name-input" type="text" placeholder="First Last" autocomplete="name"/>
-  </div>
-  <div class="field">
-    <label for="dept-select">Department</label>
-    <select id="dept-select">
-      <option value="">-- Select department --</option>
-      <option>Administration</option>
-      <option>Clerical</option>
-      <option>Counseling</option>
-      <option>CTAE</option>
-      <option>English</option>
-      <option>Fine Arts</option>
-      <option>Library</option>
-      <option>Math</option>
-      <option>Nurse</option>
-      <option>Officer</option>
-      <option>PE</option>
-      <option>Science</option>
-      <option>Social Studies</option>
-      <option>Special Education</option>
-      <option>World Language</option>
-    </select>
-  </div>
-  <p class="msg" id="msg"></p>
-  <button class="btn btn-primary" id="submit-btn" onclick="submitForm()">Join</button>
+  <div class="spinner"></div>
 </div>
 
 <script>
+  const SUPABASE_URL     = 'https://cnuifibctivvdmxhtcfj.supabase.co';
+  const SUPABASE_KEY     = 'sb_publishable_BdccknKAwSQKfgbvjK0elw_utfpB4Qc';
+  const FITBIT_CLIENT_ID = '23VCQB';
+  const FITBIT_REDIRECT  = 'https://waltondashboard.com/';
+  const FITBIT_SCOPES    = 'activity profile';
+
+  const LBK_ACCESS    = 'lb_fitbit_access';
+  const LBK_REFRESH   = 'lb_fitbit_refresh';
+  const LBK_EXPIRY    = 'lb_fitbit_expiry';
+  const LBK_VERIFIER  = 'lb_pkce_verifier';
+  const LBK_NAME      = 'lb_user_name';
+  const LBK_DEPT      = 'lb_user_dept';
+  const LBK_FITBIT_ID = 'lb_fitbit_user_id';
+
+  const DEPTS = [
+    'Administration','Clerical','Counseling','CTAE','English',
+    'Fine Arts','Library','Math','Nurse','Officer','PE',
+    'Science','Social Studies','Special Education','World Language',
+  ];
+
+  // ── Helpers ───────────────────────────────────
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+  function card() { return document.getElementById('card'); }
 
-  function showSuccess(name) {
-    document.getElementById('card').innerHTML = `
-      <div class="logo">Walton High School</div>
-      <div class="success">
-        <div class="check" style="background:#f0b429; width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round">
-            <line x1="12" y1="5" x2="12" y2="14"/>
-            <circle cx="12" cy="19" r="2" fill="#fff" stroke="none"/>
-          </svg>
-        </div>
-        <h1>One more step!</h1>
-        <p class="subtitle">Almost there, ${esc(name)}! Connect your Fitbit to start tracking your steps on the leaderboard.</p>
-        <hr class="divider" style="width:100%"/>
-        <a class="btn btn-primary" href="https://waltondashboard.com/fitbit.html">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm12 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
-          Connect Fitbit
-        </a>
-        <div class="steps">
-          <div class="step">
-            <div class="step-num">1</div>
-            <span>Tap <strong>Connect Fitbit</strong> or scan the QR code above.</span>
-          </div>
-          <div class="step">
-            <div class="step-num">2</div>
-            <span>Sign in with your <strong>personal Fitbit account</strong> to authorize step tracking.</span>
-          </div>
-          <div class="step">
-            <div class="step-num">3</div>
-            <span>Your steps sync automatically. Revisit the link anytime to update your count.</span>
-          </div>
-        </div>
-      </div>`;
+  // ── PKCE ──────────────────────────────────────
+  function genVerifier() {
+    const arr = new Uint8Array(48);
+    crypto.getRandomValues(arr);
+    return btoa(String.fromCharCode(...arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  }
+  async function genChallenge(verifier) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+    return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
   }
 
+  // ── Token management ──────────────────────────
+  function saveTokens(data) {
+    localStorage.setItem(LBK_ACCESS,  data.access_token);
+    localStorage.setItem(LBK_REFRESH, data.refresh_token);
+    localStorage.setItem(LBK_EXPIRY,  Date.now() + (data.expires_in - 60) * 1000);
+  }
+  async function getValidToken() {
+    const expiry = parseInt(localStorage.getItem(LBK_EXPIRY) || '0');
+    if (Date.now() < expiry) return localStorage.getItem(LBK_ACCESS);
+    const refresh = localStorage.getItem(LBK_REFRESH);
+    if (!refresh) throw new Error('no_refresh');
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/bright-processor`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ grant_type: 'refresh_token', client_id: FITBIT_CLIENT_ID, refresh_token: refresh }),
+    });
+    if (!res.ok) { clearTokens(); throw new Error('no_refresh'); }
+    const data = await res.json();
+    saveTokens(data);
+    return data.access_token;
+  }
+  function clearTokens() {
+    [LBK_ACCESS, LBK_REFRESH, LBK_EXPIRY, LBK_FITBIT_ID].forEach(k => localStorage.removeItem(k));
+  }
+
+  // ── Fitbit API ────────────────────────────────
+  async function fetchProfile(token) {
+    const res = await fetch('https://api.fitbit.com/1/user/-/profile.json', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Could not load Fitbit profile');
+    const data = await res.json();
+    return {
+      fitbitId: data.user.encodedId,
+      name:     data.user.fullName || data.user.displayName || 'Unknown',
+      avatar:   data.user.avatar150 || data.user.avatar || null,
+    };
+  }
+  async function fetchMonthlySteps(token) {
+    const now  = new Date();
+    const y    = now.getFullYear();
+    const m    = String(now.getMonth() + 1).padStart(2, '0');
+    const last = new Date(y, now.getMonth() + 1, 0).getDate();
+    const res  = await fetch(
+      `https://api.fitbit.com/1/user/-/activities/steps/date/${y}-${m}-01/${y}-${m}-${String(last).padStart(2,'0')}.json`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!res.ok) throw new Error('Could not load steps');
+    const data  = await res.json();
+    const total = (data['activities-steps'] || []).reduce((s, d) => s + (parseInt(d.value) || 0), 0);
+    return { total, month: `${y}-${m}`, label: now.toLocaleString('default', { month: 'long' }) + ' ' + y };
+  }
+
+  // ── Supabase ──────────────────────────────────
+  async function submitSteps(fitbitId, name, dept, steps, month) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/step_challenge`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({
+        fitbit_user_id: fitbitId, month, name, department: dept,
+        steps, updated_at: new Date().toISOString(),
+        access_token:  localStorage.getItem(LBK_ACCESS)  || null,
+        refresh_token: localStorage.getItem(LBK_REFRESH) || null,
+        expires_at:    parseInt(localStorage.getItem(LBK_EXPIRY) || '0') || null,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `Supabase error ${res.status}`);
+    }
+  }
+
+  // ── Render: name/dept form ────────────────────
+  function showForm(errMsg) {
+    const opts = DEPTS.map(d => `<option>${esc(d)}</option>`).join('');
+    card().innerHTML = `
+      <div class="logo">Walton High School</div>
+      <h1>Join the Step Challenge</h1>
+      <p class="subtitle">Enter your info to get started, then connect your Fitbit to track steps.</p>
+      <hr class="divider"/>
+      <div class="fields">
+        <div class="field">
+          <label for="name-input">Full Name</label>
+          <input id="name-input" type="text" placeholder="First Last" autocomplete="name"/>
+        </div>
+        <div class="field">
+          <label for="dept-select">Department</label>
+          <select id="dept-select">
+            <option value="">-- Select department --</option>
+            ${opts}
+          </select>
+        </div>
+      </div>
+      <p class="msg error" id="msg">${errMsg ? esc(errMsg) : ''}</p>
+      <button class="btn btn-primary" id="submit-btn" onclick="submitForm()">Continue</button>`;
+    document.addEventListener('keydown', function onKey(e) {
+      if (e.key === 'Enter') { document.removeEventListener('keydown', onKey); submitForm(); }
+    });
+  }
+
+  // ── Render: connect Fitbit ────────────────────
+  function showConnectFitbit(name) {
+    card().innerHTML = `
+      <div class="logo">Walton High School</div>
+      <div class="check" style="background:#f0b429">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="14"/>
+          <circle cx="12" cy="19" r="2" fill="#fff" stroke="none"/>
+        </svg>
+      </div>
+      <h1>One more step!</h1>
+      <p class="subtitle">Almost there, ${esc(name)}! Connect your Fitbit to start tracking steps on the leaderboard.</p>
+      <hr class="divider"/>
+      <button class="btn btn-primary" onclick="startLogin()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm12 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+        Connect Fitbit
+      </button>
+      <a class="btn btn-secondary" href="https://waltondashboard.com">View Leaderboard</a>`;
+  }
+
+  // ── Render: spinner ───────────────────────────
+  function showSpinner() {
+    card().innerHTML = `<div class="logo">Walton High School</div><div class="spinner"></div>`;
+  }
+
+  // ── Render: connected ─────────────────────────
+  function showConnected(name, avatar, steps, monthLabel) {
+    const initials  = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const avatarHtml = avatar ? `<img src="${esc(avatar)}" alt=""/>` : initials;
+    card().innerHTML = `
+      <div class="logo">Walton High School</div>
+      <div class="check">
+        <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h1>You're on the board!</h1>
+      <div class="profile" id="profile-card">
+        <div class="profile-avatar">${avatarHtml}</div>
+        <div>
+          <div class="profile-name">${esc(name)}</div>
+          <div class="profile-steps" id="step-count">${steps.toLocaleString()} steps &mdash; ${esc(monthLabel)}</div>
+        </div>
+      </div>
+      <p class="msg" id="sync-msg"></p>
+      <button class="btn btn-secondary" id="sync-btn" onclick="syncSteps()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Sync Steps
+      </button>
+      <a class="btn btn-primary" href="https://waltondashboard.com">View Leaderboard</a>
+      <button class="disconnect" onclick="disconnect()">disconnect</button>`;
+  }
+
+  // ── Form submit ───────────────────────────────
   function submitForm() {
     const nameEl = document.getElementById('name-input');
     const deptEl = document.getElementById('dept-select');
     const msgEl  = document.getElementById('msg');
-    const btn    = document.getElementById('submit-btn');
-
-    const name = nameEl.value.trim();
-    const dept = deptEl.value;
-
+    const name   = nameEl?.value.trim();
+    const dept   = deptEl?.value;
     if (!name) { msgEl.textContent = 'Please enter your full name.'; nameEl.focus(); return; }
     if (!dept) { msgEl.textContent = 'Please select your department.'; deptEl.focus(); return; }
-    msgEl.textContent = '';
-
-    // Save to localStorage — fitbit.html picks these up when syncing
-    localStorage.setItem('lb_user_name', name);
-    localStorage.setItem('lb_user_dept', dept);
-    showSuccess(name);
+    localStorage.setItem(LBK_NAME, name);
+    localStorage.setItem(LBK_DEPT, dept);
+    showConnectFitbit(name);
   }
 
-  // Allow Enter key to submit
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') submitForm();
-  });
+  // ── OAuth login ───────────────────────────────
+  async function startLogin() {
+    const verifier  = genVerifier();
+    const challenge = await genChallenge(verifier);
+    localStorage.setItem(LBK_VERIFIER, verifier);
+    const params = new URLSearchParams({
+      response_type: 'code', client_id: FITBIT_CLIENT_ID,
+      redirect_uri: FITBIT_REDIRECT, scope: FITBIT_SCOPES,
+      code_challenge: challenge, code_challenge_method: 'S256',
+      state: 'fitbit_cb',
+    });
+    window.location.href = `https://www.fitbit.com/oauth2/authorize?${params}`;
+  }
+
+  // ── OAuth callback ────────────────────────────
+  async function handleCallback(code) {
+    showSpinner();
+    const verifier = localStorage.getItem(LBK_VERIFIER);
+    localStorage.removeItem(LBK_VERIFIER);
+    if (!verifier) { showForm('Login failed — please try again.'); return; }
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/bright-processor`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code', client_id: FITBIT_CLIENT_ID,
+          redirect_uri: FITBIT_REDIRECT, code, code_verifier: verifier,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.errors?.[0]?.message || res.statusText);
+      }
+      saveTokens(await res.json());
+      await syncSteps();
+    } catch(e) {
+      showForm(`Login failed: ${e.message}`);
+    }
+  }
+
+  // ── Sync steps ────────────────────────────────
+  async function syncSteps() {
+    const syncBtn = document.getElementById('sync-btn');
+    const syncMsg = document.getElementById('sync-msg');
+    if (syncBtn) { syncBtn.disabled = true; syncBtn.textContent = 'Syncing…'; }
+
+    try {
+      const token = await getValidToken();
+      const [{ fitbitId, name: fitbitName, avatar }, { total, month, label }] = await Promise.all([
+        fetchProfile(token),
+        fetchMonthlySteps(token),
+      ]);
+      const name = localStorage.getItem(LBK_NAME) || fitbitName;
+      const dept = localStorage.getItem(LBK_DEPT) || '';
+      localStorage.setItem(LBK_NAME, name);
+      localStorage.setItem(LBK_FITBIT_ID, fitbitId);
+      await submitSteps(fitbitId, name, dept, total, month);
+
+      if (document.getElementById('profile-card')) {
+        const stepEl = document.getElementById('step-count');
+        if (stepEl) stepEl.textContent = `${total.toLocaleString()} steps — ${label}`;
+        if (syncMsg) syncMsg.textContent = 'Updated!';
+        setTimeout(() => { if (syncMsg) syncMsg.textContent = ''; }, 3000);
+        if (syncBtn) {
+          syncBtn.disabled = false;
+          syncBtn.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync Steps`;
+        }
+      } else {
+        showConnected(name, avatar, total, label);
+      }
+    } catch(e) {
+      if (e.message === 'no_refresh') {
+        clearTokens();
+        showForm('Session expired — please reconnect.');
+      } else {
+        if (syncMsg) syncMsg.textContent = `Sync failed: ${e.message}`;
+        if (syncBtn) {
+          syncBtn.disabled = false;
+          syncBtn.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync Steps`;
+        }
+      }
+    }
+  }
+
+  // ── Disconnect ────────────────────────────────
+  function disconnect() {
+    clearTokens();
+    const name = localStorage.getItem(LBK_NAME);
+    if (name) showConnectFitbit(name);
+    else showForm();
+  }
+
+  // ── Init ──────────────────────────────────────
+  async function init() {
+    const params = new URLSearchParams(location.search);
+    const code   = params.get('code');
+    if (code && params.get('state') === 'fitbit_cb') {
+      window.history.replaceState({}, '', location.pathname);
+      await handleCallback(code);
+      return;
+    }
+
+    const hasTokens = !!localStorage.getItem(LBK_REFRESH);
+    const name      = localStorage.getItem(LBK_NAME);
+    const dept      = localStorage.getItem(LBK_DEPT);
+
+    if (hasTokens) {
+      showSpinner();
+      await syncSteps();
+    } else if (name && dept) {
+      showConnectFitbit(name);
+    } else {
+      showForm();
+    }
+  }
+
+  init();
 </script>
 </body>
 </html>
