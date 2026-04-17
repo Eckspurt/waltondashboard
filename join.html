@@ -408,7 +408,15 @@
     } catch(e) {
       if (e.message === 'no_refresh') {
         clearTokens();
-        showForm('Session expired — please reconnect.');
+        const name = localStorage.getItem(LBK_NAME);
+        if (name) showConnectFitbit(name);
+        else showForm('Session expired — please reconnect.');
+      } else if (!document.getElementById('profile-card')) {
+        // Failed during initial load (spinner state) — recover gracefully
+        clearTokens();
+        const name = localStorage.getItem(LBK_NAME);
+        if (name) showConnectFitbit(name);
+        else showForm('Could not sync — please reconnect your Fitbit.');
       } else {
         if (syncMsg) syncMsg.textContent = `Sync failed: ${e.message}`;
         if (syncBtn) {
