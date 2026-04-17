@@ -919,29 +919,7 @@
       text-align: center; padding: 0.4rem 0 0.1rem;
     }
 
-    /* Connect / status panel */
-    .lb-connect-btn {
-      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-      width: 100%;
-      background: #00B0B9; border: none; border-radius: 6px;
-      color: #fff; font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.85rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-      padding: 0.55rem 1rem; cursor: pointer;
-      text-decoration: none;
-      transition: background 0.15s;
-    }
-    .lb-connect-btn:hover { background: #00979e; }
-    .lb-connect-form {
-      padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.65rem;
-    }
-    .lb-input {
-      width: 100%; box-sizing: border-box;
-      background: var(--gm-mid); border: 1px solid var(--gm-border); border-radius: 6px;
-      color: var(--txt-bright); padding: 0.45rem 0.7rem;
-      font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem;
-    }
-    .lb-input::placeholder { color: var(--txt-dim); }
-    .lb-input option { background: var(--gm-dark); }
+    /* Status panel */
     .lb-sbar {
       display: flex; align-items: center; gap: 0.5rem;
       padding: 0.4rem 1.1rem;
@@ -2179,30 +2157,6 @@
         </div>
         <div class="widget-body-collapsible" id="leaderboard-collapsible">
 
-          <!-- Fitbit connect panel -->
-          <div id="lb-connect-panel" class="lb-connect-form">
-            <input id="lb-name-input" type="text" class="lb-input" placeholder="Your name" autocomplete="off">
-            <select id="lb-dept-select" class="lb-input">
-              <option value="">— Department —</option>
-              <option>Administration</option>
-              <option>Clerical</option>
-              <option>Counseling</option>
-              <option>CTAE</option>
-              <option>English</option>
-              <option>Fine Arts</option>
-              <option>Library</option>
-              <option>Math</option>
-              <option>Nurse</option>
-              <option>Officer</option>
-              <option>PE</option>
-              <option>Science</option>
-              <option>Social Studies</option>
-              <option>Special Education</option>
-              <option>World Language</option>
-            </select>
-            <button class="lb-connect-btn" onclick="lbFitbitLogin()">Connect Fitbit</button>
-          </div>
-
           <!-- Status bar (shown when connected) -->
           <div id="lb-status-bar" class="lb-sbar" style="display:none">
             <span id="lb-status-dot" class="lb-sbar-dot"></span>
@@ -2945,13 +2899,14 @@
   ];
 
   // localStorage keys
-  const LBK_ACCESS   = 'lb_fitbit_access';
-  const LBK_REFRESH  = 'lb_fitbit_refresh';
-  const LBK_EXPIRY   = 'lb_fitbit_expiry';
-  const LBK_NAME     = 'lb_user_name';
-  const LBK_DEPT     = 'lb_user_dept';
-  const LBK_VERIFIER = 'lb_pkce_verifier';
-  const LBK_TAB      = 'lb_active_tab';
+  const LBK_ACCESS    = 'lb_fitbit_access';
+  const LBK_REFRESH   = 'lb_fitbit_refresh';
+  const LBK_EXPIRY    = 'lb_fitbit_expiry';
+  const LBK_NAME      = 'lb_user_name';
+  const LBK_DEPT      = 'lb_user_dept';
+  const LBK_VERIFIER  = 'lb_pkce_verifier';
+  const LBK_TAB       = 'lb_active_tab';
+  const LBK_FITBIT_ID = 'lb_fitbit_user_id';
 
   let _lbActiveTab = 'overall';
   let _lbAllEntries = [];
@@ -3066,7 +3021,7 @@
 
   // ── Submit steps to Supabase ──────────────────
   async function lbSubmitSteps(name, dept, steps, month) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/step_challenge`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/step_challenge?on_conflict=fitbit_user_id,month`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY,
@@ -3075,6 +3030,7 @@
         'Prefer': 'resolution=merge-duplicates',
       },
       body: JSON.stringify({
+        fitbit_user_id: localStorage.getItem(LBK_FITBIT_ID) || null,
         month,
         name,
         department:    dept,
@@ -3190,17 +3146,10 @@
 
   // ── UI helpers ────────────────────────────────
   function lbShowConnect(msg) {
-    document.getElementById('lb-connect-panel').style.display = '';
-    document.getElementById('lb-status-bar').style.display    = 'none';
-    document.getElementById('lb-tabs').style.display          = 'none';
+    document.getElementById('lb-status-bar').style.display = 'none';
+    document.getElementById('lb-tabs').style.display       = 'none';
     const syncBtn = document.getElementById('lb-sync-btn');
     if (syncBtn) syncBtn.style.display = 'none';
-    const nameVal = localStorage.getItem(LBK_NAME) || '';
-    const deptVal = localStorage.getItem(LBK_DEPT) || '';
-    const ni = document.getElementById('lb-name-input');
-    const di = document.getElementById('lb-dept-select');
-    if (ni) ni.value = nameVal;
-    if (di) di.value = deptVal;
     const body = document.getElementById('lb-body');
     if (msg && body) body.innerHTML = `<div class="lb-empty">${escLb(msg)}</div>`;
     else if (body) body.innerHTML = '';
@@ -3242,8 +3191,6 @@
     const dept = localStorage.getItem(LBK_DEPT);
     if (name && dept && localStorage.getItem(LBK_REFRESH)) {
       lbShowStatusBar(name, dept, null, null);
-    } else {
-      lbShowConnect();
     }
     await lbRefreshBoard();
   }
