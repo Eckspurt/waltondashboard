@@ -931,6 +931,44 @@
       transition: background 0.15s;
     }
     .lb-connect-btn:hover { background: #00979e; }
+    .lb-connect-form {
+      padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.65rem;
+    }
+    .lb-input {
+      width: 100%; box-sizing: border-box;
+      background: var(--gm-mid); border: 1px solid var(--gm-border); border-radius: 6px;
+      color: var(--txt-bright); padding: 0.45rem 0.7rem;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem;
+    }
+    .lb-input::placeholder { color: var(--txt-dim); }
+    .lb-input option { background: var(--gm-dark); }
+    .lb-sbar {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 1.1rem;
+      border-bottom: 1px solid var(--gm-border);
+      font-size: 0.72rem; font-family: 'Barlow Condensed', sans-serif;
+    }
+    .lb-sbar-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #4caf50; flex-shrink: 0;
+    }
+    .lb-sbar-name { color: var(--txt-mid); flex: 1; letter-spacing: 0.03em; }
+    .lb-sbar-steps { color: var(--txt-bright); font-weight: 700; }
+    .lb-sbar-disconnect {
+      font-size: 0.65rem; color: var(--txt-dim); background: none; border: none;
+      cursor: pointer; padding: 0; letter-spacing: 0.08em; text-transform: uppercase;
+      font-family: 'Barlow Condensed', sans-serif;
+    }
+    .lb-sbar-disconnect:hover { color: var(--raider-red); }
+    .lb-header-sync {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--txt-dim); background: var(--gm-mid);
+      border: 1px solid var(--gm-border); border-radius: 4px;
+      padding: 0.18rem 0.5rem; cursor: pointer; transition: color 0.15s;
+    }
+    .lb-header-sync:hover { color: var(--txt-bright); }
+    .lb-header-sync:disabled { opacity: 0.4; cursor: default; }
 
     /* ══════════════════════════════
        QUESTION OF THE DAY WIDGET
@@ -2132,11 +2170,46 @@
             </div>
             <span class="widget-title">Step Challenge</span>
           </div>
-          <svg class="widget-chevron" id="leaderboard-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <button id="lb-sync-btn" class="lb-header-sync" onclick="lbSyncSteps()" style="display:none">Sync</button>
+            <svg class="widget-chevron" id="leaderboard-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
         </div>
         <div class="widget-body-collapsible" id="leaderboard-collapsible">
+
+          <!-- Fitbit connect panel -->
+          <div id="lb-connect-panel" class="lb-connect-form">
+            <input id="lb-name-input" type="text" class="lb-input" placeholder="Your name" autocomplete="off">
+            <select id="lb-dept-select" class="lb-input">
+              <option value="">— Department —</option>
+              <option>Administration</option>
+              <option>Clerical</option>
+              <option>Counseling</option>
+              <option>CTAE</option>
+              <option>English</option>
+              <option>Fine Arts</option>
+              <option>Library</option>
+              <option>Math</option>
+              <option>Nurse</option>
+              <option>Officer</option>
+              <option>PE</option>
+              <option>Science</option>
+              <option>Social Studies</option>
+              <option>Special Education</option>
+              <option>World Language</option>
+            </select>
+            <button class="lb-connect-btn" onclick="lbFitbitLogin()">Connect Fitbit</button>
+          </div>
+
+          <!-- Status bar (shown when connected) -->
+          <div id="lb-status-bar" class="lb-sbar" style="display:none">
+            <span id="lb-status-dot" class="lb-sbar-dot"></span>
+            <span id="lb-status-text" class="lb-sbar-name">Connected</span>
+            <span id="lb-status-steps" class="lb-sbar-steps"></span>
+            <button onclick="lbDisconnect()" class="lb-sbar-disconnect">Disconnect</button>
+          </div>
 
           <!-- Tabs -->
           <div class="lb-tabs" id="lb-tabs"></div>
@@ -3001,7 +3074,16 @@
         'Content-Type': 'application/json',
         'Prefer': 'resolution=merge-duplicates',
       },
-      body: JSON.stringify({ month, name, department: dept, steps, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({
+        month,
+        name,
+        department:    dept,
+        steps,
+        updated_at:    new Date().toISOString(),
+        access_token:  localStorage.getItem(LBK_ACCESS)  || null,
+        refresh_token: localStorage.getItem(LBK_REFRESH) || null,
+        expires_at:    parseInt(localStorage.getItem(LBK_EXPIRY) || '0') || null,
+      }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -3111,6 +3193,8 @@
     document.getElementById('lb-connect-panel').style.display = '';
     document.getElementById('lb-status-bar').style.display    = 'none';
     document.getElementById('lb-tabs').style.display          = 'none';
+    const syncBtn = document.getElementById('lb-sync-btn');
+    if (syncBtn) syncBtn.style.display = 'none';
     const nameVal = localStorage.getItem(LBK_NAME) || '';
     const deptVal = localStorage.getItem(LBK_DEPT) || '';
     const ni = document.getElementById('lb-name-input');
@@ -3125,10 +3209,12 @@
   function lbShowStatusBar(name, dept, steps, monthLabel) {
     document.getElementById('lb-connect-panel').style.display = 'none';
     document.getElementById('lb-status-bar').style.display    = '';
+    const syncBtn = document.getElementById('lb-sync-btn');
+    if (syncBtn) syncBtn.style.display = '';
     const st = document.getElementById('lb-status-text');
     const ss = document.getElementById('lb-status-steps');
     if (st) st.textContent = `${name} · ${dept}`;
-    if (ss) ss.textContent = steps.toLocaleString() + ' steps';
+    if (ss && steps != null) ss.textContent = steps.toLocaleString() + ' steps';
   }
 
   function lbSetStatus(msg, isError) {
@@ -3152,6 +3238,13 @@
   // ── Init ──────────────────────────────────────
   async function initLeaderboard() {
     _lbActiveTab = localStorage.getItem(LBK_TAB) || 'overall';
+    const name = localStorage.getItem(LBK_NAME);
+    const dept = localStorage.getItem(LBK_DEPT);
+    if (name && dept && localStorage.getItem(LBK_REFRESH)) {
+      lbShowStatusBar(name, dept, null, null);
+    } else {
+      lbShowConnect();
+    }
     await lbRefreshBoard();
   }
 
@@ -3426,6 +3519,13 @@
   updatePlaceholders();
   initLeaderboard();
   setInterval(lbRefreshBoard, 5 * 60 * 1000);
+
+  // Auto-sync steps on load and every hour if the user has connected Fitbit
+  function lbAutoSync() {
+    if (localStorage.getItem(LBK_REFRESH)) lbSyncSteps();
+  }
+  setTimeout(lbAutoSync, 2000);           // initial sync after page settles
+  setInterval(lbAutoSync, 60 * 60 * 1000); // then every hour
 
   fetchAnnouncements();
   setInterval(fetchAnnouncements, 30 * 60 * 1000);
