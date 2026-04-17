@@ -113,15 +113,34 @@
       font-size: 0.75rem; cursor: pointer; text-decoration: underline; font-family: inherit;
     }
     .disconnect:hover { color: #b0c2d8; }
+
+    .brand {
+      display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+    }
+    .brand-icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: #1e3258; border: 1px solid #2a4270;
+      display: flex; align-items: center; justify-content: center;
+      color: #c0392b;
+    }
   </style>
 </head>
 <body>
 <div class="card" id="card">
-  <div class="logo">Walton High School</div>
   <div class="spinner"></div>
 </div>
 
 <script>
+  const LOGO_HTML = `<div class="brand">
+    <div class="brand-icon">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+        <polyline points="17 6 23 6 23 12"/>
+      </svg>
+    </div>
+    <div class="logo">Walton High School</div>
+  </div>`;
+
   const SUPABASE_URL     = 'https://cnuifibctivvdmxhtcfj.supabase.co';
   const SUPABASE_KEY     = 'sb_publishable_BdccknKAwSQKfgbvjK0elw_utfpB4Qc';
   const FITBIT_CLIENT_ID = '23VCQB';
@@ -239,7 +258,7 @@
   function showForm(errMsg) {
     const opts = DEPTS.map(d => `<option>${esc(d)}</option>`).join('');
     card().innerHTML = `
-      <div class="logo">Walton High School</div>
+      ${LOGO_HTML}
       <h1>Join the Step Challenge</h1>
       <p class="subtitle">Enter your info to get started, then connect your Fitbit account to track steps.</p>
       <hr class="divider"/>
@@ -266,7 +285,7 @@
   // ── Render: connect Fitbit ────────────────────
   function showConnectFitbit(name, errMsg) {
     card().innerHTML = `
-      <div class="logo">Walton High School</div>
+      ${LOGO_HTML}
       <div class="check" style="background:#f0b429">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round">
           <line x1="12" y1="5" x2="12" y2="14"/>
@@ -287,7 +306,7 @@
 
   // ── Render: spinner ───────────────────────────
   function showSpinner() {
-    card().innerHTML = `<div class="logo">Walton High School</div><div class="spinner"></div>`;
+    card().innerHTML = `${LOGO_HTML}<div class="spinner"></div>`;
   }
 
   // ── Render: connected ─────────────────────────
@@ -295,7 +314,7 @@
     const initials  = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
     const avatarHtml = avatar ? `<img src="${esc(avatar)}" alt=""/>` : initials;
     card().innerHTML = `
-      <div class="logo">Walton High School</div>
+      ${LOGO_HTML}
       <div class="check">
         <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
           <polyline points="20 6 9 17 4 12"/>
