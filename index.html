@@ -919,25 +919,27 @@
       text-align: center; padding: 0.4rem 0 0.1rem;
     }
 
-    /* Status panel */
-    .lb-sbar {
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.4rem 1.1rem;
-      border-bottom: 1px solid var(--gm-border);
-      font-size: 0.72rem; font-family: 'Barlow Condensed', sans-serif;
+    /* My row + ghost + leave button */
+    .lb-row-me {
+      background: rgba(192, 57, 43, 0.18);
+      border-left: 3px solid var(--raider-red);
     }
-    .lb-sbar-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: #4caf50; flex-shrink: 0;
+    .lb-row-me .lb-name { color: var(--txt-bright); font-weight: 700; }
+    .lb-row-ghost {
+      opacity: 0.55;
+      font-style: italic;
+      border-top: 1px dashed var(--gm-border);
     }
-    .lb-sbar-name { color: var(--txt-mid); flex: 1; letter-spacing: 0.03em; }
-    .lb-sbar-steps { color: var(--txt-bright); font-weight: 700; }
-    .lb-sbar-disconnect {
-      font-size: 0.65rem; color: var(--txt-dim); background: none; border: none;
-      cursor: pointer; padding: 0; letter-spacing: 0.08em; text-transform: uppercase;
-      font-family: 'Barlow Condensed', sans-serif;
+    .lb-row-ghost .lb-rank { color: var(--txt-dim); }
+    .lb-leave-btn {
+      width: 100%; padding: 0.55rem 1rem;
+      background: none; border: 1px solid #7a1c1c;
+      color: #c0392b; border-radius: 6px;
+      font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase;
+      font-family: 'Barlow Condensed', sans-serif; cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
     }
-    .lb-sbar-disconnect:hover { color: var(--raider-red); }
+    .lb-leave-btn:hover { background: rgba(192,57,43,0.12); border-color: #c0392b; }
 
     /* ══════════════════════════════
        QUESTION OF THE DAY WIDGET
@@ -2145,20 +2147,17 @@
         </div>
         <div class="widget-body-collapsible" id="leaderboard-collapsible">
 
-          <!-- Status bar (shown when connected) -->
-          <div id="lb-status-bar" class="lb-sbar" style="display:none">
-            <span id="lb-status-dot" class="lb-sbar-dot"></span>
-            <span id="lb-status-text" class="lb-sbar-name">Connected</span>
-            <span id="lb-status-steps" class="lb-sbar-steps"></span>
-            <button onclick="lbLeaveGroup()" class="lb-sbar-disconnect">Leave Group</button>
-          </div>
-
           <!-- Tabs -->
           <div class="lb-tabs" id="lb-tabs"></div>
 
           <!-- List -->
           <div id="lb-body" class="lb-body">
             <div class="weather-loading"><div class="spin"></div>Loading…</div>
+          </div>
+
+          <!-- Leave button -->
+          <div id="lb-footer" style="display:none; padding:0.5rem 1.1rem 0.75rem;">
+            <button onclick="lbLeaveGroup()" class="lb-leave-btn">Leave Step Challenge</button>
           </div>
 
         </div>
@@ -3118,43 +3117,49 @@
       ? _lbAllEntries
       : _lbAllEntries.filter(e => e.dept === tab);
 
-    if (!entries.length) {
+    const myName    = localStorage.getItem(LBK_NAME)    || '';
+    const myDept    = localStorage.getItem(LBK_DEPT)    || '';
+    const myFitbitId = localStorage.getItem(LBK_FITBIT_ID) || '';
+    const isConnected = !!(myName && myFitbitId);
+
+    // Find user in this tab's entries
+    const myIdx = isConnected
+      ? entries.findIndex(e => e.name === myName)
+      : -1;
+
+    if (!entries.length && !isConnected) {
       body.innerHTML = `<div class="lb-empty">No data yet${tab !== 'overall' ? ' for ' + escLb(tab) : ''}</div>`;
       return;
     }
     const showDept = tab === 'overall';
-    const rows = entries.slice(0, 25).map((e, i) => `
-      <div class="lb-row">
+    const rows = entries.slice(0, 25).map((e, i) => {
+      const isMe = isConnected && e.name === myName;
+      return `
+      <div class="lb-row${isMe ? ' lb-row-me' : ''}">
         <span class="lb-rank">${i + 1}</span>
         <span class="lb-name">${escLb(e.name)}</span>
         ${showDept ? `<span class="lb-dept-tag show">${escLb(e.dept)}</span>` : ''}
         <span class="lb-steps">${e.steps.toLocaleString()}</span>
-      </div>`).join('');
-    body.innerHTML = `<div class="lb-month-label">${monthLabel}</div><div class="lb-list">${rows}</div>`;
-  }
+      </div>`;
+    }).join('');
 
-  // ── UI helpers ────────────────────────────────
-  function lbShowConnect(msg) {
-    document.getElementById('lb-status-bar').style.display = 'none';
-    document.getElementById('lb-tabs').style.display       = 'none';
-    const body = document.getElementById('lb-body');
-    if (msg && body) body.innerHTML = `<div class="lb-empty">${escLb(msg)}</div>`;
-    else if (body) body.innerHTML = '';
-  }
+    // Ghost entry if user is connected but not in this tab's list
+    let ghost = '';
+    if (isConnected && myIdx === -1) {
+      ghost = `
+      <div class="lb-row lb-row-me lb-row-ghost">
+        <span class="lb-rank">—</span>
+        <span class="lb-name">${escLb(myName)}</span>
+        ${showDept ? `<span class="lb-dept-tag show">${escLb(myDept)}</span>` : ''}
+        <span class="lb-steps">Not synced yet</span>
+      </div>`;
+    }
 
-  function lbShowStatusBar(name, dept, steps, monthLabel) {
-    document.getElementById('lb-status-bar').style.display = '';
-    const st = document.getElementById('lb-status-text');
-    const ss = document.getElementById('lb-status-steps');
-    if (st) st.textContent = `${name} · ${dept}`;
-    if (ss && steps != null) ss.textContent = steps.toLocaleString() + ' steps';
-  }
-
-  function lbSetStatus(msg, isError) {
-    const st  = document.getElementById('lb-status-text');
-    const dot = document.getElementById('lb-status-dot');
-    if (st)  st.textContent = msg;
-    if (dot) dot.style.background = isError ? '#e53935' : '#4caf50';
+    if (!entries.length) {
+      body.innerHTML = `<div class="lb-month-label">${monthLabel}</div><div class="lb-list">${ghost}</div>`;
+      return;
+    }
+    body.innerHTML = `<div class="lb-month-label">${monthLabel}</div><div class="lb-list">${rows}${ghost}</div>`;
   }
 
   async function lbLeaveGroup() {
@@ -3173,7 +3178,8 @@
     }
     [LBK_ACCESS, LBK_REFRESH, LBK_EXPIRY, LBK_FITBIT_ID, LBK_NAME, LBK_DEPT].forEach(k => localStorage.removeItem(k));
     _lbAllEntries = [];
-    lbShowConnect();
+    const footer = document.getElementById('lb-footer');
+    if (footer) footer.style.display = 'none';
     lbRefreshBoard();
   }
 
@@ -3186,8 +3192,9 @@
     _lbActiveTab = localStorage.getItem(LBK_TAB) || 'overall';
     const name = localStorage.getItem(LBK_NAME);
     const dept = localStorage.getItem(LBK_DEPT);
-    if (name && dept && localStorage.getItem(LBK_REFRESH) && localStorage.getItem(LBK_FITBIT_ID)) {
-      lbShowStatusBar(name, dept, null, null);
+    if (name && dept && localStorage.getItem(LBK_FITBIT_ID)) {
+      const footer = document.getElementById('lb-footer');
+      if (footer) footer.style.display = '';
     }
     await lbRefreshBoard();
   }
