@@ -213,7 +213,7 @@
   }
 
   // ── Supabase ──────────────────────────────────
-  async function submitSteps(fitbitId, name, dept, steps, month) {
+  async function submitSteps(name, dept, steps, month) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/step_challenge`, {
       method: 'POST',
       headers: {
@@ -221,7 +221,7 @@
         'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates',
       },
       body: JSON.stringify({
-        fitbit_user_id: fitbitId, month, name, department: dept,
+        month, name, department: dept,
         steps, updated_at: new Date().toISOString(),
         access_token:  localStorage.getItem(LBK_ACCESS)  || null,
         refresh_token: localStorage.getItem(LBK_REFRESH) || null,
@@ -386,15 +386,14 @@
 
     try {
       const token = await getValidToken();
-      const [{ fitbitId, name: fitbitName, avatar }, { total, month, label }] = await Promise.all([
+      const [{ name: fitbitName, avatar }, { total, month, label }] = await Promise.all([
         fetchProfile(token),
         fetchMonthlySteps(token),
       ]);
       const name = localStorage.getItem(LBK_NAME) || fitbitName;
       const dept = localStorage.getItem(LBK_DEPT) || '';
       localStorage.setItem(LBK_NAME, name);
-      localStorage.setItem(LBK_FITBIT_ID, fitbitId);
-      await submitSteps(fitbitId, name, dept, total, month);
+      await submitSteps(name, dept, total, month);
 
       if (document.getElementById('profile-card')) {
         const stepEl = document.getElementById('step-count');
@@ -415,11 +414,9 @@
         if (name) showConnectFitbit(name);
         else showForm('Session expired — please reconnect.');
       } else if (!document.getElementById('profile-card')) {
-        // Failed during initial load (spinner state) — recover gracefully
-        clearTokens();
+        // Failed during initial load — show error but keep tokens (might be a Supabase issue)
         const name = localStorage.getItem(LBK_NAME);
-        if (name) showConnectFitbit(name);
-        else showForm('Could not sync — please reconnect your Fitbit.');
+        showConnectFitbit(name, `Sync error: ${e.message}`);
       } else {
         if (syncMsg) syncMsg.textContent = `Sync failed: ${e.message}`;
         if (syncBtn) {
