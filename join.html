@@ -214,7 +214,7 @@
 
   // ── Supabase ──────────────────────────────────
   async function submitSteps(fitbitId, name, dept, steps, month) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/step_challenge`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/step_challenge?on_conflict=fitbit_user_id,month`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
