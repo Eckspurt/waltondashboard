@@ -263,7 +263,7 @@
   }
 
   // ── Render: connect Fitbit ────────────────────
-  function showConnectFitbit(name) {
+  function showConnectFitbit(name, errMsg) {
     card().innerHTML = `
       <div class="logo">Walton High School</div>
       <div class="check" style="background:#f0b429">
@@ -274,6 +274,7 @@
       </div>
       <h1>One more step!</h1>
       <p class="subtitle">Almost there, ${esc(name)}! Connect your Fitbit to start tracking steps on the leaderboard.</p>
+      ${errMsg ? `<p class="msg error">${esc(errMsg)}</p>` : ''}
       <hr class="divider"/>
       <button class="btn btn-primary" onclick="startLogin()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm12 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
@@ -334,16 +335,21 @@
 
   // ── OAuth login ───────────────────────────────
   async function startLogin() {
-    const verifier  = genVerifier();
-    const challenge = await genChallenge(verifier);
-    localStorage.setItem(LBK_VERIFIER, verifier);
-    const params = new URLSearchParams({
-      response_type: 'code', client_id: FITBIT_CLIENT_ID,
-      redirect_uri: FITBIT_REDIRECT, scope: FITBIT_SCOPES,
-      code_challenge: challenge, code_challenge_method: 'S256',
-      state: 'fitbit_cb',
-    });
-    window.location.href = `https://www.fitbit.com/oauth2/authorize?${params}`;
+    try {
+      const verifier  = genVerifier();
+      const challenge = await genChallenge(verifier);
+      localStorage.setItem(LBK_VERIFIER, verifier);
+      const params = new URLSearchParams({
+        response_type: 'code', client_id: FITBIT_CLIENT_ID,
+        redirect_uri: FITBIT_REDIRECT, scope: FITBIT_SCOPES,
+        code_challenge: challenge, code_challenge_method: 'S256',
+        state: 'fitbit_cb',
+      });
+      window.location.href = `https://www.fitbit.com/oauth2/authorize?${params}`;
+    } catch(e) {
+      const name = localStorage.getItem(LBK_NAME);
+      showConnectFitbit(name, `Could not start login: ${e.message}`);
+    }
   }
 
   // ── OAuth callback ────────────────────────────
