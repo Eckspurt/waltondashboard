@@ -59,12 +59,13 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Check icon */
-    .check {
-      width: 64px; height: 64px; background: #1a4a2a; border-radius: 50%;
+    /* Step-up icon */
+    .step-icon {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: #1e3258; border: 1px solid #2a4270;
       display: flex; align-items: center; justify-content: center;
+      color: #c0392b; flex-shrink: 0;
     }
-    .check svg { color: #4caf50; }
 
     /* Profile card */
     .profile {
@@ -108,15 +109,6 @@
     }
     .disconnect:hover { color: #b0c2d8; }
 
-    .brand {
-      display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
-    }
-    .brand-icon {
-      width: 52px; height: 52px; border-radius: 50%;
-      background: #1e3258; border: 1px solid #2a4270;
-      display: flex; align-items: center; justify-content: center;
-      color: #c0392b;
-    }
   </style>
 </head>
 <body>
@@ -125,13 +117,11 @@
 </div>
 
 <script>
-  const LOGO_HTML = `<div class="brand">
-    <div class="brand-icon">
-      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-        <polyline points="17 6 23 6 23 12"/>
-      </svg>
-    </div>
+  const ICON_HTML = `<div class="step-icon">
+    <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+      <polyline points="17 6 23 6 23 12"/>
+    </svg>
   </div>`;
 
   const SUPABASE_URL     = 'https://cnuifibctivvdmxhtcfj.supabase.co';
@@ -251,7 +241,7 @@
   function showForm(errMsg) {
     const opts = DEPTS.map(d => `<option>${esc(d)}</option>`).join('');
     card().innerHTML = `
-      ${LOGO_HTML}
+      ${ICON_HTML}
       <h1>Join the Step Challenge</h1>
       <p class="subtitle">Enter your info to get started, then connect your Fitbit account to track steps.</p>
       <hr class="divider"/>
@@ -278,13 +268,7 @@
   // ── Render: connect Fitbit ────────────────────
   function showConnectFitbit(name, errMsg) {
     card().innerHTML = `
-      ${LOGO_HTML}
-      <div class="check" style="background:#f0b429">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round">
-          <line x1="12" y1="5" x2="12" y2="14"/>
-          <circle cx="12" cy="19" r="2" fill="#fff" stroke="none"/>
-        </svg>
-      </div>
+      ${ICON_HTML}
       <h1>One more step!</h1>
       <p class="subtitle">Almost there, ${esc(name)}! Connect your Fitbit to start tracking steps on the leaderboard.</p>
       ${errMsg ? `<p class="msg error">${esc(errMsg)}</p>` : ''}
@@ -299,7 +283,7 @@
 
   // ── Render: spinner ───────────────────────────
   function showSpinner() {
-    card().innerHTML = `${LOGO_HTML}<div class="spinner"></div>`;
+    card().innerHTML = `<div class="spinner"></div>`;
   }
 
   // ── Render: connected ─────────────────────────
@@ -307,12 +291,7 @@
     const initials  = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
     const avatarHtml = avatar ? `<img src="${esc(avatar)}" alt=""/>` : initials;
     card().innerHTML = `
-      ${LOGO_HTML}
-      <div class="check">
-        <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-      </div>
+      ${ICON_HTML}
       <h1>You're on the board!</h1>
       <div class="profile" id="profile-card">
         <div class="profile-avatar">${avatarHtml}</div>
