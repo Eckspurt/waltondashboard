@@ -319,7 +319,7 @@
   }
 
   // ── Form submit ───────────────────────────────
-  function submitForm() {
+  async function submitForm() {
     const nameEl = document.getElementById('name-input');
     const deptEl = document.getElementById('dept-select');
     const msgEl  = document.getElementById('msg');
@@ -329,7 +329,7 @@
     if (!dept) { msgEl.textContent = 'Please select your department.'; deptEl.focus(); return; }
     localStorage.setItem(LBK_NAME, name);
     localStorage.setItem(LBK_DEPT, dept);
-    showConnectFitbit(name);
+    await startLogin();
   }
 
   // ── OAuth login ───────────────────────────────
