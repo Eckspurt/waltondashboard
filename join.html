@@ -312,14 +312,6 @@
           <div class="profile-steps" id="step-count">${steps.toLocaleString()} steps &mdash; ${esc(monthLabel)}</div>
         </div>
       </div>
-      <p class="msg" id="sync-msg"></p>
-      <button class="btn btn-secondary" id="sync-btn" onclick="syncSteps()">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <polyline points="23 4 23 10 17 10"/>
-          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-        </svg>
-        Sync Steps
-      </button>
       <a class="btn btn-primary" href="https://waltondashboard.com">View Leaderboard</a>
       <button class="disconnect" onclick="leaveGroup()">leave group</button>`;
   }
@@ -385,10 +377,6 @@
 
   // ── Sync steps ────────────────────────────────
   async function syncSteps() {
-    const syncBtn = document.getElementById('sync-btn');
-    const syncMsg = document.getElementById('sync-msg');
-    if (syncBtn) { syncBtn.disabled = true; syncBtn.textContent = 'Syncing…'; }
-
     try {
       const token = await getValidToken();
       const [{ name: fitbitName, avatar }, { total, month, label }] = await Promise.all([
@@ -400,35 +388,16 @@
       const dept = localStorage.getItem(LBK_DEPT) || '';
       localStorage.setItem(LBK_NAME, name);
       await submitSteps(fitbitId, name, dept, total, month);
-
-      if (document.getElementById('profile-card')) {
-        const stepEl = document.getElementById('step-count');
-        if (stepEl) stepEl.textContent = `${total.toLocaleString()} steps — ${label}`;
-        if (syncMsg) syncMsg.textContent = 'Updated!';
-        setTimeout(() => { if (syncMsg) syncMsg.textContent = ''; }, 3000);
-        if (syncBtn) {
-          syncBtn.disabled = false;
-          syncBtn.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync Steps`;
-        }
-      } else {
-        showConnected(name, avatar, total, label);
-      }
+      showConnected(name, avatar, total, label);
     } catch(e) {
       if (e.message === 'no_refresh') {
         clearTokens();
         const name = localStorage.getItem(LBK_NAME);
         if (name) showConnectFitbit(name);
         else showForm('Session expired — please reconnect.');
-      } else if (!document.getElementById('profile-card')) {
-        // Failed during initial load — show error but keep tokens (might be a Supabase issue)
+      } else {
         const name = localStorage.getItem(LBK_NAME);
         showConnectFitbit(name, `Sync error: ${e.message}`);
-      } else {
-        if (syncMsg) syncMsg.textContent = `Sync failed: ${e.message}`;
-        if (syncBtn) {
-          syncBtn.disabled = false;
-          syncBtn.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Sync Steps`;
-        }
       }
     }
   }

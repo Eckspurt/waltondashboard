@@ -938,15 +938,6 @@
       font-family: 'Barlow Condensed', sans-serif;
     }
     .lb-sbar-disconnect:hover { color: var(--raider-red); }
-    .lb-header-sync {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--txt-dim); background: var(--gm-mid);
-      border: 1px solid var(--gm-border); border-radius: 4px;
-      padding: 0.18rem 0.5rem; cursor: pointer; transition: color 0.15s;
-    }
-    .lb-header-sync:hover { color: var(--txt-bright); }
-    .lb-header-sync:disabled { opacity: 0.4; cursor: default; }
 
     /* ══════════════════════════════
        QUESTION OF THE DAY WIDGET
@@ -2148,12 +2139,9 @@
             </div>
             <span class="widget-title">Step Challenge</span>
           </div>
-          <div style="display:flex;align-items:center;gap:0.75rem;">
-            <button id="lb-sync-btn" class="lb-header-sync" onclick="lbSyncSteps()" style="display:none">Sync</button>
-            <svg class="widget-chevron" id="leaderboard-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </div>
+          <svg class="widget-chevron" id="leaderboard-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
         </div>
         <div class="widget-body-collapsible" id="leaderboard-collapsible">
 
@@ -3055,33 +3043,6 @@
     return rows.map(r => ({ name: r.name, dept: r.department, steps: r.steps }));
   }
 
-  // ── Sync: fetch steps → submit → refresh board ─
-  async function lbSyncSteps() {
-    const name     = localStorage.getItem(LBK_NAME);
-    const dept     = localStorage.getItem(LBK_DEPT);
-    const fitbitId = localStorage.getItem(LBK_FITBIT_ID);
-    if (!name || !dept || !fitbitId) return;
-
-    const syncBtn = document.getElementById('lb-sync-btn');
-    if (syncBtn) { syncBtn.disabled = true; syncBtn.textContent = '…'; }
-    lbSetStatus('Syncing…', false);
-
-    try {
-      const { total, month, label } = await lbFetchMonthlySteps();
-      await lbSubmitSteps(fitbitId, name, dept, total, month);
-      lbShowStatusBar(name, dept, total, label);
-      await lbRefreshBoard();
-    } catch(e) {
-      if (e.message.includes('reconnect')) {
-        lbShowConnect(e.message);
-      } else {
-        lbSetStatus(`Sync error: ${e.message}`, true);
-        await lbRefreshBoard().catch(() => {});
-      }
-    } finally {
-      if (syncBtn) { syncBtn.disabled = false; syncBtn.textContent = 'Sync'; }
-    }
-  }
 
   // ── Refresh leaderboard display only ──────────
   async function lbRefreshBoard() {
@@ -3102,10 +3063,10 @@
     tabsEl.style.display = '';
 
     const depts = [...new Set(_lbAllEntries.map(e => e.dept))].sort();
-    const tabs  = ['overall', ...LB_DEPARTMENTS.filter(d => depts.includes(d))];
+    const tabs  = ['overall', 'averages', ...LB_DEPARTMENTS.filter(d => depts.includes(d))];
 
     tabsEl.innerHTML = tabs.map(t => {
-      const label = t === 'overall' ? 'Overall' : t;
+      const label = t === 'overall' ? 'Overall' : t === 'averages' ? 'Averages' : t;
       return `<button class="lb-tab${t === _lbActiveTab ? ' active' : ''}"
         onclick="lbSwitchTab('${escLb(t)}')">${escLb(label)}</button>`;
     }).join('');
@@ -3115,7 +3076,8 @@
     _lbActiveTab = tab;
     localStorage.setItem(LBK_TAB, tab);
     document.querySelectorAll('#lb-tabs .lb-tab').forEach(el => {
-      el.classList.toggle('active', el.textContent === (tab === 'overall' ? 'Overall' : tab));
+      const label = tab === 'overall' ? 'Overall' : tab === 'averages' ? 'Averages' : tab;
+      el.classList.toggle('active', el.textContent === label);
     });
     lbRenderList(tab);
   }
@@ -3124,7 +3086,34 @@
   function lbRenderList(tab) {
     const body = document.getElementById('lb-body');
     if (!body) return;
-    const showDept = tab === 'overall';
+    const now = new Date();
+    const monthLabel = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    if (tab === 'averages') {
+      const deptMap = {};
+      _lbAllEntries.filter(e => e.steps > 0).forEach(e => {
+        if (!deptMap[e.dept]) deptMap[e.dept] = { total: 0, count: 0 };
+        deptMap[e.dept].total += e.steps;
+        deptMap[e.dept].count += 1;
+      });
+      const avgs = Object.entries(deptMap)
+        .map(([dept, { total, count }]) => ({ dept, avg: Math.round(total / count), count }))
+        .sort((a, b) => b.avg - a.avg);
+      if (!avgs.length) {
+        body.innerHTML = `<div class="lb-empty">No data yet</div>`;
+        return;
+      }
+      const rows = avgs.map((e, i) => `
+        <div class="lb-row">
+          <span class="lb-rank">${i + 1}</span>
+          <span class="lb-name">${escLb(e.dept)}</span>
+          <span class="lb-dept-tag show">${e.count} ${e.count === 1 ? 'person' : 'people'}</span>
+          <span class="lb-steps">${e.avg.toLocaleString()}</span>
+        </div>`).join('');
+      body.innerHTML = `<div class="lb-month-label">${monthLabel} — avg steps / person</div><div class="lb-list">${rows}</div>`;
+      return;
+    }
+
     let entries = tab === 'overall'
       ? _lbAllEntries
       : _lbAllEntries.filter(e => e.dept === tab);
@@ -3133,8 +3122,7 @@
       body.innerHTML = `<div class="lb-empty">No data yet${tab !== 'overall' ? ' for ' + escLb(tab) : ''}</div>`;
       return;
     }
-    const now = new Date();
-    const monthLabel = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const showDept = tab === 'overall';
     const rows = entries.slice(0, 25).map((e, i) => `
       <div class="lb-row">
         <span class="lb-rank">${i + 1}</span>
@@ -3149,8 +3137,6 @@
   function lbShowConnect(msg) {
     document.getElementById('lb-status-bar').style.display = 'none';
     document.getElementById('lb-tabs').style.display       = 'none';
-    const syncBtn = document.getElementById('lb-sync-btn');
-    if (syncBtn) syncBtn.style.display = 'none';
     const body = document.getElementById('lb-body');
     if (msg && body) body.innerHTML = `<div class="lb-empty">${escLb(msg)}</div>`;
     else if (body) body.innerHTML = '';
@@ -3158,8 +3144,6 @@
 
   function lbShowStatusBar(name, dept, steps, monthLabel) {
     document.getElementById('lb-status-bar').style.display = '';
-    const syncBtn = document.getElementById('lb-sync-btn');
-    if (syncBtn) syncBtn.style.display = '';
     const st = document.getElementById('lb-status-text');
     const ss = document.getElementById('lb-status-steps');
     if (st) st.textContent = `${name} · ${dept}`;
@@ -3480,12 +3464,6 @@
   initLeaderboard();
   setInterval(lbRefreshBoard, 5 * 60 * 1000);
 
-  // Auto-sync steps on load and every hour if the user has connected Fitbit
-  function lbAutoSync() {
-    if (localStorage.getItem(LBK_REFRESH)) lbSyncSteps();
-  }
-  setTimeout(lbAutoSync, 2000);           // initial sync after page settles
-  setInterval(lbAutoSync, 60 * 60 * 1000); // then every hour
 
   fetchAnnouncements();
   setInterval(fetchAnnouncements, 30 * 60 * 1000);
