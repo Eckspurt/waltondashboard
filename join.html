@@ -282,7 +282,7 @@
         Connect Fitbit
       </button>
       <a class="btn btn-secondary" href="https://waltondashboard.com">View Leaderboard</a>
-      <button class="disconnect" onclick="startOver()">start over</button>`;
+      <button class="disconnect" onclick="leaveGroup()">leave group</button>`;
   }
 
   // ── Render: spinner ───────────────────────────
@@ -318,8 +318,7 @@
         Sync Steps
       </button>
       <a class="btn btn-primary" href="https://waltondashboard.com">View Leaderboard</a>
-      <button class="disconnect" onclick="disconnect()">disconnect</button>
-      <button class="disconnect" onclick="startOver()">start over</button>`;
+      <button class="disconnect" onclick="leaveGroup()">leave group</button>`;
   }
 
   // ── Form submit ───────────────────────────────
@@ -431,16 +430,16 @@
     }
   }
 
-  // ── Disconnect ────────────────────────────────
-  function disconnect() {
-    clearTokens();
-    const name = localStorage.getItem(LBK_NAME);
-    if (name) showConnectFitbit(name);
-    else showForm();
-  }
-
-  // ── Start over ────────────────────────────────
-  function startOver() {
+  // ── Leave group ───────────────────────────────
+  async function leaveGroup() {
+    if (!confirm('Remove yourself from the Step Challenge leaderboard?')) return;
+    const fitbitId = localStorage.getItem(LBK_FITBIT_ID);
+    if (fitbitId) {
+      await fetch(`${SUPABASE_URL}/rest/v1/step_challenge?fitbit_user_id=eq.${encodeURIComponent(fitbitId)}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      }).catch(() => {});
+    }
     [LBK_ACCESS, LBK_REFRESH, LBK_EXPIRY, LBK_VERIFIER, LBK_NAME, LBK_DEPT, LBK_FITBIT_ID]
       .forEach(k => localStorage.removeItem(k));
     showForm();
