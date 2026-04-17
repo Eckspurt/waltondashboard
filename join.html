@@ -164,6 +164,7 @@
     localStorage.setItem(LBK_ACCESS,  data.access_token);
     localStorage.setItem(LBK_REFRESH, data.refresh_token);
     localStorage.setItem(LBK_EXPIRY,  Date.now() + (data.expires_in - 60) * 1000);
+    if (data.user_id) localStorage.setItem(LBK_FITBIT_ID, data.user_id);
   }
   async function getValidToken() {
     const expiry = parseInt(localStorage.getItem(LBK_EXPIRY) || '0');
@@ -388,14 +389,14 @@
 
     try {
       const token = await getValidToken();
-      const [{ fitbitId, name: fitbitName, avatar }, { total, month, label }] = await Promise.all([
+      const [{ name: fitbitName, avatar }, { total, month, label }] = await Promise.all([
         fetchProfile(token),
         fetchMonthlySteps(token),
       ]);
+      const fitbitId = localStorage.getItem(LBK_FITBIT_ID);
       const name = localStorage.getItem(LBK_NAME) || fitbitName;
       const dept = localStorage.getItem(LBK_DEPT) || '';
       localStorage.setItem(LBK_NAME, name);
-      localStorage.setItem(LBK_FITBIT_ID, fitbitId);
       await submitSteps(fitbitId, name, dept, total, month);
 
       if (document.getElementById('profile-card')) {
