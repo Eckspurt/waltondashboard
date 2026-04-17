@@ -59,6 +59,13 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Check icon */
+    .check {
+      width: 64px; height: 64px; background: #1a4a2a; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .check svg { color: #4caf50; }
+
     /* Step-up icon */
     .step-icon {
       width: 64px; height: 64px; border-radius: 50%;
@@ -197,7 +204,7 @@
     return {
       fitbitId: data.user.encodedId,
       name:     data.user.fullName || data.user.displayName || 'Unknown',
-      avatar:   data.user.avatar150 || data.user.avatar || null,
+      avatar:   data.user.avatar640 || data.user.avatar150 || data.user.avatar || null,
     };
   }
   async function fetchMonthlySteps(token) {
@@ -288,10 +295,14 @@
 
   // ── Render: connected ─────────────────────────
   function showConnected(name, avatar, steps, monthLabel) {
-    const initials  = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
-    const avatarHtml = avatar ? `<img src="${esc(avatar)}" alt=""/>` : initials;
+    const initials   = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const avatarHtml = avatar ? `<img src="${avatar}" alt=""/>` : initials;
     card().innerHTML = `
-      ${ICON_HTML}
+      <div class="check">
+        <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
       <h1>You're on the board!</h1>
       <div class="profile" id="profile-card">
         <div class="profile-avatar">${avatarHtml}</div>
