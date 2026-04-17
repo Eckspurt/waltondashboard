@@ -204,7 +204,8 @@
     return {
       fitbitId: data.user.encodedId,
       name:     data.user.fullName || data.user.displayName || 'Unknown',
-      avatar:   data.user.avatar640 || data.user.avatar150 || data.user.avatar || null,
+      avatar:   [data.user.avatar640, data.user.avatar150, data.user.avatar]
+                  .find(u => u && !u.includes('defaultProfile')) || null,
     };
   }
   async function fetchMonthlySteps(token) {
