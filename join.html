@@ -170,7 +170,7 @@
     if (Date.now() < expiry) return localStorage.getItem(LBK_ACCESS);
     const refresh = localStorage.getItem(LBK_REFRESH);
     if (!refresh) throw new Error('no_refresh');
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/bright-processor`, {
+    const res = await fetch('https://api.fitbit.com/oauth2/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ grant_type: 'refresh_token', client_id: FITBIT_CLIENT_ID, refresh_token: refresh }),
@@ -359,12 +359,9 @@
     localStorage.removeItem(LBK_VERIFIER);
     if (!verifier) { showForm('Login failed — please try again.'); return; }
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/bright-processor`, {
+      const res = await fetch('https://api.fitbit.com/oauth2/token', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           grant_type: 'authorization_code', client_id: FITBIT_CLIENT_ID,
           redirect_uri: FITBIT_REDIRECT, code, code_verifier: verifier,
