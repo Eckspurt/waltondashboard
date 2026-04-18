@@ -486,15 +486,24 @@
     }
 
     .schedule-no-school {
-      text-align: center; padding: 2rem 1rem;
+      text-align: center; padding: 1.25rem 1rem 1.5rem;
       color: var(--txt-dim);
       font-size: 0.840rem; letter-spacing: 0.2em; text-transform: uppercase;
+    }
+    .schedule-no-school img {
+      display: block; margin: 0 auto 0.85rem;
+      max-height: 110px; width: auto; border-radius: 8px;
+      opacity: 0.92;
     }
     .schedule-no-school strong {
       display: block;
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 1.792rem; color: var(--gm-highlight);
       margin-bottom: 0.4rem; letter-spacing: 0.1em;
+    }
+    .schedule-no-school span {
+      display: block; font-size: 0.78rem; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--txt-dim);
     }
 
     /* ── Grade selector bar ── */
@@ -932,14 +941,13 @@
     }
     .lb-row-ghost .lb-rank { color: var(--txt-dim); }
     .lb-leave-btn {
-      width: 100%; padding: 0.55rem 1rem;
-      background: none; border: 1px solid #7a1c1c;
-      color: #c0392b; border-radius: 6px;
-      font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase;
-      font-family: 'Barlow Condensed', sans-serif; cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
+      background: none; border: none;
+      color: #5e7a9a; font-size: 0.72rem;
+      font-family: inherit; cursor: pointer;
+      text-decoration: underline; padding: 0;
+      transition: color 0.15s;
     }
-    .lb-leave-btn:hover { background: rgba(192,57,43,0.12); border-color: #c0392b; }
+    .lb-leave-btn:hover { color: #b0c2d8; }
 
     /* ══════════════════════════════
        QUESTION OF THE DAY WIDGET
@@ -2156,8 +2164,8 @@
           </div>
 
           <!-- Leave button -->
-          <div id="lb-footer" style="display:none; padding:0.5rem 1.1rem 0.75rem;">
-            <button onclick="lbLeaveGroup()" class="lb-leave-btn">Leave Step Challenge</button>
+          <div id="lb-footer" style="display:none; padding:0.25rem 1.1rem 0.75rem; text-align:center;">
+            <button onclick="lbLeaveGroup()" class="lb-leave-btn">leave group</button>
           </div>
 
         </div>
@@ -2690,16 +2698,22 @@
 
   const SCHED_CACHE_KEY = 'walton-sched-cache';
 
+  function _schedShowNoSchool(subtitle = '') {
+    const body = document.getElementById('schedule-body');
+    _schedRenderGradeBar([]);
+    body.innerHTML = `<div class="schedule-no-school">
+      <img src="cat.png" alt=""/>
+      <strong>NO SCHOOL TODAY</strong>${subtitle ? `<span>${subtitle}</span>` : ''}
+    </div>`;
+  }
+
   async function fetchSchedule(force = false) {
     const body = document.getElementById('schedule-body');
 
     const now     = new Date();
     const weekday = now.getDay();
     if (weekday === 0 || weekday === 6) {
-      _schedRenderGradeBar([]);
-      body.innerHTML = `<div class="schedule-no-school">
-        <strong>No School Today</strong>Enjoy your weekend!
-      </div>`;
+      _schedShowNoSchool('Enjoy your weekend!');
       return;
     }
 
@@ -2720,6 +2734,11 @@
       let tabToUse = 'Daily';
       const calData = await supabaseGet('schedule_calendar', `date=eq.${todayKey}&select=tab_name`);
       if (calData[0]?.tab_name) tabToUse = calData[0].tab_name;
+
+      if (/no.?school|holiday|break|closed/i.test(tabToUse)) {
+        _schedShowNoSchool(tabToUse);
+        return;
+      }
 
       // 2. Fetch all periods for this schedule
       let rows = await supabaseGet('schedule_periods',
@@ -2749,8 +2768,7 @@
   function _schedApplySupabasePeriods(rows, tabName) {
     const body = document.getElementById('schedule-body');
     if (!rows.length) {
-      body.innerHTML = `<div class="schedule-no-school"><strong>No Schedule</strong>No periods found for today.</div>`;
-      _schedRenderGradeBar([]);
+      _schedShowNoSchool();
       return;
     }
 
