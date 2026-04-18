@@ -932,13 +932,14 @@
     }
     .lb-row-ghost .lb-rank { color: var(--txt-dim); }
     .lb-leave-btn {
-      background: none; border: none;
-      color: #5e7a9a; font-size: 0.72rem;
-      font-family: inherit; cursor: pointer;
-      text-decoration: underline; padding: 0;
-      transition: color 0.15s;
+      width: 100%; padding: 0.55rem 1rem;
+      background: none; border: 1px solid #7a1c1c;
+      color: #c0392b; border-radius: 6px;
+      font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase;
+      font-family: 'Barlow Condensed', sans-serif; cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
     }
-    .lb-leave-btn:hover { color: #b0c2d8; }
+    .lb-leave-btn:hover { background: rgba(192,57,43,0.12); border-color: #c0392b; }
 
     /* ══════════════════════════════
        QUESTION OF THE DAY WIDGET
@@ -2155,8 +2156,8 @@
           </div>
 
           <!-- Leave button -->
-          <div id="lb-footer" style="display:none; padding:0.25rem 1.1rem 0.75rem; text-align:center;">
-            <button onclick="lbLeaveGroup()" class="lb-leave-btn">leave group</button>
+          <div id="lb-footer" style="display:none; padding:0.5rem 1.1rem 0.75rem;">
+            <button onclick="lbLeaveGroup()" class="lb-leave-btn">Leave Step Challenge</button>
           </div>
 
         </div>
