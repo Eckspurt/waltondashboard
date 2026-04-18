@@ -491,8 +491,8 @@
       font-size: 0.840rem; letter-spacing: 0.2em; text-transform: uppercase;
     }
     .schedule-no-school img {
-      display: block; margin: 0 auto 0.85rem;
-      max-height: 110px; width: auto; border-radius: 8px;
+      display: block; margin: 0.85rem auto 0;
+      max-height: 150px; width: auto; border-radius: 8px;
       opacity: 0.92;
     }
     .schedule-no-school strong {
@@ -2702,8 +2702,8 @@
     const body = document.getElementById('schedule-body');
     _schedRenderGradeBar([]);
     body.innerHTML = `<div class="schedule-no-school">
-      <img src="cat.png" alt=""/>
       <strong>NO SCHOOL TODAY</strong>${subtitle ? `<span>${subtitle}</span>` : ''}
+      <img src="cat.png" alt=""/>
     </div>`;
   }
 
@@ -2713,7 +2713,7 @@
     const now     = new Date();
     const weekday = now.getDay();
     if (weekday === 0 || weekday === 6) {
-      _schedShowNoSchool('Enjoy your weekend!');
+      _schedShowNoSchool();
       return;
     }
 
