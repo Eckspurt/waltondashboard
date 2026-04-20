@@ -506,6 +506,23 @@
       text-transform: uppercase; color: var(--txt-dim);
     }
 
+    /* ── Upcoming schedule banner ── */
+    .sched-upcoming-banner {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.45rem 0.75rem;
+      background: rgba(255,255,255,0.06);
+      border-bottom: 1px solid var(--gm-border);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--gm-highlight);
+    }
+    .sched-upcoming-banner svg { flex-shrink: 0; opacity: 0.85; }
+    .period-list.is-upcoming .period-row { opacity: 0.72; }
+    .period-list.is-upcoming .period-row.is-past,
+    .period-list.is-upcoming .period-row.is-current { opacity: 0.72; background: none; }
+    .period-list.is-upcoming .period-row.is-current .period-progress { display: none; }
+
     /* ── Grade selector bar ── */
     .sched-grade-bar {
       display: flex; gap: 4px; flex-wrap: wrap;
@@ -2698,62 +2715,115 @@
 
   const SCHED_CACHE_KEY = 'walton-sched-cache';
 
-  function _schedShowNoSchool(subtitle = '') {
-    const body = document.getElementById('schedule-body');
+  async function _showUpcomingSchedule(fromDate) {
     _schedRenderGradeBar([]);
-    body.innerHTML = `<div class="schedule-no-school">
-      <strong>NO SCHOOL TODAY</strong>${subtitle ? `<span>${subtitle}</span>` : ''}
-      <img src="cat.png" alt=""/>
-    </div>`;
+    const body = document.getElementById('schedule-body');
+    body.innerHTML = '<div class="weather-loading"><div class="spin"></div>Loading schedule…</div>';
+    const next = await _fetchNextSchedule(fromDate);
+    if (next) {
+      const dateLabel = next.dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+      _schedApplySupabasePeriods(next.periods, next.tab, dateLabel);
+    } else {
+      body.innerHTML = '';
+    }
+  }
+
+  async function _fetchNextSchedule(fromDate) {
+    const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    // Look up to 14 days ahead for the next school day with a real schedule
+    const candidates = [];
+    for (let i = 1; i <= 14; i++) {
+      const d = new Date(fromDate);
+      d.setDate(d.getDate() + i);
+      if (d.getDay() === 0 || d.getDay() === 6) continue; // skip weekends
+      candidates.push(d.toISOString().split('T')[0]);
+    }
+    if (!candidates.length) return null;
+
+    const calRows = await supabaseGet('schedule_calendar',
+      `date=in.(${candidates.join(',')})&order=date.asc&select=date,tab_name`);
+
+    // Build a map of date → tab_name
+    const calMap = {};
+    for (const r of calRows) calMap[r.date] = r.tab_name;
+
+    for (const dateKey of candidates) {
+      let tabToUse = calMap[dateKey] || 'Daily';
+      if (/no.?school|holiday|break|closed/i.test(tabToUse)) continue;
+
+      let rows = await supabaseGet('schedule_periods',
+        `tab_name=eq.${encodeURIComponent(tabToUse)}&order=sort_order.asc`);
+      if (!rows.length && tabToUse !== 'Daily') {
+        tabToUse = 'Daily';
+        rows = await supabaseGet('schedule_periods', `tab_name=eq.Daily&order=sort_order.asc`);
+      }
+      if (!rows.length) continue;
+
+      const d = new Date(dateKey + 'T00:00:00');
+      return { dateKey, tab: tabToUse, periods: rows, dayName: DAYS[d.getDay()], dateObj: d };
+    }
+    return null;
   }
 
   async function fetchSchedule(force = false) {
     const body = document.getElementById('schedule-body');
-
     const now     = new Date();
     const weekday = now.getDay();
-    if (weekday === 0 || weekday === 6) {
-      _schedShowNoSchool();
-      return;
+    const isWeekend = weekday === 0 || weekday === 6;
+    const todayKey = now.toISOString().split('T')[0];
+
+    function _rowsAllPast(rows) {
+      if (!rows.length) return false;
+      const nowMin = minutesToNow();
+      return rows.every(r => { const e = parseTime(r.end_time); return e !== null && nowMin >= e; });
     }
 
     // Serve from cache (keyed by date) — only bypass when force=true
-    const todayKey = now.toISOString().split('T')[0]; // YYYY-MM-DD
-    if (!force) {
+    if (!isWeekend && !force) {
       try {
         const cached = JSON.parse(localStorage.getItem(SCHED_CACHE_KEY) || 'null');
         if (cached?.date === todayKey && cached.tab && cached.periods?.length) {
-          _schedApplySupabasePeriods(cached.periods, cached.tab);
+          if (_rowsAllPast(cached.periods)) {
+            await _showUpcomingSchedule(now);
+          } else {
+            _schedApplySupabasePeriods(cached.periods, cached.tab);
+          }
           return;
         }
       } catch(e) { /* ignore bad cache */ }
     }
 
     try {
-      // 1. Look up today's schedule name in schedule_calendar
+      let noSchoolToday = isWeekend;
       let tabToUse = 'Daily';
-      const calData = await supabaseGet('schedule_calendar', `date=eq.${todayKey}&select=tab_name`);
-      if (calData[0]?.tab_name) tabToUse = calData[0].tab_name;
 
-      if (/no.?school|holiday|break|closed/i.test(tabToUse)) {
-        _schedShowNoSchool(tabToUse);
+      if (!isWeekend) {
+        const calData = await supabaseGet('schedule_calendar', `date=eq.${todayKey}&select=tab_name`);
+        if (calData[0]?.tab_name) tabToUse = calData[0].tab_name;
+        if (/no.?school|holiday|break|closed/i.test(tabToUse)) noSchoolToday = true;
+      }
+
+      if (noSchoolToday) {
+        await _showUpcomingSchedule(now);
         return;
       }
 
-      // 2. Fetch all periods for this schedule
+      // Fetch all periods for today's schedule
       let rows = await supabaseGet('schedule_periods',
         `tab_name=eq.${encodeURIComponent(tabToUse)}&order=sort_order.asc`);
 
-      // Fallback to Daily if not found
       if (!rows.length && tabToUse !== 'Daily') {
         tabToUse = 'Daily';
-        rows = await supabaseGet('schedule_periods',
-          `tab_name=eq.Daily&order=sort_order.asc`);
+        rows = await supabaseGet('schedule_periods', `tab_name=eq.Daily&order=sort_order.asc`);
       }
 
       try { localStorage.setItem(SCHED_CACHE_KEY, JSON.stringify({ date: todayKey, tab: tabToUse, periods: rows })); } catch(e) {}
 
-      _schedApplySupabasePeriods(rows, tabToUse);
+      if (_rowsAllPast(rows)) {
+        await _showUpcomingSchedule(now);
+      } else {
+        _schedApplySupabasePeriods(rows, tabToUse);
+      }
 
     } catch(e) {
       console.error(e);
@@ -2765,12 +2835,9 @@
   }
 
   // Convert Supabase rows → periods and handle multi-grade
-  function _schedApplySupabasePeriods(rows, tabName) {
-    const body = document.getElementById('schedule-body');
-    if (!rows.length) {
-      _schedShowNoSchool();
-      return;
-    }
+  // upcomingLabel: if set, renders as an upcoming (future-day) schedule
+  function _schedApplySupabasePeriods(rows, tabName, upcomingLabel = '') {
+    if (!rows.length) return;
 
     const GRADE_ORDER = ['9th','10th','11th','12th'];
     const grades = [...new Set(rows.map(r => r.grade).filter(Boolean))]
@@ -2784,10 +2851,10 @@
       _schedRenderGradeBar(gradeOptions);
       const savedIdx = Math.min(parseInt(localStorage.getItem(SCHED_GRADE_KEY) || '0'), grades.length - 1);
       const filtered = rows.filter(r => r.grade === grades[savedIdx]);
-      renderSchedule(_schedRowsToPeriods(filtered), grades[savedIdx]);
+      renderSchedule(_schedRowsToPeriods(filtered), grades[savedIdx], upcomingLabel);
     } else {
       _schedRenderGradeBar([]);
-      renderSchedule(_schedRowsToPeriods(rows), tabName);
+      renderSchedule(_schedRowsToPeriods(rows), tabName, upcomingLabel);
     }
   }
 
@@ -2831,7 +2898,7 @@
     strip.classList.add('visible');
   }
 
-  function renderSchedule(periods, tabName) {
+  function renderSchedule(periods, tabName, upcomingLabel = '') {
     const body   = document.getElementById('schedule-body');
     const nowMin = minutesToNow();
 
@@ -2839,8 +2906,9 @@
     const ld = getLunchDuty();
 
     const rows = periods.map(p => {
-      const isPast      = nowMin >= p.end;
-      const isCurrent   = nowMin >= p.start && nowMin < p.end;
+      // When showing an upcoming schedule, don't apply past/current highlights
+      const isPast      = !upcomingLabel && nowMin >= p.end;
+      const isCurrent   = !upcomingLabel && nowMin >= p.start && nowMin < p.end;
       const isHomeroom   = p.name.toLowerCase().includes('homeroom');
       const isDeadTime   = isCurrent && (isHomeroom || (nowMin - p.start) < 5 || (p.end - nowMin) <= 5);
       const isEndingSoon = isCurrent && (p.end - nowMin) <= 1;
@@ -2848,7 +2916,7 @@
         ? Math.round(((nowMin - p.start) / (p.end - p.start)) * 100)
         : 0;
       const remaining = isCurrent ? minsToStr(p.end - nowMin) : '';
-      const showLunch = ld.enabled && (ld.entries || []).some(e => e.period === p.name && e.day === todayName);
+      const showLunch = !upcomingLabel && ld.enabled && (ld.entries || []).some(e => e.period === p.name && e.day === todayName);
       return `<div class="period-row ${isPast ? 'is-past' : ''} ${isCurrent ? 'is-current' : ''} ${isDeadTime ? 'is-dead-time' : ''} ${isEndingSoon ? 'is-ending-soon' : ''}">
         ${isCurrent ? `<div class="period-progress" style="width:${pct}%"></div>` : ''}
         <div class="period-name">${p.name}</div>
@@ -2867,17 +2935,29 @@
     }).join('');
 
     const badge = document.getElementById('schedule-badge');
-    if (badge) badge.textContent = tabName;
-    const listHTML = `<div class="period-list" onclick="schedOpenModal()" title="Click to expand" style="cursor:pointer">${rows}</div>`;
-    body.innerHTML = listHTML;
+    if (badge) badge.textContent = upcomingLabel ? `Upcoming · ${tabName}` : tabName;
+
+    const upcomingBanner = upcomingLabel ? `<div class="sched-upcoming-banner">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+      </svg>
+      Upcoming · ${upcomingLabel}
+    </div>` : '';
+
+    const listCls = upcomingLabel ? 'period-list is-upcoming' : 'period-list';
+
+    body.innerHTML = upcomingBanner + `<div class="${listCls}" onclick="schedOpenModal()" title="Click to expand" style="cursor:pointer">${rows}</div>`;
+
     const modalBody = document.getElementById('sched-modal-body');
     if (modalBody) {
-      modalBody.innerHTML = `<div class="period-list">${rows}</div>`;
+      modalBody.innerHTML = (upcomingLabel ? upcomingBanner : '') + `<div class="${listCls}">${rows}</div>`;
       const title = document.getElementById('sched-modal-title');
-      if (title) title.textContent = tabName || 'Bell Schedule';
+      if (title) title.textContent = upcomingLabel ? `Upcoming · ${tabName}` : (tabName || 'Bell Schedule');
     }
-    currentSchedulePeriods = periods;
-    currentScheduleTab     = tabName;
+    if (!upcomingLabel) {
+      currentSchedulePeriods = periods;
+      currentScheduleTab     = tabName;
+    }
     renderLunchDutyEntries();
     updateSchedStrip();
   }
