@@ -4448,11 +4448,13 @@
   const TIMER_MAX_RECENTS = 8;
   const TIMER_CIRCUMFERENCE = 2 * Math.PI * 68; // r=68
 
-  let timerTotal    = 0;   // seconds set
-  let timerRemain   = 0;   // seconds remaining
-  let timerRunning  = false;
-  let timerInterval = null;
-  let timerDone     = false;
+  let timerTotal     = 0;     // seconds set
+  let timerRemain    = 0;     // seconds remaining at last pause/start
+  let timerRunning   = false;
+  let timerInterval  = null;
+  let timerDone      = false;
+  let timerStartedAt = null;  // Date.now() when last started
+  let timerRemainAt  = 0;     // timerRemain snapshot when last started
 
   function timerLoadRecents() {
     try { return JSON.parse(localStorage.getItem(TIMER_RECENTS_KEY) || '[]'); }
@@ -4569,37 +4571,43 @@
 
   function timerStart() {
     if (timerTotal === 0 || timerRemain === 0 || timerDone) return;
-    timerRunning = true;
-    timerInterval = setInterval(() => {
-      if (timerRemain > 0) {
-        timerRemain--;
-        timerUpdateDisplay();
-      }
+    timerRunning   = true;
+    timerStartedAt = Date.now();
+    timerRemainAt  = timerRemain;
+    timerInterval  = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - timerStartedAt) / 1000);
+      timerRemain   = Math.max(0, timerRemainAt - elapsed);
+      timerUpdateDisplay();
       if (timerRemain === 0) {
         timerStop();
         timerDone = true;
         timerUpdateDisplay();
         timerPlayDoneAnim();
       }
-    }, 1000);
+    }, 500);
     timerUpdateDisplay();
   }
 
   function timerPause() {
-    timerRunning = false;
+    const elapsed  = timerRunning ? Math.floor((Date.now() - timerStartedAt) / 1000) : 0;
+    timerRemain    = Math.max(0, timerRemainAt - elapsed);
+    timerRunning   = false;
+    timerStartedAt = null;
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     timerUpdateDisplay();
   }
 
   function timerStop() {
-    timerRunning = false;
+    timerRunning   = false;
+    timerStartedAt = null;
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   }
 
   function timerReset() {
     timerStop();
-    timerRemain = timerTotal;
-    timerDone   = false;
+    timerRemain   = timerTotal;
+    timerRemainAt = timerTotal;
+    timerDone     = false;
     timerUpdateDisplay();
   }
 
