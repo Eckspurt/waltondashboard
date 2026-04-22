@@ -175,20 +175,32 @@
     localStorage.setItem(LBK_EXPIRY,  Date.now() + (data.expires_in - 60) * 1000);
     if (data.user_id) localStorage.setItem(LBK_FITBIT_ID, data.user_id);
   }
+  async function fitbitToken(params) {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/bright-processor`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+      },
+      body: new URLSearchParams(params),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.errors?.[0]?.message || err.error_description || res.statusText);
+    }
+    return res.json();
+  }
+
   async function getValidToken() {
     const expiry = parseInt(localStorage.getItem(LBK_EXPIRY) || '0');
     if (Date.now() < expiry) return localStorage.getItem(LBK_ACCESS);
     const refresh = localStorage.getItem(LBK_REFRESH);
     if (!refresh) throw new Error('no_refresh');
-    const res = await fetch('https://api.fitbit.com/oauth2/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ grant_type: 'refresh_token', client_id: FITBIT_CLIENT_ID, refresh_token: refresh }),
-    });
-    if (!res.ok) { clearTokens(); throw new Error('no_refresh'); }
-    const data = await res.json();
-    saveTokens(data);
-    return data.access_token;
+    try {
+      const data = await fitbitToken({ grant_type: 'refresh_token', client_id: FITBIT_CLIENT_ID, refresh_token: refresh });
+      saveTokens(data);
+      return data.access_token;
+    } catch(e) { clearTokens(); throw new Error('no_refresh'); }
   }
   function clearTokens() {
     [LBK_ACCESS, LBK_REFRESH, LBK_EXPIRY, LBK_FITBIT_ID].forEach(k => localStorage.removeItem(k));
@@ -285,7 +297,7 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0-10a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm12 5a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
         Connect Fitbit
       </button>
-      <a class="btn btn-secondary" href="https://waltondashboard.com">View Leaderboard</a>
+      <a class="btn btn-secondary" href="https://waltondashboard.com" onclick="enableLeaderboard()">View Leaderboard</a>
       <button class="disconnect" onclick="leaveGroup()">leave group</button>`;
   }
 
@@ -356,19 +368,11 @@
     localStorage.removeItem(LBK_VERIFIER);
     if (!verifier) { showForm('Login failed — please try again.'); return; }
     try {
-      const res = await fetch('https://api.fitbit.com/oauth2/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code', client_id: FITBIT_CLIENT_ID,
-          redirect_uri: FITBIT_REDIRECT, code, code_verifier: verifier,
-        }),
+      const data = await fitbitToken({
+        grant_type: 'authorization_code', client_id: FITBIT_CLIENT_ID,
+        redirect_uri: FITBIT_REDIRECT, code, code_verifier: verifier,
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.errors?.[0]?.message || res.statusText);
-      }
-      saveTokens(await res.json());
+      saveTokens(data);
       await syncSteps();
     } catch(e) {
       showForm(`Login failed: ${e.message}`);
@@ -420,6 +424,15 @@
     [LBK_ACCESS, LBK_REFRESH, LBK_EXPIRY, LBK_VERIFIER, LBK_NAME, LBK_DEPT, LBK_FITBIT_ID]
       .forEach(k => localStorage.removeItem(k));
     showForm();
+  }
+
+  // ── Ensure leaderboard widget is visible on dashboard ────────
+  function enableLeaderboard() {
+    try {
+      const state = JSON.parse(localStorage.getItem('walton-widget-collapsed') || '{}');
+      state.leaderboard = false;
+      localStorage.setItem('walton-widget-collapsed', JSON.stringify(state));
+    } catch(e) {}
   }
 
   // ── Init ──────────────────────────────────────
