@@ -1670,7 +1670,7 @@
     .music-controls {
       display: none; align-items: center; gap: 0.75rem;
     }
-    .music-play-btn {
+    .music-play-btn, .music-skip-btn {
       width: 34px; height: 34px; flex-shrink: 0;
       border-radius: 50%;
       background: var(--raider-red);
@@ -1679,7 +1679,8 @@
       display: flex; align-items: center; justify-content: center;
       transition: background 0.15s;
     }
-    .music-play-btn:hover { background: var(--raider-red-glow); }
+    .music-play-btn:hover, .music-skip-btn:hover { background: var(--raider-red-glow); }
+    .music-skip-btn { display: none; }
     .music-vol-wrap {
       display: flex; align-items: center; gap: 0.45rem; flex: 1;
     }
@@ -1710,6 +1711,17 @@
       transition: background 0.15s;
     }
     .music-header-play-btn:hover { background: var(--raider-red-glow); }
+    .music-header-skip-btn {
+      display: none;
+      width: 24px; height: 24px; flex-shrink: 0;
+      border-radius: 50%;
+      background: var(--raider-red);
+      border: none; color: #fff;
+      cursor: pointer;
+      align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .music-header-skip-btn:hover { background: var(--raider-red-glow); }
     .music-header-vol {
       width: 64px;
       accent-color: var(--raider-red);
@@ -1736,7 +1748,40 @@
       transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
     .music-recent-btn:hover { background: var(--gm-mid); color: var(--txt-bright); border-color: var(--gm-highlight); }
+    .music-recent-info { flex: 1; min-width: 0; overflow: hidden; }
+    .music-recent-title-row { display: flex; align-items: center; gap: 0.35rem; overflow: hidden; }
+    .music-recent-info .music-recent-subtitle { display: none; }
+    .music-now-playing {
+      display: none; align-items: center; gap: 0.6rem;
+      padding: 0.55rem 0.75rem;
+      border-top: 1px solid var(--gm-border);
+      background: var(--gm-mid);
+      overflow: hidden;
+    }
+    .music-now-playing.visible { display: flex; }
+    .music-now-playing-bullet {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--raider-red); flex-shrink: 0;
+    }
+    .music-now-playing-title {
+      flex: 1; font-size: 0.82rem; color: var(--txt-mid);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .music-recent-badge {
+      flex-shrink: 0;
+      background: var(--raider-red);
+      color: #fff;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 1px 5px; border-radius: 3px;
+      line-height: 1.4;
+    }
     .music-recent-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .music-recent-subtitle {
+      font-size: 0.7rem; color: var(--txt-dim);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     .music-recent-del { color: var(--txt-dim); flex-shrink: 0; font-size: 0.8rem; transition: color 0.15s; }
     .music-recent-btn:hover .music-recent-del { color: var(--raider-red); }
     .music-video-btn {
@@ -1770,7 +1815,6 @@
     }
     .music-pl-btn.active { background: var(--raider-red); color: #fff; }
     .music-pl-btn:hover:not(.active) { background: var(--gm-highlight); color: var(--txt-bright); }
-    .music-pl-spacer { flex: 1; }
 
     /* ══════════════════════════════
        CLASSBOARD WIDGET
@@ -1939,8 +1983,14 @@
           </div>
           <div style="display:flex;align-items:center;gap:0.6rem;">
             <div class="music-header-controls" id="music-header-controls">
+              <button class="music-header-skip-btn" id="music-header-prev-btn" onclick="musicPrev()" title="Previous track">
+                <svg width="9" height="9" fill="currentColor" viewBox="0 0 24 24"><rect x="5" y="4" width="2" height="16"/><polygon points="19,20 9,12 19,4"/></svg>
+              </button>
               <button class="music-header-play-btn" id="music-header-play-btn" onclick="musicToggle()" title="Play / Pause">
                 <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+              </button>
+              <button class="music-header-skip-btn" id="music-header-next-btn" onclick="musicNext()" title="Next track">
+                <svg width="9" height="9" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,20 15,12 5,4"/><rect x="17" y="4" width="2" height="16"/></svg>
               </button>
               <input class="music-header-vol" id="music-header-volume" type="range" min="0" max="100" value="50"
                 oninput="musicSetVolume(this.value)" title="Volume"/>
@@ -1950,44 +2000,21 @@
             </svg>
           </div>
         </div>
+        <div class="music-now-playing" id="music-now-playing">
+          <div class="music-now-playing-bullet"></div>
+          <span class="music-now-playing-title" id="music-now-playing-title"></span>
+        </div>
         <div class="widget-body-collapsible" id="music-collapsible">
           <div class="music-body">
-            <div class="music-input-row">
-              <input class="music-input" id="music-url-input" type="text"
-                placeholder="Paste YouTube or YouTube Music link…"
-                onkeydown="if(event.key==='Enter')musicLoad()"/>
-              <button class="music-load-btn" onclick="musicLoad()">Load</button>
-            </div>
-            <div class="music-error" id="music-error">Invalid YouTube link</div>
-            <div class="music-playlist-controls" id="music-playlist-controls">
-              <button class="music-pl-btn" onclick="musicPrev()" title="Previous track">
-                <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><polygon points="19,20 9,12 19,4"/><rect x="5" y="4" width="2" height="16"/></svg>
-                Prev
-              </button>
-              <button class="music-pl-btn" onclick="musicNext()" title="Next track">
-                Next
-                <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,20 15,12 5,4"/><rect x="17" y="4" width="2" height="16"/></svg>
-              </button>
-              <div class="music-pl-spacer"></div>
-              <button class="music-pl-btn" id="music-shuffle-btn" onclick="musicToggleShuffle()" title="Shuffle">
-                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
-                  <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
-                  <line x1="4" y1="4" x2="9" y2="9"/>
-                </svg>
-                Shuffle
-              </button>
-              <button class="music-pl-btn" id="music-loop-btn" onclick="musicToggleLoop()" title="Loop">
-                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-                  <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
-                </svg>
-                Loop
-              </button>
-            </div>
             <div class="music-controls" id="music-controls" style="display:none">
+              <button class="music-skip-btn" id="music-prev-btn" onclick="musicPrev()" title="Previous track">
+                <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><rect x="5" y="4" width="2" height="16"/><polygon points="19,20 9,12 19,4"/></svg>
+              </button>
               <button class="music-play-btn" id="music-play-btn" onclick="musicToggle()" title="Play / Pause">
                 <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+              </button>
+              <button class="music-skip-btn" id="music-next-btn" onclick="musicNext()" title="Next track">
+                <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,20 15,12 5,4"/><rect x="17" y="4" width="2" height="16"/></svg>
               </button>
               <div class="music-vol-wrap">
                 <svg class="music-vol-icon" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -2007,10 +2034,34 @@
                 Video
               </button>
             </div>
+            <div class="music-playlist-controls" id="music-playlist-controls">
+              <button class="music-pl-btn" id="music-shuffle-btn" onclick="musicToggleShuffle()" title="Shuffle">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+                  <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+                  <line x1="4" y1="4" x2="9" y2="9"/>
+                </svg>
+                Shuffle
+              </button>
+              <button class="music-pl-btn" id="music-loop-btn" onclick="musicToggleLoop()" title="Loop">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                  <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+                </svg>
+                Loop
+              </button>
+            </div>
             <!-- <div id="music-suggested-section">
               <div class="music-section-label">Suggested</div>
               <div class="music-recents" id="music-suggested"></div>
             </div> -->
+            <div class="music-input-row">
+              <input class="music-input" id="music-url-input" type="text"
+                placeholder="Paste YouTube or YouTube Music link…"
+                onkeydown="if(event.key==='Enter')musicLoad()"/>
+              <button class="music-load-btn" onclick="musicLoad()">Load</button>
+            </div>
+            <div class="music-error" id="music-error">Invalid YouTube link</div>
             <div id="music-recents-section">
               <div class="music-section-label">Recent</div>
               <div class="music-recents" id="music-recents"></div>
@@ -4879,8 +4930,9 @@
   let _ytCurrentId       = null;
   let _ytCurrentPlaylist = null;
   let _ytVideoVisible    = true;
-  let _ytShuffle         = false;
-  let _ytLoop            = false;
+  let _ytShuffle            = false;
+  let _ytLoop               = false;
+  let _ytCurrentTrackTitle  = null;
 
   const MUSIC_VOLUME_KEY  = 'walton-music-volume';
   const MUSIC_RECENTS_KEY = 'walton-music-recents';
@@ -4908,17 +4960,30 @@
     const recents = _musicLoadRecents();
     if (!recents.length) { section.style.display = 'none'; return; }
     section.style.display = '';
-    list.innerHTML = recents.map((r, i) => `
-      <button class="music-recent-btn" onclick="musicPlayRecent(${i})">
-        <span class="music-recent-title">${r.playlist ? '&#9654;&#xFE0E; ' : ''}${escHtml(r.title || r.id)}</span>
+    list.innerHTML = recents.map((r, i) => {
+      const isActive = r.playlist && r.id === _ytCurrentPlaylist;
+      const subtitle = isActive && _ytCurrentTrackTitle
+        ? `<span class="music-recent-subtitle">${escHtml(_ytCurrentTrackTitle)}</span>` : '';
+      const inner = r.playlist
+        ? `<div class="music-recent-info">
+             <div class="music-recent-title-row">
+               <span class="music-recent-badge">Playlist</span>
+               <span class="music-recent-title">${escHtml(r.title || r.id)}</span>
+             </div>${subtitle}</div>`
+        : `<span class="music-recent-title">${escHtml(r.title || r.id)}</span>`;
+      return `<button class="music-recent-btn" onclick="musicPlayRecent(${i})">
+        ${inner}
         <span class="music-recent-del" onclick="event.stopPropagation();musicDeleteRecent('${r.id}')" title="Remove">✕</span>
-      </button>`).join('');
+      </button>`;
+    }).join('');
   }
 
   function musicPlayRecent(idx) {
     const r = _musicLoadRecents()[idx];
     if (!r) return;
     _ytCurrentPlaylist = r.playlist ? r.id : null;
+    _ytCurrentTrackTitle = null;
+    _ytUpdateNowPlaying(null);
     const cfg = r.playlist ? { videoId: null, listId: r.id } : { videoId: r.id, listId: null };
     musicUpdatePlaylistControls();
     if (_ytPlayer) {
@@ -5008,7 +5073,22 @@
 
     const cfg = { videoId, listId };
     _ytCurrentPlaylist = listId;
-    if (listId) _musicAddRecent(listId, 'YouTube Playlist', true);
+    _ytCurrentTrackTitle = null;
+    _ytUpdateNowPlaying(null);
+    if (listId) {
+      _musicAddRecent(listId, 'YouTube Playlist', true);
+      // Try to fetch the real playlist title via oEmbed (no API key needed)
+      fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/playlist?list=${listId}&format=json`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data && data.title) {
+            const recents = _musicLoadRecents();
+            const idx = recents.findIndex(r => r.id === listId && r.playlist);
+            if (idx !== -1) { recents[idx].title = data.title; _musicSaveRecents(recents); musicRenderRecents(); }
+          }
+        })
+        .catch(() => {});
+    }
     musicUpdatePlaylistControls();
 
     if (_ytPlayer) {
@@ -5045,14 +5125,29 @@
           e.target.playVideo();
           _ytApplyPlaylistSettings();
         },
+        onError(e) {
+          // 100 = video not found, 101/150 = embed not allowed
+          if (_ytCurrentPlaylist && [100, 101, 150].includes(e.data)) {
+            setTimeout(() => { try { _ytPlayer.nextVideo(); } catch(err) {} }, 500);
+          }
+        },
         onStateChange(e) {
           _ytPlaying = (e.data === YT.PlayerState.PLAYING);
           _ytUpdateBtn();
-          if (e.data === YT.PlayerState.PLAYING && !_ytCurrentPlaylist) {
+          if (e.data === YT.PlayerState.PLAYING) {
             const data = e.target.getVideoData();
-            if (data && data.video_id && data.video_id !== _ytCurrentId) {
-              _ytCurrentId = data.video_id;
-              _musicAddRecent(data.video_id, data.title || data.video_id, false);
+            if (_ytCurrentPlaylist) {
+              if (data && data.title && data.title !== _ytCurrentTrackTitle) {
+                _ytCurrentTrackTitle = data.title;
+                _ytUpdateNowPlaying(data.title);
+                musicRenderRecents();
+              }
+            } else {
+              if (data && data.title) { _ytUpdateNowPlaying(data.title); }
+              if (data && data.video_id && data.video_id !== _ytCurrentId) {
+                _ytCurrentId = data.video_id;
+                _musicAddRecent(data.video_id, data.title || data.video_id, false);
+              }
             }
           }
         },
@@ -5091,11 +5186,27 @@
   }
 
   function musicUpdatePlaylistControls() {
-    const row = document.getElementById('music-playlist-controls');
-    if (!row) return;
-    row.classList.toggle('visible', !!_ytCurrentPlaylist);
+    const active = !!_ytCurrentPlaylist;
+    const display = active ? 'flex' : 'none';
+    document.getElementById('music-playlist-controls')?.classList.toggle('visible', active);
+    document.getElementById('music-prev-btn').style.display = display;
+    document.getElementById('music-next-btn').style.display = display;
+    document.getElementById('music-header-prev-btn').style.display = display;
+    document.getElementById('music-header-next-btn').style.display = display;
     document.getElementById('music-shuffle-btn')?.classList.toggle('active', _ytShuffle);
     document.getElementById('music-loop-btn')?.classList.toggle('active', _ytLoop);
+  }
+
+  function _ytUpdateNowPlaying(title) {
+    const wrap = document.getElementById('music-now-playing');
+    const titleEl = document.getElementById('music-now-playing-title');
+    if (title) {
+      if (titleEl) titleEl.textContent = title;
+      wrap?.classList.add('visible');
+    } else {
+      if (titleEl) titleEl.textContent = '';
+      wrap?.classList.remove('visible');
+    }
   }
 
   function _ytApplyPlaylistSettings() {
