@@ -1754,6 +1754,23 @@
     }
     .music-video-btn.active { background: var(--raider-red); color: #fff; }
     .music-video-btn:hover:not(.active) { background: var(--gm-highlight); color: var(--txt-bright); }
+    .music-playlist-controls {
+      display: none; align-items: center; gap: 0.5rem;
+    }
+    .music-playlist-controls.visible { display: flex; }
+    .music-pl-btn {
+      flex-shrink: 0;
+      background: var(--gm-border); border: none; border-radius: 4px;
+      color: var(--txt-dim); padding: 4px 8px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 4px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: background 0.15s, color 0.15s;
+    }
+    .music-pl-btn.active { background: var(--raider-red); color: #fff; }
+    .music-pl-btn:hover:not(.active) { background: var(--gm-highlight); color: var(--txt-bright); }
+    .music-pl-spacer { flex: 1; }
 
     /* ══════════════════════════════
        CLASSBOARD WIDGET
@@ -1942,6 +1959,32 @@
               <button class="music-load-btn" onclick="musicLoad()">Load</button>
             </div>
             <div class="music-error" id="music-error">Invalid YouTube link</div>
+            <div class="music-playlist-controls" id="music-playlist-controls">
+              <button class="music-pl-btn" onclick="musicPrev()" title="Previous track">
+                <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><polygon points="19,20 9,12 19,4"/><rect x="5" y="4" width="2" height="16"/></svg>
+                Prev
+              </button>
+              <button class="music-pl-btn" onclick="musicNext()" title="Next track">
+                Next
+                <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,20 15,12 5,4"/><rect x="17" y="4" width="2" height="16"/></svg>
+              </button>
+              <div class="music-pl-spacer"></div>
+              <button class="music-pl-btn" id="music-shuffle-btn" onclick="musicToggleShuffle()" title="Shuffle">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+                  <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+                  <line x1="4" y1="4" x2="9" y2="9"/>
+                </svg>
+                Shuffle
+              </button>
+              <button class="music-pl-btn" id="music-loop-btn" onclick="musicToggleLoop()" title="Loop">
+                <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                  <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+                </svg>
+                Loop
+              </button>
+            </div>
             <div class="music-controls" id="music-controls" style="display:none">
               <button class="music-play-btn" id="music-play-btn" onclick="musicToggle()" title="Play / Pause">
                 <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
@@ -4829,12 +4872,15 @@
   // ══════════════════════════════════════════════
   //  MUSIC / YOUTUBE BACKGROUND
   // ══════════════════════════════════════════════
-  let _ytPlayer       = null;
-  let _ytApiReady     = false;
-  let _ytPending      = null;
-  let _ytPlaying      = false;
-  let _ytCurrentId    = null;
-  let _ytVideoVisible = true;
+  let _ytPlayer          = null;
+  let _ytApiReady        = false;
+  let _ytPending         = null;
+  let _ytPlaying         = false;
+  let _ytCurrentId       = null;
+  let _ytCurrentPlaylist = null;
+  let _ytVideoVisible    = true;
+  let _ytShuffle         = false;
+  let _ytLoop            = false;
 
   const MUSIC_VOLUME_KEY  = 'walton-music-volume';
   const MUSIC_RECENTS_KEY = 'walton-music-recents';
@@ -4846,10 +4892,10 @@
   }
   function _musicSaveRecents(arr) { localStorage.setItem(MUSIC_RECENTS_KEY, JSON.stringify(arr)); }
 
-  function _musicAddRecent(id, title) {
+  function _musicAddRecent(id, title, playlist = false) {
     let recents = _musicLoadRecents();
     recents = recents.filter(r => r.id !== id);
-    recents.unshift({ id, title });
+    recents.unshift({ id, title, playlist });
     recents = recents.slice(0, MUSIC_MAX_RECENTS);
     _musicSaveRecents(recents);
     musicRenderRecents();
@@ -4864,7 +4910,7 @@
     section.style.display = '';
     list.innerHTML = recents.map((r, i) => `
       <button class="music-recent-btn" onclick="musicPlayRecent(${i})">
-        <span class="music-recent-title">${escHtml(r.title || r.id)}</span>
+        <span class="music-recent-title">${r.playlist ? '&#9654;&#xFE0E; ' : ''}${escHtml(r.title || r.id)}</span>
         <span class="music-recent-del" onclick="event.stopPropagation();musicDeleteRecent('${r.id}')" title="Remove">✕</span>
       </button>`).join('');
   }
@@ -4872,10 +4918,18 @@
   function musicPlayRecent(idx) {
     const r = _musicLoadRecents()[idx];
     if (!r) return;
-    if (_ytPlayer) { _ytPlayer.loadVideoById(r.id); _ytShowBg(); }
-    else if (_ytApiReady) { _ytCreatePlayer(r.id); }
+    _ytCurrentPlaylist = r.playlist ? r.id : null;
+    const cfg = r.playlist ? { videoId: null, listId: r.id } : { videoId: r.id, listId: null };
+    musicUpdatePlaylistControls();
+    if (_ytPlayer) {
+      if (r.playlist) {
+        _ytPlayer.loadPlaylist({ listType: 'playlist', list: r.id, index: 0 });
+        _ytApplyPlaylistSettings();
+      } else { _ytPlayer.loadVideoById(r.id); }
+      _ytShowBg();
+    } else if (_ytApiReady) { _ytCreatePlayer(cfg); }
     else {
-      _ytPending = r.id;
+      _ytPending = cfg;
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
       document.head.appendChild(tag);
@@ -4922,22 +4976,28 @@
     if (_ytPending) { _ytCreatePlayer(_ytPending); _ytPending = null; }
   };
 
-  function _ytExtractId(url) {
+  function _ytParseUrl(url) {
     url = url.trim();
+    let videoId = null, listId = null;
     try {
       const u = new URL(url);
-      if (u.searchParams.has('v')) return u.searchParams.get('v');
-      if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('?')[0];
-    } catch(e) {}
-    const m = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-    return m ? m[1] : null;
+      videoId = u.searchParams.get('v') ||
+        (u.hostname === 'youtu.be' ? u.pathname.slice(1).split('?')[0] : null);
+      listId = u.searchParams.get('list') || null;
+    } catch(e) {
+      const vm = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+      const lm = url.match(/[?&]list=([A-Za-z0-9_-]+)/);
+      videoId = vm ? vm[1] : null;
+      listId  = lm ? lm[1] : null;
+    }
+    return { videoId, listId };
   }
 
   function musicLoad() {
     const input = document.getElementById('music-url-input');
     const errEl = document.getElementById('music-error');
-    const id    = _ytExtractId(input.value);
-    if (!id) {
+    const { videoId, listId } = _ytParseUrl(input.value);
+    if (!videoId && !listId) {
       errEl.style.display = 'block';
       input.style.borderColor = 'var(--raider-red)';
       setTimeout(() => { errEl.style.display = 'none'; input.style.borderColor = ''; }, 2000);
@@ -4946,41 +5006,53 @@
     errEl.style.display = 'none';
     input.style.borderColor = '';
 
+    const cfg = { videoId, listId };
+    _ytCurrentPlaylist = listId;
+    if (listId) _musicAddRecent(listId, 'YouTube Playlist', true);
+    musicUpdatePlaylistControls();
+
     if (_ytPlayer) {
-      _ytPlayer.loadVideoById(id);
+      if (listId) {
+        _ytPlayer.loadPlaylist({ listType: 'playlist', list: listId, index: 0 });
+        _ytApplyPlaylistSettings();
+      } else { _ytPlayer.loadVideoById(videoId); }
       _ytShowBg();
     } else if (_ytApiReady) {
-      _ytCreatePlayer(id);
+      _ytCreatePlayer(cfg);
     } else {
-      _ytPending = id;
+      _ytPending = cfg;
       const tag = document.createElement('script');
       tag.src   = 'https://www.youtube.com/iframe_api';
       document.head.appendChild(tag);
     }
   }
 
-  function _ytCreatePlayer(videoId) {
+  function _ytCreatePlayer(cfg) {
+    const { videoId, listId } = (typeof cfg === 'string') ? { videoId: cfg, listId: null } : cfg;
     _ytShowBg();
+    const playerVars = {
+      autoplay: 1, controls: 0, disablekb: 1,
+      fs: 0, iv_load_policy: 3, modestbranding: 1,
+      playsinline: 1, rel: 0,
+    };
+    if (listId) { playerVars.listType = 'playlist'; playerVars.list = listId; }
     _ytPlayer = new YT.Player('yt-bg-player', {
-      videoId,
-      playerVars: {
-        autoplay: 1, controls: 0, disablekb: 1,
-        fs: 0, iv_load_policy: 3, modestbranding: 1,
-        playsinline: 1, rel: 0,
-      },
+      videoId: videoId || undefined,
+      playerVars,
       events: {
         onReady(e) {
           e.target.setVolume(parseInt(document.getElementById('music-volume').value));
           e.target.playVideo();
+          _ytApplyPlaylistSettings();
         },
         onStateChange(e) {
           _ytPlaying = (e.data === YT.PlayerState.PLAYING);
           _ytUpdateBtn();
-          if (e.data === YT.PlayerState.PLAYING) {
+          if (e.data === YT.PlayerState.PLAYING && !_ytCurrentPlaylist) {
             const data = e.target.getVideoData();
             if (data && data.video_id && data.video_id !== _ytCurrentId) {
               _ytCurrentId = data.video_id;
-              _musicAddRecent(data.video_id, data.title || data.video_id);
+              _musicAddRecent(data.video_id, data.title || data.video_id, false);
             }
           }
         },
@@ -5016,6 +5088,40 @@
     document.getElementById('music-volume').value        = val;
     document.getElementById('music-header-volume').value = val;
     localStorage.setItem(MUSIC_VOLUME_KEY, val);
+  }
+
+  function musicUpdatePlaylistControls() {
+    const row = document.getElementById('music-playlist-controls');
+    if (!row) return;
+    row.classList.toggle('visible', !!_ytCurrentPlaylist);
+    document.getElementById('music-shuffle-btn')?.classList.toggle('active', _ytShuffle);
+    document.getElementById('music-loop-btn')?.classList.toggle('active', _ytLoop);
+  }
+
+  function _ytApplyPlaylistSettings() {
+    if (!_ytPlayer || !_ytCurrentPlaylist) return;
+    try { _ytPlayer.setShuffle(_ytShuffle); } catch(e) {}
+    try { _ytPlayer.setLoop(_ytLoop); } catch(e) {}
+  }
+
+  function musicPrev() {
+    if (_ytPlayer) _ytPlayer.previousVideo();
+  }
+
+  function musicNext() {
+    if (_ytPlayer) _ytPlayer.nextVideo();
+  }
+
+  function musicToggleShuffle() {
+    _ytShuffle = !_ytShuffle;
+    _ytApplyPlaylistSettings();
+    musicUpdatePlaylistControls();
+  }
+
+  function musicToggleLoop() {
+    _ytLoop = !_ytLoop;
+    _ytApplyPlaylistSettings();
+    musicUpdatePlaylistControls();
   }
 
   (function initMusicVolume() {
