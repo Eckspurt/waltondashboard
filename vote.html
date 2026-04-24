@@ -196,6 +196,7 @@
       if (!rows.length) { showError('No question found for today.'); return; }
       question = rows[0].question;
       options  = typeof rows[0].options === 'string' ? JSON.parse(rows[0].options) : rows[0].options;
+      options  = await resolveWinnerPlaceholders(options, date);
     } catch(e) { showError('Unable to load question. Please try again.'); return; }
 
     // Render voting UI
@@ -210,6 +211,39 @@
           </button>`).join('')}
       </div>
       <div class="msg" id="msg"></div>`;
+  }
+
+  // Replace "[Last Week's Winner]" placeholders with the actual winning option text
+  async function resolveWinnerPlaceholders(options, forDate) {
+    const PLACEHOLDER = /\[last\s*week.?s?\s*winner\]/i;
+    if (!options.some(o => PLACEHOLDER.test(o))) return options;
+
+    // Find the most recent past Friday before forDate
+    const d = new Date(forDate + 'T12:00:00');
+    do { d.setDate(d.getDate() - 1); } while (d.getDay() !== 5);
+    const lastFri = d.getFullYear() + '-' +
+      String(d.getMonth()+1).padStart(2,'0') + '-' +
+      String(d.getDate()).padStart(2,'0');
+
+    try {
+      const [qRows, vRows] = await Promise.all([
+        sbGet('qotd_questions', `date=eq.${lastFri}&select=options`),
+        sbGet('qotd_votes',     `date=eq.${lastFri}&select=option_index`),
+      ]);
+      if (!qRows.length || !vRows.length) return options;
+
+      const lastOpts = typeof qRows[0].options === 'string'
+        ? JSON.parse(qRows[0].options) : qRows[0].options;
+
+      const counts = {};
+      vRows.forEach(v => { counts[v.option_index] = (counts[v.option_index] || 0) + 1; });
+      const winnerIdx = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+      const winnerText = lastOpts[winnerIdx];
+
+      return options.map(o => PLACEHOLDER.test(o) ? winnerText : o);
+    } catch(e) {
+      return options; // leave placeholder in place if lookup fails
+    }
   }
 
   let _voting = false;
