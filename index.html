@@ -862,10 +862,24 @@
     /* ══════════════════════════════
        LEADERBOARD / STEP CHALLENGE WIDGET
     ══════════════════════════════ */
-    .lb-tabs {
-      display: flex; overflow-x: auto; scrollbar-width: none;
+    .lb-tabs-wrap {
+      position: relative;
       border-bottom: 1px solid var(--gm-border);
       background: var(--gm-dark);
+      display: flex; align-items: stretch;
+    }
+    .lb-tabs-arrow {
+      flex-shrink: 0; width: 28px;
+      background: var(--gm-dark); border: none;
+      color: var(--txt-dim); cursor: pointer;
+      font-size: 0.85rem; padding: 0;
+      transition: color 0.15s, background 0.15s;
+      display: none;
+    }
+    .lb-tabs-arrow:hover { color: var(--txt-bright); background: var(--gm-mid); }
+    .lb-tabs-arrow.visible { display: block; }
+    .lb-tabs {
+      display: flex; overflow-x: auto; scrollbar-width: none; flex: 1;
     }
     .lb-tabs::-webkit-scrollbar { display: none; }
     .lb-tab {
@@ -2173,7 +2187,11 @@
         <div class="widget-body-collapsible" id="leaderboard-collapsible">
 
           <!-- Tabs -->
-          <div class="lb-tabs" id="lb-tabs"></div>
+          <div class="lb-tabs-wrap" id="lb-tabs-wrap">
+            <button class="lb-tabs-arrow" id="lb-tabs-left" onclick="lbScrollTabs(-1)">&#8249;</button>
+            <div class="lb-tabs" id="lb-tabs"></div>
+            <button class="lb-tabs-arrow" id="lb-tabs-right" onclick="lbScrollTabs(1)">&#8250;</button>
+          </div>
 
           <!-- List -->
           <div id="lb-body" class="lb-body">
@@ -2730,9 +2748,9 @@
 
   async function _fetchNextSchedule(fromDate) {
     const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    // Look up to 14 days ahead for the next school day with a real schedule
+    // Look up to 100 days ahead (covers full summer break) for the next school day with a real schedule
     const candidates = [];
-    for (let i = 1; i <= 14; i++) {
+    for (let i = 1; i <= 100; i++) {
       const d = new Date(fromDate);
       d.setDate(d.getDate() + i);
       if (d.getDay() === 0 || d.getDay() === 6) continue; // skip weekends
@@ -3167,6 +3185,25 @@
       return `<button class="lb-tab${t === _lbActiveTab ? ' active' : ''}"
         onclick="lbSwitchTab('${escLb(t)}')">${escLb(label)}</button>`;
     }).join('');
+
+    tabsEl.addEventListener('scroll', lbUpdateTabArrows, { passive: true });
+    requestAnimationFrame(lbUpdateTabArrows);
+  }
+
+  function lbUpdateTabArrows() {
+    const tabsEl = document.getElementById('lb-tabs');
+    const leftBtn  = document.getElementById('lb-tabs-left');
+    const rightBtn = document.getElementById('lb-tabs-right');
+    if (!tabsEl || !leftBtn || !rightBtn) return;
+    const overflows = tabsEl.scrollWidth > tabsEl.clientWidth + 2;
+    leftBtn.classList.toggle('visible',  overflows && tabsEl.scrollLeft > 2);
+    rightBtn.classList.toggle('visible', overflows && tabsEl.scrollLeft < tabsEl.scrollWidth - tabsEl.clientWidth - 2);
+  }
+
+  function lbScrollTabs(dir) {
+    const tabsEl = document.getElementById('lb-tabs');
+    if (!tabsEl) return;
+    tabsEl.scrollBy({ left: dir * 120, behavior: 'smooth' });
   }
 
   function lbSwitchTab(tab) {
@@ -4448,13 +4485,11 @@
   const TIMER_MAX_RECENTS = 8;
   const TIMER_CIRCUMFERENCE = 2 * Math.PI * 68; // r=68
 
-  let timerTotal     = 0;     // seconds set
-  let timerRemain    = 0;     // seconds remaining at last pause/start
-  let timerRunning   = false;
-  let timerInterval  = null;
-  let timerDone      = false;
-  let timerStartedAt = null;  // Date.now() when last started
-  let timerRemainAt  = 0;     // timerRemain snapshot when last started
+  let timerTotal    = 0;   // seconds set
+  let timerRemain   = 0;   // seconds remaining
+  let timerRunning  = false;
+  let timerInterval = null;
+  let timerDone     = false;
 
   function timerLoadRecents() {
     try { return JSON.parse(localStorage.getItem(TIMER_RECENTS_KEY) || '[]'); }
@@ -4571,43 +4606,37 @@
 
   function timerStart() {
     if (timerTotal === 0 || timerRemain === 0 || timerDone) return;
-    timerRunning   = true;
-    timerStartedAt = Date.now();
-    timerRemainAt  = timerRemain;
-    timerInterval  = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - timerStartedAt) / 1000);
-      timerRemain   = Math.max(0, timerRemainAt - elapsed);
-      timerUpdateDisplay();
+    timerRunning = true;
+    timerInterval = setInterval(() => {
+      if (timerRemain > 0) {
+        timerRemain--;
+        timerUpdateDisplay();
+      }
       if (timerRemain === 0) {
         timerStop();
         timerDone = true;
         timerUpdateDisplay();
         timerPlayDoneAnim();
       }
-    }, 500);
+    }, 1000);
     timerUpdateDisplay();
   }
 
   function timerPause() {
-    const elapsed  = timerRunning ? Math.floor((Date.now() - timerStartedAt) / 1000) : 0;
-    timerRemain    = Math.max(0, timerRemainAt - elapsed);
-    timerRunning   = false;
-    timerStartedAt = null;
+    timerRunning = false;
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     timerUpdateDisplay();
   }
 
   function timerStop() {
-    timerRunning   = false;
-    timerStartedAt = null;
+    timerRunning = false;
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   }
 
   function timerReset() {
     timerStop();
-    timerRemain   = timerTotal;
-    timerRemainAt = timerTotal;
-    timerDone     = false;
+    timerRemain = timerTotal;
+    timerDone   = false;
     timerUpdateDisplay();
   }
 
