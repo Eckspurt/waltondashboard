@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Song Battle Bracket · Walton HS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:#0d1628; --card:#111e35; --mid:#1a2d4a; --border:#1e3458;
+      --red:#c0222a; --red-dim:#8b1515; --txt:#eef2f8;
+      --txt-mid:#8faabf; --txt-dim:#4d6478; --green:#2e7d32;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+
+    /* ── Header ── */
+    .hdr{background:var(--card);border-bottom:1px solid var(--border);padding:.9rem 1.5rem;
+      display:flex;align-items:center;justify-content:space-between;gap:1rem}
+    .hdr-logo{font-family:'Barlow Condensed',sans-serif;font-size:.62rem;letter-spacing:.22em;
+      text-transform:uppercase;color:var(--txt-dim)}
+    .hdr-title{font-family:'Barlow Condensed',sans-serif;font-size:1.55rem;font-weight:800;
+      letter-spacing:.1em;text-transform:uppercase}
+    .hdr-title span{color:var(--red)}
+    .back{font-size:.78rem;color:var(--txt-mid);text-decoration:none;display:flex;
+      align-items:center;gap:.35rem;transition:color .15s}
+    .back:hover{color:var(--txt)}
+
+    /* ── Tabs ── */
+    .tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);
+      padding:0 1.2rem;overflow-x:auto;scrollbar-width:none}
+    .tabs::-webkit-scrollbar{display:none}
+    .tab{font-family:'Barlow Condensed',sans-serif;font-size:.88rem;font-weight:600;
+      letter-spacing:.1em;text-transform:uppercase;color:var(--txt-dim);padding:.65rem 1.1rem;
+      border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;
+      white-space:nowrap;transition:color .15s,border-color .15s;margin-bottom:-1px}
+    .tab:hover{color:var(--txt-mid)}
+    .tab.active{color:var(--txt);border-bottom-color:var(--red)}
+
+    /* ── Content ── */
+    .page{padding:1.25rem 1.5rem;overflow-x:auto}
+    .view{display:none}.view.active{display:block}
+
+    /* ── Loading ── */
+    .loading{display:flex;align-items:center;justify-content:center;padding:4rem;
+      gap:.75rem;color:var(--txt-dim);font-size:.9rem}
+    .spin{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--txt-dim);
+      border-radius:50%;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ── Champion banner ── */
+    .champ-banner{display:none;align-items:center;gap:.6rem;
+      background:linear-gradient(90deg,rgba(139,21,21,.25),transparent);
+      border:1px solid var(--red-dim);border-radius:6px;
+      padding:.55rem 1rem;margin-bottom:1rem}
+    .champ-banner.show{display:flex}
+    .champ-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;
+      letter-spacing:.15em;text-transform:uppercase;color:var(--txt-mid);flex-shrink:0}
+    .champ-name{font-size:.88rem;font-weight:600;color:var(--txt)}
+
+    /* ── Division bracket ── */
+    .div-bracket{display:flex;gap:0;min-width:800px;align-items:stretch}
+
+    /* ── Round column ── */
+    .round-col{display:flex;flex-direction:column}
+    .round-hdr{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;
+      letter-spacing:.14em;text-transform:uppercase;color:var(--txt-dim);
+      text-align:center;padding:.25rem .4rem .55rem;white-space:nowrap}
+    .round-body{display:flex;flex-direction:column;flex:1}
+
+    /* Slots: flex value controls vertical span */
+    .slot{display:flex;align-items:center;padding:3px 0}
+    .slot.f1{flex:1}.slot.f2{flex:2}.slot.f4{flex:4}
+
+    /* Connector column */
+    .conn-col{width:18px;display:flex;flex-direction:column;flex-shrink:0}
+    .conn-col .round-hdr{visibility:hidden}
+    .conn-col .round-body{display:flex;flex-direction:column}
+    .c{flex:1}
+    .c.rb{border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+    .c.rt{border-right:1px solid var(--border);border-top:1px solid var(--border)}
+    .c.r {border-right:1px solid var(--border)}
+
+    /* Play-in section */
+    .playin-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem}
+    .playin-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;
+      letter-spacing:.14em;text-transform:uppercase;color:var(--txt-dim);white-space:nowrap}
+    .playin-arrow{color:var(--txt-dim);font-size:.75rem;flex-shrink:0}
+
+    /* ── Game card ── */
+    .gcard{background:var(--card);border:1px solid var(--border);border-radius:6px;
+      width:195px;flex-shrink:0;overflow:hidden;transition:border-color .2s}
+    .gcard.today{border-color:var(--red);box-shadow:0 0 0 1px var(--red)}
+    .gcard.future{opacity:.55}
+    .gcard-hdr{display:flex;align-items:center;justify-content:space-between;
+      padding:2px 6px;background:var(--mid);border-bottom:1px solid var(--border)}
+    .gcard-date{font-size:.62rem;color:var(--txt-dim);letter-spacing:.04em}
+    .today-badge{font-family:'Barlow Condensed',sans-serif;font-size:.58rem;font-weight:700;
+      letter-spacing:.1em;text-transform:uppercase;background:var(--red);color:#fff;
+      padding:1px 5px;border-radius:3px}
+    .gsong{display:flex;align-items:center;gap:5px;padding:5px 7px;
+      border-bottom:1px solid var(--border);position:relative;min-height:38px}
+    .gsong:last-child{border-bottom:none}
+    .gsong.win{background:rgba(139,21,21,.18)}
+    .gsong.lose{opacity:.5}
+    .vbar{position:absolute;left:0;top:0;bottom:0;background:rgba(139,21,21,.1);z-index:0;transition:width .5s}
+    .gsong>*{position:relative;z-index:1}
+    .gseed{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;
+      color:var(--txt-dim);min-width:15px;flex-shrink:0}
+    .ginfo{flex:1;min-width:0}
+    .gtitle{font-size:.74rem;font-weight:600;color:var(--txt);overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap}
+    .gartist{font-size:.6rem;color:var(--txt-mid);overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap}
+    .gpct{font-family:'Barlow Condensed',sans-serif;font-size:.7rem;font-weight:700;
+      color:var(--txt-dim);flex-shrink:0}
+    .gpct.w{color:var(--red)}
+    .gtbd{font-size:.68rem;color:var(--txt-dim);font-style:italic}
+
+    /* ── Final Four layout ── */
+    .ff-wrap{max-width:650px}
+    .ff-section{margin-bottom:1.5rem}
+    .ff-label{font-family:'Barlow Condensed',sans-serif;font-size:.9rem;font-weight:700;
+      letter-spacing:.14em;text-transform:uppercase;color:var(--txt-dim);
+      padding-bottom:.4rem;margin-bottom:.65rem;border-bottom:1px solid var(--border)}
+    .ff-cards{display:flex;gap:.75rem;flex-wrap:wrap}
+  </style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-logo">Walton High School</div>
+    <div class="hdr-title">Song <span>Battle</span> Bracket</div>
+  </div>
+  <a class="back" href="/">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Dashboard
+  </a>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('90s')">1990s</button>
+  <button class="tab" onclick="showTab('2000s')">2000s</button>
+  <button class="tab" onclick="showTab('2010s')">2010s</button>
+  <button class="tab" onclick="showTab('2020s')">2020s</button>
+  <button class="tab" onclick="showTab('ff')">Final Four</button>
+</div>
+
+<div class="page">
+  <div class="loading" id="loading"><div class="spin"></div>Loading bracket…</div>
+  <div id="content" style="display:none">
+    <div class="view active" id="view-90s"></div>
+    <div class="view" id="view-2000s"></div>
+    <div class="view" id="view-2010s"></div>
+    <div class="view" id="view-2020s"></div>
+    <div class="view" id="view-ff"></div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = 'https://cnuifibctivvdmxhtcfj.supabase.co';
+const SUPA_KEY = 'sb_publishable_BdccknKAwSQKfgbvjK0elw_utfpB4Qc';
+
+// ── SONGS ────────────────────────────────────────────────────
+const SONGS = {
+  '90s':[
+    {seed:1,title:'Iris',artist:'Goo Goo Dolls'},
+    {seed:2,title:'Smells Like Teen Spirit',artist:'Nirvana'},
+    {seed:3,title:'Wonderwall',artist:'Oasis'},
+    {seed:4,title:"Gangsta's Paradise",artist:'Coolio'},
+    {seed:5,title:'I Want It That Way',artist:'Backstreet Boys'},
+    {seed:6,title:'…Baby One More Time',artist:'Britney Spears'},
+    {seed:7,title:'I Will Always Love You',artist:'Whitney Houston'},
+    {seed:8,title:'1979',artist:'Smashing Pumpkins'},
+    {seed:9,title:'Waterfalls',artist:'TLC'},
+  ],
+  '2000s':[
+    {seed:1,title:'Mr. Brightside',artist:'The Killers'},
+    {seed:2,title:'Lose Yourself',artist:'Eminem'},
+    {seed:3,title:'Numb',artist:'Linkin Park'},
+    {seed:4,title:'Umbrella',artist:'Rihanna'},
+    {seed:5,title:'Seven Nation Army',artist:'The White Stripes'},
+    {seed:6,title:'Yeah!',artist:'Usher'},
+    {seed:7,title:'Hey Ya!',artist:'OutKast'},
+    {seed:8,title:'Single Ladies',artist:'Beyoncé'},
+    {seed:9,title:'Bye Bye Bye',artist:'NSYNC'},
+  ],
+  '2010s':[
+    {seed:1,title:'Blinding Lights',artist:'The Weeknd'},
+    {seed:2,title:'Shape of You',artist:'Ed Sheeran'},
+    {seed:3,title:'Uptown Funk',artist:'Mark Ronson ft. Bruno Mars'},
+    {seed:4,title:'Rolling in the Deep',artist:'Adele'},
+    {seed:5,title:'Old Town Road',artist:'Lil Nas X'},
+    {seed:6,title:'Shake It Off',artist:'Taylor Swift'},
+    {seed:7,title:'Royals',artist:'Lorde'},
+    {seed:8,title:'Happy',artist:'Pharrell Williams'},
+    {seed:9,title:'Call Me Maybe',artist:'Carly Rae Jepsen'},
+  ],
+  '2020s':[
+    {seed:1,title:'As It Was',artist:'Harry Styles'},
+    {seed:2,title:'Stay',artist:'The Kid LAROI & Justin Bieber'},
+    {seed:3,title:'Heat Waves',artist:'Glass Animals'},
+    {seed:4,title:'Espresso',artist:'Sabrina Carpenter'},
+    {seed:5,title:'Flowers',artist:'Miley Cyrus'},
+    {seed:6,title:'Levitating',artist:'Dua Lipa'},
+    {seed:7,title:'Anti-Hero',artist:'Taylor Swift'},
+    {seed:8,title:'Thank U, Next',artist:'Ariana Grande'},
+    {seed:9,title:'Golden',artist:'K-Pop Demon Hunters'},
+  ],
+};
+
+// ── GAMES ────────────────────────────────────────────────────
+// a/b: {d,s} = fixed song; {win:n} = winner of game n; {lose:n} = loser
+const GAMES = [
+  // Play-in
+  {n:1, date:'2026-07-31',round:'play-in',   div:'90s',   a:{d:'90s',  s:8},b:{d:'90s',  s:9}},
+  {n:2, date:'2026-08-07',round:'play-in',   div:'2000s', a:{d:'2000s',s:8},b:{d:'2000s',s:9}},
+  {n:3, date:'2026-08-14',round:'play-in',   div:'2010s', a:{d:'2010s',s:8},b:{d:'2010s',s:9}},
+  {n:4, date:'2026-08-21',round:'play-in',   div:'2020s', a:{d:'2020s',s:8},b:{d:'2020s',s:9}},
+  // R32 — #1 vs play-in winner
+  {n:5, date:'2026-08-28',round:'r32',       div:'90s',   a:{d:'90s',  s:1},b:{win:1}},
+  {n:6, date:'2026-09-04',round:'r32',       div:'2000s', a:{d:'2000s',s:1},b:{win:2}},
+  {n:7, date:'2026-09-11',round:'r32',       div:'2010s', a:{d:'2010s',s:1},b:{win:3}},
+  {n:8, date:'2026-09-18',round:'r32',       div:'2020s', a:{d:'2020s',s:1},b:{win:4}},
+  // R32 — #4 vs #5
+  {n:9, date:'2026-10-02',round:'r32',       div:'90s',   a:{d:'90s',  s:4},b:{d:'90s',  s:5}},
+  {n:10,date:'2026-10-09',round:'r32',       div:'2000s', a:{d:'2000s',s:4},b:{d:'2000s',s:5}},
+  {n:11,date:'2026-10-16',round:'r32',       div:'2010s', a:{d:'2010s',s:4},b:{d:'2010s',s:5}},
+  {n:12,date:'2026-10-23',round:'r32',       div:'2020s', a:{d:'2020s',s:4},b:{d:'2020s',s:5}},
+  // R32 — #2 vs #7
+  {n:13,date:'2026-10-30',round:'r32',       div:'90s',   a:{d:'90s',  s:2},b:{d:'90s',  s:7}},
+  {n:14,date:'2026-11-06',round:'r32',       div:'2000s', a:{d:'2000s',s:2},b:{d:'2000s',s:7}},
+  {n:15,date:'2026-11-13',round:'r32',       div:'2010s', a:{d:'2010s',s:2},b:{d:'2010s',s:7}},
+  {n:16,date:'2026-11-20',round:'r32',       div:'2020s', a:{d:'2020s',s:2},b:{d:'2020s',s:7}},
+  // R32 — #3 vs #6
+  {n:17,date:'2026-12-04',round:'r32',       div:'90s',   a:{d:'90s',  s:3},b:{d:'90s',  s:6}},
+  {n:18,date:'2026-12-11',round:'r32',       div:'2000s', a:{d:'2000s',s:3},b:{d:'2000s',s:6}},
+  {n:19,date:'2026-12-18',round:'r32',       div:'2010s', a:{d:'2010s',s:3},b:{d:'2010s',s:6}},
+  {n:20,date:'2027-01-08',round:'r32',       div:'2020s', a:{d:'2020s',s:3},b:{d:'2020s',s:6}},
+  // Sweet 16 — W(1vPI) vs W(4v5)
+  {n:21,date:'2027-01-15',round:'sweet16',   div:'90s',   a:{win:5}, b:{win:9}},
+  {n:22,date:'2027-01-22',round:'sweet16',   div:'2000s', a:{win:6}, b:{win:10}},
+  {n:23,date:'2027-01-29',round:'sweet16',   div:'2010s', a:{win:7}, b:{win:11}},
+  {n:24,date:'2027-02-05',round:'sweet16',   div:'2020s', a:{win:8}, b:{win:12}},
+  // Sweet 16 — W(2v7) vs W(3v6)
+  {n:25,date:'2027-02-12',round:'sweet16',   div:'90s',   a:{win:13},b:{win:17}},
+  {n:26,date:'2027-02-26',round:'sweet16',   div:'2000s', a:{win:14},b:{win:18}},
+  {n:27,date:'2027-03-05',round:'sweet16',   div:'2010s', a:{win:15},b:{win:19}},
+  {n:28,date:'2027-03-12',round:'sweet16',   div:'2020s', a:{win:16},b:{win:20}},
+  // Elite 8
+  {n:29,date:'2027-03-19',round:'elite8',    div:'90s',   a:{win:21},b:{win:25}},
+  {n:30,date:'2027-03-26',round:'elite8',    div:'2000s', a:{win:22},b:{win:26}},
+  {n:31,date:'2027-04-02',round:'elite8',    div:'2010s', a:{win:23},b:{win:27}},
+  {n:32,date:'2027-04-16',round:'elite8',    div:'2020s', a:{win:24},b:{win:28}},
+  // Final Four
+  {n:33,date:'2027-04-23',round:'final4',    div:null,    a:{win:29},b:{win:32}},
+  {n:34,date:'2027-04-30',round:'final4',    div:null,    a:{win:30},b:{win:31}},
+  // Championship & 3rd Place
+  {n:35,date:'2027-05-07',round:'champ',     div:null,    a:{win:33},b:{win:34}},
+  {n:36,date:'2027-05-14',round:'3rd',       div:null,    a:{lose:33},b:{lose:34}},
+];
+
+// ── HELPERS ──────────────────────────────────────────────────
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtDate(iso) {
+  const [y,m,d] = iso.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function getSong(d,s) { return SONGS[d]?.[s-1] ?? null; }
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function resolveSong(spec, results) {
+  if (spec.d) return getSong(spec.d, spec.s);
+  const ref = spec.win ?? spec.lose;
+  const r = results.get(ref);
+  if (!r) return null;
+  const g = GAMES[ref - 1];
+  const side = (spec.win !== undefined)
+    ? (r.wi === 0 ? g.a : g.b)
+    : (r.wi === 0 ? g.b : g.a);
+  return resolveSong(side, results);
+}
+
+// ── SUPABASE ─────────────────────────────────────────────────
+async function sbGet(table, q) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}?${q}`,
+    {headers:{apikey:SUPA_KEY,Authorization:`Bearer ${SUPA_KEY}`}});
+  if (!r.ok) throw new Error('fetch failed');
+  return r.json();
+}
+
+// ── RENDER GAME CARD ─────────────────────────────────────────
+const TODAY = todayISO();
+
+function gameCard(game, results) {
+  const r   = results.get(game.n);
+  const sA  = resolveSong(game.a, results);
+  const sB  = resolveSong(game.b, results);
+  const tot = r ? r.counts[0] + r.counts[1] : 0;
+  const cls = game.date === TODAY ? 'gcard today'
+            : (!r && game.date > TODAY) ? 'gcard future' : 'gcard';
+
+  function row(song, idx) {
+    const win  = r && r.wi === idx;
+    const lose = r && r.wi !== idx;
+    const pct  = (r && tot > 0) ? Math.round(r.counts[idx]/tot*100) : null;
+    const rcls = win ? 'gsong win' : lose ? 'gsong lose' : 'gsong';
+    if (!song) return `<div class="${rcls}">
+      ${pct!=null?`<div class="vbar" style="width:${pct}%"></div>`:''}
+      <span class="gseed">?</span>
+      <div class="ginfo"><span class="gtbd">TBD</span></div>
+      ${pct!=null?`<span class="gpct${win?' w':''}">${pct}%</span>`:''}
+    </div>`;
+    return `<div class="${rcls}">
+      ${pct!=null?`<div class="vbar" style="width:${pct}%"></div>`:''}
+      <span class="gseed">${song.seed}</span>
+      <div class="ginfo">
+        <div class="gtitle">${esc(song.title)}</div>
+        <div class="gartist">${esc(song.artist)}</div>
+      </div>
+      ${pct!=null?`<span class="gpct${win?' w':''}">${pct}%</span>`:''}
+    </div>`;
+  }
+
+  return `<div class="${cls}">
+    <div class="gcard-hdr">
+      <span class="gcard-date">${fmtDate(game.date)}</span>
+      ${game.date===TODAY?'<span class="today-badge">Today</span>':''}
+    </div>
+    ${row(sA,0)}${row(sB,1)}
+  </div>`;
+}
+
+// ── RENDER DIVISION TAB ───────────────────────────────────────
+function renderDiv(div, results) {
+  const el = document.getElementById(`view-${div}`);
+  const pi  = GAMES.find(g => g.round==='play-in' && g.div===div);
+  const r32 = GAMES.filter(g => g.round==='r32'     && g.div===div);
+  const s16 = GAMES.filter(g => g.round==='sweet16' && g.div===div);
+  const e8  = GAMES.find(g => g.round==='elite8'   && g.div===div);
+
+  // Champion banner
+  let champHtml = '';
+  const e8r = results.get(e8.n);
+  if (e8r) {
+    const ch = resolveSong(e8r.wi===0 ? e8.a : e8.b, results);
+    if (ch) champHtml = `<div class="champ-banner show">
+      <span class="champ-lbl">🏆 Division Champion</span>
+      <span class="champ-name">${esc(ch.title)} · ${esc(ch.artist)}</span>
+    </div>`;
+  }
+
+  // Play-in note: game card + arrow label
+  const piHtml = `<div class="playin-row">
+    <span class="playin-lbl">First Four</span>
+    ${gameCard(pi, results)}
+    <span class="playin-arrow">→ feeds into Round of 32 · Game ${r32[0].n}</span>
+  </div>`;
+
+  // Bracket columns
+  // R32: 4 games (slot f1 each)
+  // conn: 4 cells (rb, rt, rb, rt)
+  // S16: 2 games (slot f2 each)
+  // conn: 2 cells (rb, rt)
+  // E8: 1 game (slot f4)
+
+  const r32Slots = r32.map(g =>
+    `<div class="slot f1"><div style="width:100%">${gameCard(g,results)}</div></div>`).join('');
+
+  const s16Slots = s16.map(g =>
+    `<div class="slot f2"><div style="width:100%">${gameCard(g,results)}</div></div>`).join('');
+
+  el.innerHTML = `${champHtml}${piHtml}
+  <div class="div-bracket">
+    <div class="round-col" style="width:205px">
+      <div class="round-hdr">Round of 32</div>
+      <div class="round-body">${r32Slots}</div>
+    </div>
+    <div class="conn-col">
+      <div class="round-hdr">·</div>
+      <div class="round-body">
+        <div class="c rb"></div><div class="c rt"></div>
+        <div class="c rb"></div><div class="c rt"></div>
+      </div>
+    </div>
+    <div class="round-col" style="width:205px">
+      <div class="round-hdr">Sweet 16</div>
+      <div class="round-body">${s16Slots}</div>
+    </div>
+    <div class="conn-col">
+      <div class="round-hdr">·</div>
+      <div class="round-body">
+        <div class="c rb"></div><div class="c rt"></div>
+      </div>
+    </div>
+    <div class="round-col" style="width:205px">
+      <div class="round-hdr">Elite 8</div>
+      <div class="round-body">
+        <div class="slot f4"><div style="width:100%">${gameCard(e8,results)}</div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── RENDER FINAL FOUR TAB ─────────────────────────────────────
+function renderFF(results) {
+  const el = document.getElementById('view-ff');
+  const [ff1,ff2,ch,tp] = [33,34,35,36].map(n => GAMES[n-1]);
+
+  // Overall champion
+  let champHtml = '';
+  const chr = results.get(ch.n);
+  if (chr) {
+    const winner = resolveSong(chr.wi===0 ? ch.a : ch.b, results);
+    if (winner) champHtml = `<div class="champ-banner show" style="margin-bottom:1.25rem">
+      <span class="champ-lbl">🏆 Overall Champion</span>
+      <span class="champ-name">${esc(winner.title)} · ${esc(winner.artist)}</span>
+    </div>`;
+  }
+
+  el.innerHTML = `${champHtml}
+  <div class="ff-wrap">
+    <div class="ff-section">
+      <div class="ff-label">Final Four</div>
+      <div class="ff-cards">
+        ${gameCard(ff1,results)}
+        ${gameCard(ff2,results)}
+      </div>
+    </div>
+    <div class="ff-section">
+      <div class="ff-label">🏆 Championship · ${fmtDate(ch.date)}</div>
+      <div class="ff-cards">${gameCard(ch,results)}</div>
+    </div>
+    <div class="ff-section">
+      <div class="ff-label">3rd Place · ${fmtDate(tp.date)}</div>
+      <div class="ff-cards">${gameCard(tp,results)}</div>
+    </div>
+  </div>`;
+}
+
+// ── TABS ─────────────────────────────────────────────────────
+const TAB_IDS = ['90s','2000s','2010s','2020s','ff'];
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i) =>
+    t.classList.toggle('active', TAB_IDS[i]===id));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${id}`)?.classList.add('active');
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+(async function init() {
+  const dates = GAMES.map(g => g.date);
+  let rows;
+  try {
+    rows = await sbGet('qotd_votes',
+      `date=in.(${dates.join(',')})&select=date,option_index`);
+  } catch(e) {
+    document.getElementById('loading').textContent = 'Failed to load results. Please refresh.';
+    return;
+  }
+
+  // Tally votes per date
+  const tally = new Map();
+  for (const row of rows) {
+    if (!tally.has(row.date)) tally.set(row.date, [0,0]);
+    tally.get(row.date)[row.option_index] = (tally.get(row.date)[row.option_index]||0) + 1;
+  }
+
+  // Compute results: Map<gameNum, {wi, counts}>
+  const results = new Map();
+  for (const g of GAMES) {
+    const t = tally.get(g.date);
+    if (!t || t[0]+t[1] === 0) continue;
+    results.set(g.n, { wi: t[1] > t[0] ? 1 : 0, counts: t });
+  }
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+
+  renderDiv('90s',   results);
+  renderDiv('2000s', results);
+  renderDiv('2010s', results);
+  renderDiv('2020s', results);
+  renderFF(results);
+})();
+</script>
+</body>
+</html>
