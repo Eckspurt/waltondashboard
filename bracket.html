@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/png" href="logo.png"/>
   <title>Song Battle Bracket · Walton HS</title>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
   <style>
@@ -31,7 +32,7 @@
       padding:0 1.2rem;overflow-x:auto;scrollbar-width:none}
     .tabs::-webkit-scrollbar{display:none}
     .tab{font-family:'Barlow Condensed',sans-serif;font-size:.88rem;font-weight:600;
-      letter-spacing:.1em;text-transform:uppercase;color:var(--txt-dim);padding:.65rem 1.1rem;
+      letter-spacing:.1em;color:var(--txt-dim);padding:.65rem 1.1rem;
       border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;
       white-space:nowrap;transition:color .15s,border-color .15s;margin-bottom:-1px}
     .tab:hover{color:var(--txt-mid)}
@@ -144,7 +145,7 @@
   <button class="tab" onclick="showTab('2000s')">2000s</button>
   <button class="tab" onclick="showTab('2010s')">2010s</button>
   <button class="tab" onclick="showTab('2020s')">2020s</button>
-  <button class="tab" onclick="showTab('ff')">Final Four</button>
+  <button class="tab" onclick="showTab('ff')">FINAL FOUR</button>
 </div>
 
 <div class="page">
@@ -358,7 +359,7 @@ function renderDiv(div, results) {
 
   // Play-in note: game card + arrow label
   const piHtml = `<div class="playin-row">
-    <span class="playin-lbl">First Four</span>
+    <span class="playin-lbl">Play-In</span>
     ${gameCard(pi, results)}
     <span class="playin-arrow">→ feeds into Round of 32 · Game ${r32[0].n}</span>
   </div>`;
