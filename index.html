@@ -1042,6 +1042,47 @@
       color: var(--txt-dim); font-size: 0.98rem;
       letter-spacing: 0.18em; text-transform: uppercase;
     }
+    /* Song Battle widget */
+    .sb-round-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--raider-red);
+      text-align: center;
+    }
+    .sb-vs-wrap { display: flex; align-items: stretch; gap: 0.4rem; }
+    .sb-song-card {
+      flex: 1; min-width: 0; position: relative; overflow: hidden;
+      background: var(--gm-dark); border: 1px solid var(--gm-border);
+      border-radius: 6px; padding: 0.5rem 0.55rem;
+      display: flex; flex-direction: column; gap: 0.15rem;
+    }
+    .sb-vbar {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      background: rgba(139,21,21,0.15); z-index: 0; transition: width 0.5s;
+    }
+    .sb-song-card > * { position: relative; z-index: 1; }
+    .sb-song-seed {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.6rem;
+      font-weight: 700; color: var(--txt-dim); letter-spacing: 0.05em;
+    }
+    .sb-song-title {
+      font-size: 0.8rem; font-weight: 600; color: var(--txt-bright);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .sb-song-artist {
+      font-size: 0.68rem; color: var(--txt-mid);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .sb-song-pct {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem;
+      font-weight: 700; color: var(--raider-red); margin-top: 0.1rem;
+    }
+    .sb-song-tbd { font-size: 0.72rem; color: var(--txt-dim); font-style: italic; }
+    .sb-vs {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem;
+      font-weight: 800; color: var(--txt-dim); letter-spacing: 0.1em;
+      display: flex; align-items: center; flex-shrink: 0;
+    }
     /* QOTD modal */
     .qotd-modal-overlay {
       position: fixed; inset: 0; z-index: 2000;
@@ -1667,6 +1708,9 @@
       transition: background 0.15s;
     }
     .music-load-btn:hover { background: var(--raider-red-glow); }
+    .music-name-row { display: none; margin-top: 0.35rem; }
+    .music-name-row.visible { display: block; }
+    .music-name-input { width: 100%; box-sizing: border-box; }
     .music-controls {
       display: none; align-items: center; gap: 0.75rem;
     }
@@ -1750,7 +1794,6 @@
     .music-recent-btn:hover { background: var(--gm-mid); color: var(--txt-bright); border-color: var(--gm-highlight); }
     .music-recent-info { flex: 1; min-width: 0; overflow: hidden; }
     .music-recent-title-row { display: flex; align-items: center; gap: 0.35rem; overflow: hidden; }
-    .music-recent-info .music-recent-subtitle { display: none; }
     .music-now-playing {
       display: none; align-items: center; gap: 0.6rem;
       padding: 0.55rem 0.75rem;
@@ -1783,6 +1826,10 @@
     }
     .music-recent-del { color: var(--txt-dim); flex-shrink: 0; font-size: 0.8rem; transition: color 0.15s; }
     .music-recent-btn:hover .music-recent-del { color: var(--raider-red); }
+    .music-recent-rename { color: var(--txt-dim); flex-shrink: 0; opacity: 0; transition: opacity 0.15s, color 0.15s; cursor: pointer; padding: 0 0.1rem; }
+    .music-recent-btn:hover .music-recent-rename { opacity: 1; }
+    .music-recent-btn:hover .music-recent-rename:hover { color: var(--txt-bright); }
+    .music-rename-input { flex: 1; min-width: 0; background: transparent; border: none; border-bottom: 1px solid var(--raider-red); color: var(--txt-bright); font-family: 'Barlow', sans-serif; font-size: 0.82rem; outline: none; padding: 0; }
     .music-video-btn {
       flex-shrink: 0;
       background: var(--gm-border);
@@ -2057,8 +2104,14 @@
             <div class="music-input-row">
               <input class="music-input" id="music-url-input" type="text"
                 placeholder="Paste YouTube or YouTube Music link…"
+                oninput="_musicCheckPlaylistUrl()"
                 onkeydown="if(event.key==='Enter')musicLoad()"/>
               <button class="music-load-btn" onclick="musicLoad()">Load</button>
+            </div>
+            <div class="music-name-row" id="music-name-row">
+              <input class="music-input music-name-input" id="music-name-input" type="text"
+                placeholder="Playlist name (optional)"
+                onkeydown="if(event.key==='Enter')musicLoad()"/>
             </div>
             <div class="music-error" id="music-error">Invalid YouTube link</div>
             <div id="music-recents-section">
@@ -2489,16 +2542,14 @@
 
   (async function syncAtomicClock() {
     try {
-      const tz  = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const res  = await fetch(`https://worldtimeapi.org/api/timezone/${encodeURIComponent(tz)}`);
-      const json = await res.json();
-      // unixtime is seconds; measure local time at moment of parse
-      const serverMs = json.unixtime * 1000;
+      const res = await fetch('https://timeapi.io/api/time/current/zone?timeZone=UTC');
+      if (!res.ok) return;
+      const j = await res.json();
+      const serverMs = Date.UTC(j.year, j.month - 1, j.day, j.hour, j.minute, j.seconds, j.milliSeconds);
       _timeOffsetMs  = serverMs - Date.now();
     } catch {
       // Fall back to machine time silently
     }
-    // Re-sync every 30 minutes
     setTimeout(syncAtomicClock, 30 * 60 * 1000);
   })();
 
@@ -4931,6 +4982,7 @@
   let _ytVideoVisible    = true;
   let _ytShuffle            = false;
   let _ytLoop               = false;
+  let _ytErrStreak          = 0;
   let _ytCurrentTrackTitle  = null;
 
   const MUSIC_VOLUME_KEY  = 'walton-music-volume';
@@ -4960,15 +5012,14 @@
     if (!recents.length) { section.style.display = 'none'; return; }
     section.style.display = '';
     list.innerHTML = recents.map((r, i) => {
-      const isActive = r.playlist && r.id === _ytCurrentPlaylist;
-      const subtitle = isActive && _ytCurrentTrackTitle
-        ? `<span class="music-recent-subtitle">${escHtml(_ytCurrentTrackTitle)}</span>` : '';
+      const pencil = `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
       const inner = r.playlist
         ? `<div class="music-recent-info">
              <div class="music-recent-title-row">
                <span class="music-recent-badge">Playlist</span>
                <span class="music-recent-title">${escHtml(r.title || r.id)}</span>
-             </div>${subtitle}</div>`
+               <span class="music-recent-rename" onclick="event.stopPropagation();musicRenamePlaylist(${i})" title="Rename">${pencil}</span>
+             </div></div>`
         : `<span class="music-recent-title">${escHtml(r.title || r.id)}</span>`;
       return `<button class="music-recent-btn" onclick="musicPlayRecent(${i})">
         ${inner}
@@ -4983,12 +5034,13 @@
     _ytCurrentPlaylist = r.playlist ? r.id : null;
     _ytCurrentTrackTitle = null;
     _ytUpdateNowPlaying(null);
+    if (r.playlist) _ytAutoNamePlaylist(r.id);
     const cfg = r.playlist ? { videoId: null, listId: r.id } : { videoId: r.id, listId: null };
     musicUpdatePlaylistControls();
     if (_ytPlayer) {
       if (r.playlist) {
         _ytPlayer.loadPlaylist({ listType: 'playlist', list: r.id, index: 0 });
-        _ytApplyPlaylistSettings();
+        setTimeout(() => _ytApplyPlaylistSettings(), 500);
       } else { _ytPlayer.loadVideoById(r.id); }
       _ytShowBg();
     } else if (_ytApiReady) { _ytCreatePlayer(cfg); }
@@ -5003,6 +5055,78 @@
   function musicDeleteRecent(id) {
     _musicSaveRecents(_musicLoadRecents().filter(r => r.id !== id));
     musicRenderRecents();
+  }
+
+  async function _ytFetchPlaylistTitle(listId) {
+    const feedUrl = `https://www.youtube.com/feeds/videos.xml?playlist_id=${listId}`;
+
+    // Try rss2json — built for YouTube feeds, CORS-enabled
+    try {
+      const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'ok' && data.feed?.title) return data.feed.title;
+      }
+    } catch(e) {}
+
+    // Fallback: corsproxy.io
+    try {
+      const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(feedUrl)}`);
+      if (res.ok) {
+        const xml = await res.text();
+        const doc = new DOMParser().parseFromString(xml, 'text/xml');
+        const title = doc.querySelector('feed > title')?.textContent?.trim();
+        if (title && title !== 'YouTube') return title;
+      }
+    } catch(e) {}
+
+    return null;
+  }
+
+  function _ytAutoNamePlaylist(listId) {
+    if (!listId) return;
+    const recents = _musicLoadRecents();
+    const entry = recents.find(r => r.id === listId && r.playlist);
+    if (!entry || (entry.title && entry.title !== 'YouTube Playlist')) return;
+    _ytFetchPlaylistTitle(listId).then(title => {
+      if (!title) return;
+      const recs = _musicLoadRecents();
+      const e = recs.find(r => r.id === listId && r.playlist);
+      if (e && (!e.title || e.title === 'YouTube Playlist')) {
+        e.title = title;
+        _musicSaveRecents(recs);
+        musicRenderRecents();
+      }
+    });
+  }
+
+  function musicRenamePlaylist(idx) {
+    const recents = _musicLoadRecents();
+    const r = recents[idx];
+    if (!r || !r.playlist) return;
+    const listEl = document.getElementById('music-recents');
+    if (!listEl) return;
+    const titleEl = listEl.querySelectorAll('.music-recent-title')[idx];
+    if (!titleEl) return;
+
+    const input = document.createElement('input');
+    input.className = 'music-rename-input';
+    input.value = (r.title && r.title !== 'YouTube Playlist') ? r.title : '';
+    input.placeholder = 'Playlist name…';
+
+    const save = () => {
+      r.title = input.value.trim() || 'YouTube Playlist';
+      _musicSaveRecents(recents);
+      musicRenderRecents();
+    };
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  { e.preventDefault(); input.blur(); }
+      if (e.key === 'Escape') { input.removeEventListener('blur', save); musicRenderRecents(); }
+    });
+    input.addEventListener('blur', save);
+    titleEl.replaceWith(input);
+    input.focus();
+    input.select();
   }
 
   const _musicSuggested = [
@@ -5057,6 +5181,14 @@
     return { videoId, listId };
   }
 
+  function _musicCheckPlaylistUrl() {
+    const val = document.getElementById('music-url-input').value;
+    const row = document.getElementById('music-name-row');
+    if (!row) return;
+    const { listId } = _ytParseUrl(val);
+    row.classList.toggle('visible', !!listId);
+  }
+
   function musicLoad() {
     const input = document.getElementById('music-url-input');
     const errEl = document.getElementById('music-error');
@@ -5073,27 +5205,23 @@
     const cfg = { videoId, listId };
     _ytCurrentPlaylist = listId;
     _ytCurrentTrackTitle = null;
+    _ytErrStreak = 0;
     _ytUpdateNowPlaying(null);
     if (listId) {
-      _musicAddRecent(listId, 'YouTube Playlist', true);
-      // Try to fetch the real playlist title via oEmbed (no API key needed)
-      fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/playlist?list=${listId}&format=json`)
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data && data.title) {
-            const recents = _musicLoadRecents();
-            const idx = recents.findIndex(r => r.id === listId && r.playlist);
-            if (idx !== -1) { recents[idx].title = data.title; _musicSaveRecents(recents); musicRenderRecents(); }
-          }
-        })
-        .catch(() => {});
+      const nameInput = document.getElementById('music-name-input');
+      const nameRow   = document.getElementById('music-name-row');
+      const userTitle = nameInput ? nameInput.value.trim() : '';
+      _musicAddRecent(listId, userTitle || 'YouTube Playlist', true);
+      if (nameInput) nameInput.value = '';
+      if (nameRow)   nameRow.classList.remove('visible');
+      if (!userTitle) _ytAutoNamePlaylist(listId);
     }
     musicUpdatePlaylistControls();
 
     if (_ytPlayer) {
       if (listId) {
         _ytPlayer.loadPlaylist({ listType: 'playlist', list: listId, index: 0 });
-        _ytApplyPlaylistSettings();
+        setTimeout(() => _ytApplyPlaylistSettings(), 500);
       } else { _ytPlayer.loadVideoById(videoId); }
       _ytShowBg();
     } else if (_ytApiReady) {
@@ -5111,12 +5239,14 @@
     _ytShowBg();
     const playerVars = {
       autoplay: 1, controls: 0, disablekb: 1,
+      enablejsapi: 1,
       fs: 0, iv_load_policy: 3, modestbranding: 1,
+      origin: window.location.origin,
       playsinline: 1, rel: 0,
     };
     if (listId) { playerVars.listType = 'playlist'; playerVars.list = listId; }
     _ytPlayer = new YT.Player('yt-bg-player', {
-      videoId: videoId || undefined,
+      ...(videoId ? { videoId } : {}),
       playerVars,
       events: {
         onReady(e) {
@@ -5125,13 +5255,28 @@
           _ytApplyPlaylistSettings();
         },
         onError(e) {
-          // 100 = video not found, 101/150 = embed not allowed
+          // 100 = not found/private, 101/150 = embed not allowed
+          _ytErrStreak++;
           if (_ytCurrentPlaylist && [100, 101, 150].includes(e.data)) {
-            setTimeout(() => { try { _ytPlayer.nextVideo(); } catch(err) {} }, 500);
+            if (_ytErrStreak >= 5) {
+              const errEl = document.getElementById('music-error');
+              if (errEl) { errEl.textContent = 'Embedding blocked — try a playlist with embeddable videos.'; errEl.style.display = 'block'; setTimeout(() => { errEl.style.display = 'none'; errEl.textContent = 'Invalid YouTube link'; }, 6000); }
+              _ytErrStreak = 0;
+            } else {
+              setTimeout(() => {
+                try {
+                  let idx = 0;
+                  try { const i = _ytPlayer.getPlaylistIndex(); if (i >= 0) idx = i; } catch(e) {}
+                  _ytPlayer.loadPlaylist({ listType: 'playlist', list: _ytCurrentPlaylist, index: idx + 1 });
+                  setTimeout(() => _ytApplyPlaylistSettings(), 500);
+                } catch(err) {}
+              }, 800);
+            }
           }
         },
         onStateChange(e) {
           _ytPlaying = (e.data === YT.PlayerState.PLAYING);
+          if (e.data === YT.PlayerState.PLAYING) _ytErrStreak = 0;
           _ytUpdateBtn();
           if (e.data === YT.PlayerState.PLAYING) {
             const data = e.target.getVideoData();
@@ -5214,13 +5359,25 @@
     try { _ytPlayer.setLoop(_ytLoop); } catch(e) {}
   }
 
-  function musicPrev() {
-    if (_ytPlayer) _ytPlayer.previousVideo();
+  function _ytPlayAt(offset) {
+    if (!_ytPlayer) return;
+    _ytErrStreak = 0;
+    if (_ytCurrentPlaylist) {
+      try {
+        let idx = 0;
+        try { const i = _ytPlayer.getPlaylistIndex(); if (i >= 0) idx = i; } catch(e) {}
+        _ytPlayer.loadPlaylist({ listType: 'playlist', list: _ytCurrentPlaylist, index: Math.max(0, idx + offset) });
+        setTimeout(() => _ytApplyPlaylistSettings(), 500);
+      } catch(e) {}
+      return;
+    }
+    try {
+      if (offset > 0) _ytPlayer.nextVideo(); else _ytPlayer.previousVideo();
+    } catch(e) {}
   }
 
-  function musicNext() {
-    if (_ytPlayer) _ytPlayer.nextVideo();
-  }
+  function musicPrev() { _ytPlayAt(-1); }
+  function musicNext() { _ytPlayAt(1); }
 
   function musicToggleShuffle() {
     _ytShuffle = !_ytShuffle;
@@ -5304,6 +5461,191 @@
   classboardRender();
 
   // ══════════════════════════════════════════════
+  //  SONG BATTLE BRACKET DATA
+  // ══════════════════════════════════════════════
+  const SB_SONGS = {
+    '90s':[
+      {seed:1,title:'Iris',artist:'Goo Goo Dolls'},
+      {seed:2,title:'Smells Like Teen Spirit',artist:'Nirvana'},
+      {seed:3,title:'Wonderwall',artist:'Oasis'},
+      {seed:4,title:"Gangsta's Paradise",artist:'Coolio'},
+      {seed:5,title:'I Want It That Way',artist:'Backstreet Boys'},
+      {seed:6,title:'…Baby One More Time',artist:'Britney Spears'},
+      {seed:7,title:'I Will Always Love You',artist:'Whitney Houston'},
+      {seed:8,title:'1979',artist:'Smashing Pumpkins'},
+      {seed:9,title:'Waterfalls',artist:'TLC'},
+    ],
+    '2000s':[
+      {seed:1,title:'Mr. Brightside',artist:'The Killers'},
+      {seed:2,title:'Lose Yourself',artist:'Eminem'},
+      {seed:3,title:'Numb',artist:'Linkin Park'},
+      {seed:4,title:'Umbrella',artist:'Rihanna'},
+      {seed:5,title:'Seven Nation Army',artist:'The White Stripes'},
+      {seed:6,title:'Yeah!',artist:'Usher'},
+      {seed:7,title:'Hey Ya!',artist:'OutKast'},
+      {seed:8,title:'Single Ladies',artist:'Beyoncé'},
+      {seed:9,title:'Bye Bye Bye',artist:'NSYNC'},
+    ],
+    '2010s':[
+      {seed:1,title:'Blinding Lights',artist:'The Weeknd'},
+      {seed:2,title:'Shape of You',artist:'Ed Sheeran'},
+      {seed:3,title:'Uptown Funk',artist:'Mark Ronson ft. Bruno Mars'},
+      {seed:4,title:'Rolling in the Deep',artist:'Adele'},
+      {seed:5,title:'Old Town Road',artist:'Lil Nas X'},
+      {seed:6,title:'Shake It Off',artist:'Taylor Swift'},
+      {seed:7,title:'Royals',artist:'Lorde'},
+      {seed:8,title:'Happy',artist:'Pharrell Williams'},
+      {seed:9,title:'Call Me Maybe',artist:'Carly Rae Jepsen'},
+    ],
+    '2020s':[
+      {seed:1,title:'As It Was',artist:'Harry Styles'},
+      {seed:2,title:'Stay',artist:'The Kid LAROI & Justin Bieber'},
+      {seed:3,title:'Heat Waves',artist:'Glass Animals'},
+      {seed:4,title:'Espresso',artist:'Sabrina Carpenter'},
+      {seed:5,title:'Flowers',artist:'Miley Cyrus'},
+      {seed:6,title:'Levitating',artist:'Dua Lipa'},
+      {seed:7,title:'Anti-Hero',artist:'Taylor Swift'},
+      {seed:8,title:'Thank U, Next',artist:'Ariana Grande'},
+      {seed:9,title:'Golden',artist:'K-Pop Demon Hunters'},
+    ],
+  };
+  const SB_GAMES = [
+    {n:1, date:'2026-07-31',round:'play-in', div:'90s',  a:{d:'90s',  s:8},b:{d:'90s',  s:9}},
+    {n:2, date:'2026-08-07',round:'play-in', div:'2000s',a:{d:'2000s',s:8},b:{d:'2000s',s:9}},
+    {n:3, date:'2026-08-14',round:'play-in', div:'2010s',a:{d:'2010s',s:8},b:{d:'2010s',s:9}},
+    {n:4, date:'2026-08-21',round:'play-in', div:'2020s',a:{d:'2020s',s:8},b:{d:'2020s',s:9}},
+    {n:5, date:'2026-08-28',round:'r32',     div:'90s',  a:{d:'90s',  s:1},b:{win:1}},
+    {n:6, date:'2026-09-04',round:'r32',     div:'2000s',a:{d:'2000s',s:1},b:{win:2}},
+    {n:7, date:'2026-09-11',round:'r32',     div:'2010s',a:{d:'2010s',s:1},b:{win:3}},
+    {n:8, date:'2026-09-18',round:'r32',     div:'2020s',a:{d:'2020s',s:1},b:{win:4}},
+    {n:9, date:'2026-10-02',round:'r32',     div:'90s',  a:{d:'90s',  s:4},b:{d:'90s',  s:5}},
+    {n:10,date:'2026-10-09',round:'r32',     div:'2000s',a:{d:'2000s',s:4},b:{d:'2000s',s:5}},
+    {n:11,date:'2026-10-16',round:'r32',     div:'2010s',a:{d:'2010s',s:4},b:{d:'2010s',s:5}},
+    {n:12,date:'2026-10-23',round:'r32',     div:'2020s',a:{d:'2020s',s:4},b:{d:'2020s',s:5}},
+    {n:13,date:'2026-10-30',round:'r32',     div:'90s',  a:{d:'90s',  s:2},b:{d:'90s',  s:7}},
+    {n:14,date:'2026-11-06',round:'r32',     div:'2000s',a:{d:'2000s',s:2},b:{d:'2000s',s:7}},
+    {n:15,date:'2026-11-13',round:'r32',     div:'2010s',a:{d:'2010s',s:2},b:{d:'2010s',s:7}},
+    {n:16,date:'2026-11-20',round:'r32',     div:'2020s',a:{d:'2020s',s:2},b:{d:'2020s',s:7}},
+    {n:17,date:'2026-12-04',round:'r32',     div:'90s',  a:{d:'90s',  s:3},b:{d:'90s',  s:6}},
+    {n:18,date:'2026-12-11',round:'r32',     div:'2000s',a:{d:'2000s',s:3},b:{d:'2000s',s:6}},
+    {n:19,date:'2026-12-18',round:'r32',     div:'2010s',a:{d:'2010s',s:3},b:{d:'2010s',s:6}},
+    {n:20,date:'2027-01-08',round:'r32',     div:'2020s',a:{d:'2020s',s:3},b:{d:'2020s',s:6}},
+    {n:21,date:'2027-01-15',round:'sweet16', div:'90s',  a:{win:5}, b:{win:9}},
+    {n:22,date:'2027-01-22',round:'sweet16', div:'2000s',a:{win:6}, b:{win:10}},
+    {n:23,date:'2027-01-29',round:'sweet16', div:'2010s',a:{win:7}, b:{win:11}},
+    {n:24,date:'2027-02-05',round:'sweet16', div:'2020s',a:{win:8}, b:{win:12}},
+    {n:25,date:'2027-02-12',round:'sweet16', div:'90s',  a:{win:13},b:{win:17}},
+    {n:26,date:'2027-02-26',round:'sweet16', div:'2000s',a:{win:14},b:{win:18}},
+    {n:27,date:'2027-03-05',round:'sweet16', div:'2010s',a:{win:15},b:{win:19}},
+    {n:28,date:'2027-03-12',round:'sweet16', div:'2020s',a:{win:16},b:{win:20}},
+    {n:29,date:'2027-03-19',round:'elite8',  div:'90s',  a:{win:21},b:{win:25}},
+    {n:30,date:'2027-03-26',round:'elite8',  div:'2000s',a:{win:22},b:{win:26}},
+    {n:31,date:'2027-04-02',round:'elite8',  div:'2010s',a:{win:23},b:{win:27}},
+    {n:32,date:'2027-04-16',round:'elite8',  div:'2020s',a:{win:24},b:{win:28}},
+    {n:33,date:'2027-04-23',round:'final4',  div:null,   a:{win:29},b:{win:32}},
+    {n:34,date:'2027-04-30',round:'final4',  div:null,   a:{win:30},b:{win:31}},
+    {n:35,date:'2027-05-07',round:'champ',   div:null,   a:{win:33},b:{win:34}},
+    {n:36,date:'2027-05-14',round:'3rd',     div:null,   a:{lose:33},b:{lose:34}},
+  ];
+
+  function _sbSong(d, s) { return SB_SONGS[d]?.[s - 1] ?? null; }
+  function _sbResolve(spec, results) {
+    if (spec.d) return _sbSong(spec.d, spec.s);
+    const ref = spec.win ?? spec.lose;
+    const r = results.get(ref);
+    if (!r) return null;
+    const g = SB_GAMES[ref - 1];
+    const side = (spec.win !== undefined)
+      ? (r.wi === 0 ? g.a : g.b) : (r.wi === 0 ? g.b : g.a);
+    return _sbResolve(side, results);
+  }
+
+  async function _sbRenderBattle(dayKey) {
+    const body = document.getElementById('qotd-body');
+    if (!body) return;
+    const game = SB_GAMES.find(g => g.date === dayKey);
+    if (!game) {
+      body.innerHTML = `<div class="qotd-no-question">No Song Battle scheduled today</div>`;
+      return;
+    }
+
+    // Fetch all past votes to resolve bracket participants
+    const pastDates = SB_GAMES.filter(g => g.date <= dayKey).map(g => g.date);
+    const allVotes  = await supabaseGet('qotd_votes',
+      `date=in.(${pastDates.join(',')})&select=date,option_index`);
+
+    const tally = new Map();
+    for (const v of allVotes) {
+      if (!tally.has(v.date)) tally.set(v.date, [0,0]);
+      tally.get(v.date)[v.option_index] = (tally.get(v.date)[v.option_index]||0) + 1;
+    }
+    const results = new Map();
+    for (const g of SB_GAMES) {
+      const t = tally.get(g.date);
+      if (!t || t[0]+t[1] === 0) continue;
+      results.set(g.n, { wi: t[1] > t[0] ? 1 : 0, counts: t });
+    }
+
+    const songA = _sbResolve(game.a, results);
+    const songB = _sbResolve(game.b, results);
+    const todayCounts = tally.get(dayKey) || [0,0];
+    const total = todayCounts[0] + todayCounts[1];
+    const voted = _qotdHasVoted(dayKey);
+
+    const ROUND_LABELS = {
+      'play-in':'First Four','r32':'Round of 32','sweet16':'Sweet 16',
+      'elite8':'Elite 8','final4':'Final Four','champ':'Championship','3rd':'3rd Place'
+    };
+    const divLabel = game.div ? `${game.div} Division · ` : '';
+    const roundLabel = ROUND_LABELS[game.round] || game.round;
+
+    const voteUrl = `${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}&voter=${encodeURIComponent(_qotdDeviceId())}`;
+    const qrHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=88x88&margin=0&data=${encodeURIComponent(voteUrl)}" alt="Vote QR"/>`;
+
+    function pct(idx) {
+      return total > 0 ? Math.round(todayCounts[idx] / total * 100) : 0;
+    }
+    function songCard(song, idx) {
+      if (!song) return `<div class="sb-song-card"><div class="sb-song-tbd">TBD</div></div>`;
+      const p = pct(idx);
+      return `<div class="sb-song-card">
+        <div class="sb-vbar" style="width:${p}%"></div>
+        <div class="sb-song-seed">${song.seed}</div>
+        <div class="sb-song-info">
+          <div class="sb-song-title">${escHtml(song.title)}</div>
+          <div class="sb-song-artist">${escHtml(song.artist)}</div>
+        </div>
+        ${total > 0 ? `<div class="sb-song-pct">${p}%</div>` : ''}
+      </div>`;
+    }
+
+    body.innerHTML = `
+      <div class="qotd-body" onclick="qotdOpenModal()" style="cursor:pointer" title="Click to expand">
+        <div class="sb-round-label">${divLabel}${roundLabel}</div>
+        <div class="qotd-qr-wrap">
+          <div class="qotd-qr" style="cursor:pointer" onclick="qotdHandleVoteClick('${escHtml(dayKey)}',event)">
+            ${voted ? '<div class="qotd-qr-placeholder">Voted!<br>Thanks ✓</div>' : qrHTML}
+            ${voted ? '<div class="qotd-voted-badge"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Voted</span></div>' : ''}
+          </div>
+        </div>
+        <div class="sb-vs-wrap">
+          ${songCard(songA, 0)}
+          <div class="sb-vs">VS</div>
+          ${songCard(songB, 1)}
+        </div>
+        <div class="qotd-footer">
+          <span>${total} vote${total !== 1 ? 's' : ''}</span>
+          <a href="/bracket.html" onclick="event.stopPropagation()" style="color:var(--raider-red);text-decoration:none;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase">View Bracket →</a>
+        </div>
+      </div>`;
+
+    _qotdQuestion = { dayKey, text: 'Song Battle', options: [
+      songA ? `${songA.title} – ${songA.artist}` : 'TBD',
+      songB ? `${songB.title} – ${songB.artist}` : 'TBD',
+    ]};
+  }
+
+  // ══════════════════════════════════════════════
   //  QUESTION OF THE DAY
   // ══════════════════════════════════════════════
   const QOTD_VOTE_URL = 'https://waltondashboard.com/vote.html';
@@ -5363,6 +5705,11 @@
             }
           }
         } catch(e) { /* leave placeholder as-is */ }
+      }
+
+      if (row.question === 'Song Battle') {
+        await _sbRenderBattle(today);
+        return;
       }
 
       _qotdQuestion = { dayKey: today, text: row.question, options };
