@@ -2097,10 +2097,6 @@
                 Loop
               </button>
             </div>
-            <!-- <div id="music-suggested-section">
-              <div class="music-section-label">Suggested</div>
-              <div class="music-recents" id="music-suggested"></div>
-            </div> -->
             <div class="music-input-row">
               <input class="music-input" id="music-url-input" type="text"
                 placeholder="Paste YouTube or YouTube Music link…"
@@ -2114,6 +2110,10 @@
                 onkeydown="if(event.key==='Enter')musicLoad()"/>
             </div>
             <div class="music-error" id="music-error">Invalid YouTube link</div>
+            <div id="music-suggested-section" style="display:none">
+              <div class="music-section-label">Suggested</div>
+              <div class="music-recents" id="music-suggested"></div>
+            </div>
             <div id="music-recents-section">
               <div class="music-section-label">Recent</div>
               <div class="music-recents" id="music-recents"></div>
@@ -5129,33 +5129,71 @@
     input.select();
   }
 
-  const _musicSuggested = [
-    { id: '3eMVaWoJtE0', title: 'Watch Live: Artemis II tanking operations begin ahead of planned launch to the moon' },
-  ];
+  const _musicSuggested = [];
 
-  // function musicRenderSuggested() {
-  //   const list = document.getElementById('music-suggested');
-  //   if (!list) return;
-  //   list.innerHTML = _musicSuggested.map((r, i) => `
-  //     <button class="music-recent-btn" onclick="musicPlaySuggested(${i})">
-  //       <span class="music-recent-title">${escHtml(r.title)}</span>
-  //     </button>`).join('');
-  // }
+  function musicRenderSuggested() {
+    const section = document.getElementById('music-suggested-section');
+    const list    = document.getElementById('music-suggested');
+    if (!list || !section) return;
+    if (!_musicSuggested.length) { section.style.display = 'none'; return; }
+    section.style.display = '';
+    list.innerHTML = _musicSuggested.map((r, i) => `
+      <button class="music-recent-btn" onclick="musicPlaySuggested(${i})">
+        <div class="music-recent-info">
+          <div class="music-recent-title-row">
+            <span class="music-recent-title">${escHtml(r.title)}</span>
+          </div>
+        </div>
+      </button>`).join('');
+  }
 
-  // function musicPlaySuggested(idx) {
-  //   const r = _musicSuggested[idx];
-  //   if (!r) return;
-  //   if (_ytPlayer) { _ytPlayer.loadVideoById(r.id); _ytShowBg(); }
-  //   else if (_ytApiReady) { _ytCreatePlayer(r.id); }
-  //   else {
-  //     _ytPending = r.id;
-  //     const tag = document.createElement('script');
-  //     tag.src = 'https://www.youtube.com/iframe_api';
-  //     document.head.appendChild(tag);
-  //   }
-  // }
+  function musicPlaySuggested(idx) {
+    const r = _musicSuggested[idx];
+    if (!r) return;
+    if (_ytPlayer) { _ytPlayer.loadVideoById(r.id); _ytShowBg(); }
+    else if (_ytApiReady) { _ytCreatePlayer(r.id); }
+    else {
+      _ytPending = r.id;
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
+    }
+  }
 
-  // musicRenderSuggested();
+  async function musicLoadSuggested() {
+    const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/1mZtMjdd-t5y6ebproGrIb_qLzqPUZ_qEKrdUoZl0qIU/gviz/tq?tqx=out:csv&sheet=Suggested';
+    try {
+      const res = await fetch(SHEET_CSV);
+      if (!res.ok) return;
+      const csv = await res.text();
+
+      // Each row: col A = YouTube URL, col B = optional custom title
+      const rows = csv.split('\n').map(line =>
+        line.split(',').map(c => c.trim().replace(/^"|"$/g, ''))
+      ).filter(cols => /^https?:\/\/(www\.)?youtu/i.test(cols[0]));
+
+      if (!rows.length) return;
+
+      const entries = await Promise.all(rows.map(async ([url, customTitle]) => {
+        const { videoId } = _ytParseUrl(url);
+        if (!videoId) return null;
+        let title = customTitle || '';
+        if (!title) {
+          try {
+            const oe = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+            if (oe.ok) { const d = await oe.json(); title = d.title || videoId; }
+          } catch(e) { title = videoId; }
+        }
+        return { id: videoId, title };
+      }));
+
+      _musicSuggested.length = 0;
+      entries.filter(Boolean).forEach(e => _musicSuggested.push(e));
+      musicRenderSuggested();
+    } catch(e) { /* silently fail — section stays hidden */ }
+  }
+
+  musicLoadSuggested();
   musicRenderRecents();
 
   // Called by YouTube IFrame API once loaded
@@ -5169,11 +5207,16 @@
     let videoId = null, listId = null;
     try {
       const u = new URL(url);
-      videoId = u.searchParams.get('v') ||
-        (u.hostname === 'youtu.be' ? u.pathname.slice(1).split('?')[0] : null);
+      const parts = u.pathname.split('/').filter(Boolean);
+      if (u.hostname === 'youtu.be') {
+        videoId = parts[0] || null;
+      } else {
+        videoId = u.searchParams.get('v') ||
+          (['live','shorts','embed'].includes(parts[0]) ? parts[1] : null) || null;
+      }
       listId = u.searchParams.get('list') || null;
     } catch(e) {
-      const vm = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+      const vm = url.match(/(?:v=|youtu\.be\/|\/(?:live|shorts|embed)\/)([A-Za-z0-9_-]{11})/);
       const lm = url.match(/[?&]list=([A-Za-z0-9_-]+)/);
       videoId = vm ? vm[1] : null;
       listId  = lm ? lm[1] : null;
