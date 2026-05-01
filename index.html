@@ -5687,27 +5687,27 @@
       const row = rows[0];
       let options = Array.isArray(row.options) ? row.options : JSON.parse(row.options);
 
-      // Resolve "[Last Week's Winner]" placeholder
+      // Resolve "[Last Week's Winner]" placeholder using the most recent preceding question
       if (options.some(o => /last week/i.test(o))) {
-        const lastWeek = new Date(); lastWeek.setDate(lastWeek.getDate() - 7);
-        const lwISO = `${lastWeek.getFullYear()}-${String(lastWeek.getMonth()+1).padStart(2,'0')}-${String(lastWeek.getDate()).padStart(2,'0')}`;
         try {
-          const [lwQ, lwVotes] = await Promise.all([
-            supabaseGet('qotd_questions', `date=eq.${lwISO}&select=options`),
-            supabaseGet('qotd_votes',     `date=eq.${lwISO}&select=option_index`),
-          ]);
-          if (lwQ.length && lwVotes.length) {
-            const lwOpts = Array.isArray(lwQ[0].options) ? lwQ[0].options : JSON.parse(lwQ[0].options);
-            const counts = lwOpts.map((_, i) => lwVotes.filter(v => v.option_index === i).length);
-            const winnerIdx = counts.indexOf(Math.max(...counts));
-            if (counts[winnerIdx] > 0) {
-              options = options.map(o => /last week/i.test(o) ? lwOpts[winnerIdx] : o);
+          const prevQ = await supabaseGet('qotd_questions',
+            `date=lt.${today}&question=eq.Song Battle&select=date,options&order=date.desc&limit=1`);
+          if (prevQ.length) {
+            const prevDate = prevQ[0].date;
+            const prevOpts = Array.isArray(prevQ[0].options) ? prevQ[0].options : JSON.parse(prevQ[0].options);
+            const lwVotes = await supabaseGet('qotd_votes', `date=eq.${prevDate}&select=option_index`);
+            if (lwVotes.length) {
+              const counts = prevOpts.map((_, i) => lwVotes.filter(v => v.option_index === i).length);
+              const winnerIdx = counts.indexOf(Math.max(...counts));
+              if (counts[winnerIdx] > 0) {
+                options = options.map(o => /last week/i.test(o) ? prevOpts[winnerIdx] : o);
+              }
             }
           }
         } catch(e) { /* leave placeholder as-is */ }
       }
 
-      if (row.question === 'Song Battle') {
+      if (row.question === 'Song Battle' && SB_GAMES.some(g => g.date === today)) {
         await _sbRenderBattle(today);
         return;
       }
