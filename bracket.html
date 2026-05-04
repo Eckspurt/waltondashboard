@@ -9,8 +9,8 @@
   <style>
     :root {
       --bg:#0d1628; --card:#111e35; --mid:#1a2d4a; --border:#1e3458;
-      --red:#c0222a; --red-dim:#8b1515; --txt:#eef2f8;
-      --txt-mid:#8faabf; --txt-dim:#4d6478; --green:#2e7d32;
+      --red:#c0222a; --red-dim:#8b1515; --txt:#f2f6fc;
+      --txt-mid:#b0c8dc; --txt-dim:#7a9ab5; --green:#2e7d32;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
@@ -81,6 +81,15 @@
     .c.rb{border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
     .c.rt{border-right:1px solid var(--border);border-top:1px solid var(--border)}
     .c.r {border-right:1px solid var(--border)}
+    .c.lb{border-left:1px solid var(--border);border-bottom:1px solid var(--border)}
+    .c.lt{border-left:1px solid var(--border);border-top:1px solid var(--border)}
+
+    /* ── Full tournament bracket (Overall tab) ── */
+    .full-bracket{display:flex;gap:0;align-items:stretch}
+    .slot.f8{flex:8}
+    .fb-3rd-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.63rem;font-weight:700;
+      letter-spacing:.12em;text-transform:uppercase;color:var(--txt-dim);
+      text-align:center;padding:.3rem 0}
 
     /* Play-in section */
     .playin-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem}
@@ -125,6 +134,13 @@
       letter-spacing:.14em;text-transform:uppercase;color:var(--txt-dim);
       padding-bottom:.4rem;margin-bottom:.65rem;border-bottom:1px solid var(--border)}
     .ff-cards{display:flex;gap:.75rem;flex-wrap:wrap}
+
+    /* ── Overall view ── */
+    .all-section{margin-bottom:2rem}
+    .all-section-hdr{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:800;
+      letter-spacing:.16em;text-transform:uppercase;color:var(--txt);
+      padding:.45rem 0 .45rem;margin-bottom:.9rem;
+      border-bottom:2px solid var(--red);display:inline-block}
   </style>
 </head>
 <body>
@@ -141,7 +157,8 @@
 </div>
 
 <div class="tabs">
-  <button class="tab active" onclick="showTab('90s')">1990s</button>
+  <button class="tab active" onclick="showTab('all')">OVERALL</button>
+  <button class="tab" onclick="showTab('90s')">1990s</button>
   <button class="tab" onclick="showTab('2000s')">2000s</button>
   <button class="tab" onclick="showTab('2010s')">2010s</button>
   <button class="tab" onclick="showTab('2020s')">2020s</button>
@@ -151,7 +168,8 @@
 <div class="page">
   <div class="loading" id="loading"><div class="spin"></div>Loading bracket…</div>
   <div id="content" style="display:none">
-    <div class="view active" id="view-90s"></div>
+    <div class="view active" id="view-all"></div>
+    <div class="view" id="view-90s"></div>
     <div class="view" id="view-2000s"></div>
     <div class="view" id="view-2010s"></div>
     <div class="view" id="view-2020s"></div>
@@ -174,18 +192,16 @@ const SONGS = {
     {seed:6,title:'…Baby One More Time',artist:'Britney Spears'},
     {seed:7,title:'I Will Always Love You',artist:'Whitney Houston'},
     {seed:8,title:'1979',artist:'Smashing Pumpkins'},
-    {seed:9,title:'Waterfalls',artist:'TLC'},
   ],
   '2000s':[
     {seed:1,title:'Mr. Brightside',artist:'The Killers'},
     {seed:2,title:'Lose Yourself',artist:'Eminem'},
     {seed:3,title:'Numb',artist:'Linkin Park'},
-    {seed:4,title:'Umbrella',artist:'Rihanna'},
+    {seed:4,title:'Single Ladies',artist:'Beyoncé'},
     {seed:5,title:'Seven Nation Army',artist:'The White Stripes'},
     {seed:6,title:'Yeah!',artist:'Usher'},
     {seed:7,title:'Hey Ya!',artist:'OutKast'},
-    {seed:8,title:'Single Ladies',artist:'Beyoncé'},
-    {seed:9,title:'Bye Bye Bye',artist:'NSYNC'},
+    {seed:8,title:'Bye Bye Bye',artist:'NSYNC'},
   ],
   '2010s':[
     {seed:1,title:'Blinding Lights',artist:'The Weeknd'},
@@ -196,7 +212,6 @@ const SONGS = {
     {seed:6,title:'Shake It Off',artist:'Taylor Swift'},
     {seed:7,title:'Royals',artist:'Lorde'},
     {seed:8,title:'Happy',artist:'Pharrell Williams'},
-    {seed:9,title:'Call Me Maybe',artist:'Carly Rae Jepsen'},
   ],
   '2020s':[
     {seed:1,title:'As It Was',artist:'Harry Styles'},
@@ -205,61 +220,55 @@ const SONGS = {
     {seed:4,title:'Espresso',artist:'Sabrina Carpenter'},
     {seed:5,title:'Flowers',artist:'Miley Cyrus'},
     {seed:6,title:'Levitating',artist:'Dua Lipa'},
-    {seed:7,title:'Anti-Hero',artist:'Taylor Swift'},
+    {seed:7,title:'Golden',artist:'K-Pop Demon Hunters'},
     {seed:8,title:'Thank U, Next',artist:'Ariana Grande'},
-    {seed:9,title:'Golden',artist:'K-Pop Demon Hunters'},
   ],
 };
 
 // ── GAMES ────────────────────────────────────────────────────
 // a/b: {d,s} = fixed song; {win:n} = winner of game n; {lose:n} = loser
 const GAMES = [
-  // Play-in
-  {n:1, date:'2026-07-31',round:'play-in',   div:'90s',   a:{d:'90s',  s:8},b:{d:'90s',  s:9}},
-  {n:2, date:'2026-08-07',round:'play-in',   div:'2000s', a:{d:'2000s',s:8},b:{d:'2000s',s:9}},
-  {n:3, date:'2026-08-14',round:'play-in',   div:'2010s', a:{d:'2010s',s:8},b:{d:'2010s',s:9}},
-  {n:4, date:'2026-08-21',round:'play-in',   div:'2020s', a:{d:'2020s',s:8},b:{d:'2020s',s:9}},
-  // R32 — #1 vs play-in winner
-  {n:5, date:'2026-08-28',round:'r32',       div:'90s',   a:{d:'90s',  s:1},b:{win:1}},
-  {n:6, date:'2026-09-04',round:'r32',       div:'2000s', a:{d:'2000s',s:1},b:{win:2}},
-  {n:7, date:'2026-09-11',round:'r32',       div:'2010s', a:{d:'2010s',s:1},b:{win:3}},
-  {n:8, date:'2026-09-18',round:'r32',       div:'2020s', a:{d:'2020s',s:1},b:{win:4}},
-  // R32 — #4 vs #5
-  {n:9, date:'2026-10-02',round:'r32',       div:'90s',   a:{d:'90s',  s:4},b:{d:'90s',  s:5}},
-  {n:10,date:'2026-10-09',round:'r32',       div:'2000s', a:{d:'2000s',s:4},b:{d:'2000s',s:5}},
-  {n:11,date:'2026-10-16',round:'r32',       div:'2010s', a:{d:'2010s',s:4},b:{d:'2010s',s:5}},
-  {n:12,date:'2026-10-23',round:'r32',       div:'2020s', a:{d:'2020s',s:4},b:{d:'2020s',s:5}},
-  // R32 — #2 vs #7
-  {n:13,date:'2026-10-30',round:'r32',       div:'90s',   a:{d:'90s',  s:2},b:{d:'90s',  s:7}},
-  {n:14,date:'2026-11-06',round:'r32',       div:'2000s', a:{d:'2000s',s:2},b:{d:'2000s',s:7}},
-  {n:15,date:'2026-11-13',round:'r32',       div:'2010s', a:{d:'2010s',s:2},b:{d:'2010s',s:7}},
-  {n:16,date:'2026-11-20',round:'r32',       div:'2020s', a:{d:'2020s',s:2},b:{d:'2020s',s:7}},
-  // R32 — #3 vs #6
-  {n:17,date:'2026-12-04',round:'r32',       div:'90s',   a:{d:'90s',  s:3},b:{d:'90s',  s:6}},
-  {n:18,date:'2026-12-11',round:'r32',       div:'2000s', a:{d:'2000s',s:3},b:{d:'2000s',s:6}},
-  {n:19,date:'2026-12-18',round:'r32',       div:'2010s', a:{d:'2010s',s:3},b:{d:'2010s',s:6}},
-  {n:20,date:'2027-01-08',round:'r32',       div:'2020s', a:{d:'2020s',s:3},b:{d:'2020s',s:6}},
-  // Sweet 16 — W(1vPI) vs W(4v5)
-  {n:21,date:'2027-01-15',round:'sweet16',   div:'90s',   a:{win:5}, b:{win:9}},
-  {n:22,date:'2027-01-22',round:'sweet16',   div:'2000s', a:{win:6}, b:{win:10}},
-  {n:23,date:'2027-01-29',round:'sweet16',   div:'2010s', a:{win:7}, b:{win:11}},
-  {n:24,date:'2027-02-05',round:'sweet16',   div:'2020s', a:{win:8}, b:{win:12}},
+  // Round of 32 — #1 vs #8
+  {n:1, date:'2026-08-14',round:'r32',     div:'90s',   a:{d:'90s',  s:1},b:{d:'90s',  s:8}},
+  {n:2, date:'2026-08-21',round:'r32',     div:'2000s', a:{d:'2000s',s:1},b:{d:'2000s',s:8}},
+  {n:3, date:'2026-08-28',round:'r32',     div:'2010s', a:{d:'2010s',s:1},b:{d:'2010s',s:8}},
+  {n:4, date:'2026-09-04',round:'r32',     div:'2020s', a:{d:'2020s',s:1},b:{d:'2020s',s:8}},
+  // Round of 32 — #4 vs #5
+  {n:5, date:'2026-09-11',round:'r32',     div:'90s',   a:{d:'90s',  s:4},b:{d:'90s',  s:5}},
+  {n:6, date:'2026-09-18',round:'r32',     div:'2000s', a:{d:'2000s',s:4},b:{d:'2000s',s:5}},
+  {n:7, date:'2026-10-02',round:'r32',     div:'2010s', a:{d:'2010s',s:4},b:{d:'2010s',s:5}},
+  {n:8, date:'2026-10-09',round:'r32',     div:'2020s', a:{d:'2020s',s:4},b:{d:'2020s',s:5}},
+  // Round of 32 — #2 vs #7
+  {n:9, date:'2026-10-16',round:'r32',     div:'90s',   a:{d:'90s',  s:2},b:{d:'90s',  s:7}},
+  {n:10,date:'2026-10-23',round:'r32',     div:'2000s', a:{d:'2000s',s:2},b:{d:'2000s',s:7}},
+  {n:11,date:'2026-10-30',round:'r32',     div:'2010s', a:{d:'2010s',s:2},b:{d:'2010s',s:7}},
+  {n:12,date:'2026-11-06',round:'r32',     div:'2020s', a:{d:'2020s',s:2},b:{d:'2020s',s:7}},
+  // Round of 32 — #3 vs #6
+  {n:13,date:'2026-11-13',round:'r32',     div:'90s',   a:{d:'90s',  s:3},b:{d:'90s',  s:6}},
+  {n:14,date:'2026-11-20',round:'r32',     div:'2000s', a:{d:'2000s',s:3},b:{d:'2000s',s:6}},
+  {n:15,date:'2026-12-04',round:'r32',     div:'2010s', a:{d:'2010s',s:3},b:{d:'2010s',s:6}},
+  {n:16,date:'2026-12-11',round:'r32',     div:'2020s', a:{d:'2020s',s:3},b:{d:'2020s',s:6}},
+  // Sweet 16 — W(1v8) vs W(4v5)
+  {n:17,date:'2026-12-18',round:'sweet16', div:'90s',   a:{win:1}, b:{win:5}},
+  {n:18,date:'2027-01-08',round:'sweet16', div:'2000s', a:{win:2}, b:{win:6}},
+  {n:19,date:'2027-01-15',round:'sweet16', div:'2010s', a:{win:3}, b:{win:7}},
+  {n:20,date:'2027-01-22',round:'sweet16', div:'2020s', a:{win:4}, b:{win:8}},
   // Sweet 16 — W(2v7) vs W(3v6)
-  {n:25,date:'2027-02-12',round:'sweet16',   div:'90s',   a:{win:13},b:{win:17}},
-  {n:26,date:'2027-02-26',round:'sweet16',   div:'2000s', a:{win:14},b:{win:18}},
-  {n:27,date:'2027-03-05',round:'sweet16',   div:'2010s', a:{win:15},b:{win:19}},
-  {n:28,date:'2027-03-12',round:'sweet16',   div:'2020s', a:{win:16},b:{win:20}},
+  {n:21,date:'2027-01-29',round:'sweet16', div:'90s',   a:{win:9}, b:{win:13}},
+  {n:22,date:'2027-02-05',round:'sweet16', div:'2000s', a:{win:10},b:{win:14}},
+  {n:23,date:'2027-02-12',round:'sweet16', div:'2010s', a:{win:11},b:{win:15}},
+  {n:24,date:'2027-02-26',round:'sweet16', div:'2020s', a:{win:12},b:{win:16}},
   // Elite 8
-  {n:29,date:'2027-03-19',round:'elite8',    div:'90s',   a:{win:21},b:{win:25}},
-  {n:30,date:'2027-03-26',round:'elite8',    div:'2000s', a:{win:22},b:{win:26}},
-  {n:31,date:'2027-04-02',round:'elite8',    div:'2010s', a:{win:23},b:{win:27}},
-  {n:32,date:'2027-04-16',round:'elite8',    div:'2020s', a:{win:24},b:{win:28}},
+  {n:25,date:'2027-03-05',round:'elite8',  div:'90s',   a:{win:17},b:{win:21}},
+  {n:26,date:'2027-03-12',round:'elite8',  div:'2000s', a:{win:18},b:{win:22}},
+  {n:27,date:'2027-03-19',round:'elite8',  div:'2010s', a:{win:19},b:{win:23}},
+  {n:28,date:'2027-03-26',round:'elite8',  div:'2020s', a:{win:20},b:{win:24}},
   // Final Four
-  {n:33,date:'2027-04-23',round:'final4',    div:null,    a:{win:29},b:{win:32}},
-  {n:34,date:'2027-04-30',round:'final4',    div:null,    a:{win:30},b:{win:31}},
+  {n:29,date:'2027-04-02',round:'final4',  div:null,    a:{win:25},b:{win:28}},
+  {n:30,date:'2027-04-16',round:'final4',  div:null,    a:{win:26},b:{win:27}},
   // Championship & 3rd Place
-  {n:35,date:'2027-05-07',round:'champ',     div:null,    a:{win:33},b:{win:34}},
-  {n:36,date:'2027-05-14',round:'3rd',       div:null,    a:{lose:33},b:{lose:34}},
+  {n:31,date:'2027-04-23',round:'champ',   div:null,    a:{win:29},b:{win:30}},
+  {n:32,date:'2027-04-30',round:'3rd',     div:null,    a:{lose:29},b:{lose:30}},
 ];
 
 // ── HELPERS ──────────────────────────────────────────────────
@@ -338,15 +347,12 @@ function gameCard(game, results) {
   </div>`;
 }
 
-// ── RENDER DIVISION TAB ───────────────────────────────────────
-function renderDiv(div, results) {
-  const el = document.getElementById(`view-${div}`);
-  const pi  = GAMES.find(g => g.round==='play-in' && g.div===div);
+// ── DIV BRACKET HTML (reusable) ──────────────────────────────
+function divBracketHtml(div, results) {
   const r32 = GAMES.filter(g => g.round==='r32'     && g.div===div);
   const s16 = GAMES.filter(g => g.round==='sweet16' && g.div===div);
   const e8  = GAMES.find(g => g.round==='elite8'   && g.div===div);
 
-  // Champion banner
   let champHtml = '';
   const e8r = results.get(e8.n);
   if (e8r) {
@@ -357,27 +363,12 @@ function renderDiv(div, results) {
     </div>`;
   }
 
-  // Play-in note: game card + arrow label
-  const piHtml = `<div class="playin-row">
-    <span class="playin-lbl">Play-In</span>
-    ${gameCard(pi, results)}
-    <span class="playin-arrow">→ feeds into Round of 32 · Game ${r32[0].n}</span>
-  </div>`;
-
-  // Bracket columns
-  // R32: 4 games (slot f1 each)
-  // conn: 4 cells (rb, rt, rb, rt)
-  // S16: 2 games (slot f2 each)
-  // conn: 2 cells (rb, rt)
-  // E8: 1 game (slot f4)
-
   const r32Slots = r32.map(g =>
     `<div class="slot f1"><div style="width:100%">${gameCard(g,results)}</div></div>`).join('');
-
   const s16Slots = s16.map(g =>
     `<div class="slot f2"><div style="width:100%">${gameCard(g,results)}</div></div>`).join('');
 
-  el.innerHTML = `${champHtml}${piHtml}
+  return `${champHtml}
   <div class="div-bracket">
     <div class="round-col" style="width:205px">
       <div class="round-hdr">Round of 32</div>
@@ -409,12 +400,9 @@ function renderDiv(div, results) {
   </div>`;
 }
 
-// ── RENDER FINAL FOUR TAB ─────────────────────────────────────
-function renderFF(results) {
-  const el = document.getElementById('view-ff');
-  const [ff1,ff2,ch,tp] = [33,34,35,36].map(n => GAMES[n-1]);
-
-  // Overall champion
+// ── FINAL FOUR HTML (reusable) ────────────────────────────────
+function ffHtml(results) {
+  const [ff1,ff2,ch,tp] = [29,30,31,32].map(n => GAMES[n-1]);
   let champHtml = '';
   const chr = results.get(ch.n);
   if (chr) {
@@ -424,8 +412,7 @@ function renderFF(results) {
       <span class="champ-name">${esc(winner.title)} · ${esc(winner.artist)}</span>
     </div>`;
   }
-
-  el.innerHTML = `${champHtml}
+  return `${champHtml}
   <div class="ff-wrap">
     <div class="ff-section">
       <div class="ff-label">Final Four</div>
@@ -445,8 +432,97 @@ function renderFF(results) {
   </div>`;
 }
 
+// ── RENDER TAB VIEWS ─────────────────────────────────────────
+function renderDiv(div, results) {
+  document.getElementById(`view-${div}`).innerHTML = divBracketHtml(div, results);
+}
+function renderFF(results) {
+  document.getElementById('view-ff').innerHTML = ffHtml(results);
+}
+function renderAll(results) {
+  const g = n => GAMES[n - 1];
+
+  // Left half: 1990s (top) + 2020s (bottom) → meet in game 29
+  const lR32 = [g(1),g(5),g(9),g(13), g(4),g(8),g(12),g(16)];
+  const lS16 = [g(17),g(21), g(20),g(24)];
+  const lE8  = [g(25), g(28)];
+  const lFF  = g(29);
+
+  // Right half: 2000s (top) + 2010s (bottom) → meet in game 30
+  const rR32 = [g(2),g(6),g(10),g(14), g(3),g(7),g(11),g(15)];
+  const rS16 = [g(18),g(22), g(19),g(23)];
+  const rE8  = [g(26), g(27)];
+  const rFF  = g(30);
+
+  const champ = g(31);
+  const third = g(32);
+
+  function slotsHtml(games, fCls) {
+    return games.map(game =>
+      `<div class="slot ${fCls}"><div style="width:100%">${gameCard(game,results)}</div></div>`
+    ).join('');
+  }
+
+  function col(games, fCls, label) {
+    return `<div class="round-col" style="width:205px">
+      <div class="round-hdr">${label}</div>
+      <div class="round-body">${slotsHtml(games,fCls)}</div>
+    </div>`;
+  }
+
+  function connCol(n, flex, right) {
+    const [top,bot] = right ? ['rb','rt'] : ['lb','lt'];
+    const cells = Array.from({length:n}, () =>
+      `<div class="c ${top}" style="flex:${flex}"></div><div class="c ${bot}" style="flex:${flex}"></div>`
+    ).join('');
+    return `<div class="conn-col"><div class="round-hdr"> </div><div class="round-body">${cells}</div></div>`;
+  }
+
+  // Champion banner
+  let banner = '';
+  const cr = results.get(champ.n);
+  if (cr) {
+    const w = resolveSong(cr.wi===0 ? champ.a : champ.b, results);
+    if (w) banner = `<div class="champ-banner show" style="margin-bottom:1rem">
+      <span class="champ-lbl">🏆 Overall Champion</span>
+      <span class="champ-name">${esc(w.title)} · ${esc(w.artist)}</span>
+    </div>`;
+  }
+
+  const champCol = `<div class="round-col" style="width:205px">
+    <div class="round-hdr">Championship</div>
+    <div class="round-body">
+      <div class="slot f8" style="flex-direction:column;gap:0.25rem;justify-content:center">
+        <div style="width:100%">${gameCard(champ,results)}</div>
+        <div class="fb-3rd-lbl">3rd Place</div>
+        <div style="width:100%">${gameCard(third,results)}</div>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('view-all').innerHTML = banner + `<div class="full-bracket">
+    ${col(lR32,'f1','Round of 32')}
+    ${connCol(4,1,true)}
+    ${col(lS16,'f2','Sweet 16')}
+    ${connCol(2,2,true)}
+    ${col(lE8,'f4','Elite 8')}
+    ${connCol(1,4,true)}
+    ${col([lFF],'f8','Final Four')}
+    ${connCol(1,4,true)}
+    ${champCol}
+    ${connCol(1,4,false)}
+    ${col([rFF],'f8','Final Four')}
+    ${connCol(1,4,false)}
+    ${col(rE8,'f4','Elite 8')}
+    ${connCol(2,2,false)}
+    ${col(rS16,'f2','Sweet 16')}
+    ${connCol(4,1,false)}
+    ${col(rR32,'f1','Round of 32')}
+  </div>`;
+}
+
 // ── TABS ─────────────────────────────────────────────────────
-const TAB_IDS = ['90s','2000s','2010s','2020s','ff'];
+const TAB_IDS = ['all','90s','2000s','2010s','2020s','ff'];
 function showTab(id) {
   document.querySelectorAll('.tab').forEach((t,i) =>
     t.classList.toggle('active', TAB_IDS[i]===id));
@@ -484,6 +560,7 @@ function showTab(id) {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('content').style.display = 'block';
 
+  renderAll(results);
   renderDiv('90s',   results);
   renderDiv('2000s', results);
   renderDiv('2010s', results);
