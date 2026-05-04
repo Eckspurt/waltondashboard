@@ -2208,7 +2208,8 @@
               <button class="sched-reminder-btn sched-bell-btn" data-bell="bruh.mp3"       onclick="selectBell('bruh.mp3')">Bruh</button>
               <button class="sched-reminder-btn sched-bell-btn" data-bell="hey_listen.mp3" onclick="selectBell('hey_listen.mp3')">Hey Listen</button>
               <button class="sched-reminder-btn sched-bell-btn" data-bell="item.mp3"       onclick="selectBell('item.mp3')">Item</button>
-              <button class="sched-reminder-btn sched-bell-btn" data-bell="shame.mp3"      onclick="selectBell('shame.mp3')">Shame</button>
+              <button class="sched-reminder-btn sched-bell-btn" data-bell="shame.mp3"       onclick="selectBell('shame.mp3')">Shame</button>
+              <button class="sched-reminder-btn sched-bell-btn" data-bell="chewbacca.mp3"  onclick="selectBell('chewbacca.mp3')">Chewbacca</button>
               <button class="sched-reminder-btn sched-bell-btn" data-bell="random"         onclick="selectBell('random')">Random</button>
             </div>
             <div class="sched-divider"></div>
@@ -2879,6 +2880,9 @@
   const SCHED_CACHE_KEY = 'walton-sched-cache';
 
   async function _showUpcomingSchedule(fromDate) {
+    // Null out now so the tick loop doesn't overwrite the upcoming view while we fetch
+    currentSchedulePeriods = null;
+    currentScheduleTab = '';
     _schedRenderGradeBar([]);
     const body = document.getElementById('schedule-body');
     body.innerHTML = '<div class="weather-loading"><div class="spin"></div>Loading schedule…</div>';
@@ -3771,7 +3775,7 @@
       b.classList.toggle('active', b.dataset.bell === saved));
   })();
 
-  const BELL_FILES = ['bell.mp3', 'slide.mp3', 'quack.mp3', 'bruh.mp3', 'hey_listen.mp3', 'shame.mp3', 'item.mp3'];
+  const BELL_FILES = ['bell.mp3', 'slide.mp3', 'quack.mp3', 'bruh.mp3', 'hey_listen.mp3', 'shame.mp3', 'item.mp3', 'chewbacca.mp3'];
 
   function playBell() {
     try {
@@ -4014,7 +4018,15 @@
     // Re-render schedule display on every minute tick so countdown/classes stay in sync
     if (nowMin !== _lastDisplayMin) {
       _lastDisplayMin = nowMin;
-      renderSchedule(currentSchedulePeriods, currentScheduleTab);
+      if (currentSchedulePeriods) {
+        const allPast = currentSchedulePeriods.every(p => p.end !== null && nowMin >= p.end);
+        if (allPast) {
+          currentSchedulePeriods = null; // prevent re-entry before async completes
+          fetchSchedule(true);           // switches to upcoming schedule
+        } else {
+          renderSchedule(currentSchedulePeriods, currentScheduleTab);
+        }
+      }
     }
     updateSchedStrip();
 
