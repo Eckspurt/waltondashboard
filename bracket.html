@@ -9,8 +9,8 @@
   <style>
     :root {
       --bg:#0d1628; --card:#111e35; --mid:#1a2d4a; --border:#1e3458;
-      --red:#c0222a; --red-dim:#8b1515; --txt:#f2f6fc;
-      --txt-mid:#b0c8dc; --txt-dim:#7a9ab5; --green:#2e7d32;
+      --red:#c0222a; --red-dim:#8b1515; --txt:#ffffff;
+      --txt-mid:#ddeaf6; --txt-dim:#8fb4d0; --green:#2e7d32;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
@@ -85,11 +85,25 @@
     .c.lt{border-left:1px solid var(--border);border-top:1px solid var(--border)}
 
     /* ── Full tournament bracket (Overall tab) ── */
+    #view-all{display:flex;justify-content:center}
     .full-bracket{display:flex;gap:0;align-items:stretch}
+    .full-bracket .gcard{width:175px}
+    .full-bracket .conn-col{width:14px}
     .slot.f8{flex:8}
     .fb-3rd-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.63rem;font-weight:700;
       letter-spacing:.12em;text-transform:uppercase;color:var(--txt-dim);
       text-align:center;padding:.3rem 0}
+
+    /* ── Print button ── */
+    .print-btn{display:flex;align-items:center;gap:.4rem;background:var(--card);
+      border:none;color:var(--txt-mid);padding:.45rem .85rem;
+      border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:.78rem;
+      font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+      transition:background .15s,color .15s;margin-left:auto;flex-shrink:0}
+    .print-btn:hover{background:var(--mid);color:var(--txt)}
+
+    /* ── Download button loading state ── */
+    .print-btn.loading-pdf{opacity:.6;pointer-events:none;cursor:default}
 
     /* Play-in section */
     .playin-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem}
@@ -163,6 +177,14 @@
   <button class="tab" onclick="showTab('2010s')">2010s</button>
   <button class="tab" onclick="showTab('2020s')">2020s</button>
   <button class="tab" onclick="showTab('ff')">FINAL FOUR</button>
+  <button class="print-btn" id="download-btn" onclick="downloadBracket()">
+    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    Download PDF
+  </button>
 </div>
 
 <div class="page">
@@ -267,8 +289,8 @@ const GAMES = [
   {n:29,date:'2027-04-02',round:'final4',  div:null,    a:{win:25},b:{win:28}},
   {n:30,date:'2027-04-16',round:'final4',  div:null,    a:{win:26},b:{win:27}},
   // Championship & 3rd Place
-  {n:31,date:'2027-04-23',round:'champ',   div:null,    a:{win:29},b:{win:30}},
-  {n:32,date:'2027-04-30',round:'3rd',     div:null,    a:{lose:29},b:{lose:30}},
+  {n:31,date:'2027-04-30',round:'champ',   div:null,    a:{win:29},b:{win:30}},
+  {n:32,date:'2027-04-23',round:'3rd',     div:null,    a:{lose:29},b:{lose:30}},
 ];
 
 // ── HELPERS ──────────────────────────────────────────────────
@@ -422,12 +444,12 @@ function ffHtml(results) {
       </div>
     </div>
     <div class="ff-section">
-      <div class="ff-label">🏆 Championship · ${fmtDate(ch.date)}</div>
-      <div class="ff-cards">${gameCard(ch,results)}</div>
-    </div>
-    <div class="ff-section">
       <div class="ff-label">3rd Place · ${fmtDate(tp.date)}</div>
       <div class="ff-cards">${gameCard(tp,results)}</div>
+    </div>
+    <div class="ff-section">
+      <div class="ff-label">🏆 Championship · ${fmtDate(ch.date)}</div>
+      <div class="ff-cards">${gameCard(ch,results)}</div>
     </div>
   </div>`;
 }
@@ -464,7 +486,7 @@ function renderAll(results) {
   }
 
   function col(games, fCls, label) {
-    return `<div class="round-col" style="width:205px">
+    return `<div class="round-col" style="width:185px">
       <div class="round-hdr">${label}</div>
       <div class="round-body">${slotsHtml(games,fCls)}</div>
     </div>`;
@@ -489,14 +511,16 @@ function renderAll(results) {
     </div>`;
   }
 
-  const champCol = `<div class="round-col" style="width:205px">
+  const champCol = `<div class="round-col" style="width:185px">
     <div class="round-hdr">Championship</div>
     <div class="round-body">
-      <div class="slot f8" style="flex-direction:column;gap:0.25rem;justify-content:center">
-        <div style="width:100%">${gameCard(champ,results)}</div>
-        <div class="fb-3rd-lbl">3rd Place</div>
-        <div style="width:100%">${gameCard(third,results)}</div>
-      </div>
+      <div style="flex:3.75"></div>
+      <div style="text-align:center;padding-bottom:4px;font-size:1.1rem">🏆</div>
+      <div style="width:100%;padding:3px 0">${gameCard(champ,results)}</div>
+      <div style="flex:1.75"></div>
+      <div class="fb-3rd-lbl">3rd Place</div>
+      <div style="width:100%;padding:3px 0">${gameCard(third,results)}</div>
+      <div style="flex:1"></div>
     </div>
   </div>`;
 
@@ -518,6 +542,7 @@ function renderAll(results) {
     ${col(rS16,'f2','Sweet 16')}
     ${connCol(4,1,false)}
     ${col(rR32,'f1','Round of 32')}
+  </div>
   </div>`;
 }
 
@@ -567,6 +592,66 @@ function showTab(id) {
   renderDiv('2020s', results);
   renderFF(results);
 })();
+
+async function downloadBracket() {
+  const btn = document.getElementById('download-btn');
+  btn.classList.add('loading-pdf');
+  btn.innerHTML = `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+  </svg> Generating…`;
+
+  // Temporarily make #view-all visible, left-aligned so bracket starts at x=0
+  const viewAll = document.getElementById('view-all');
+  const origStyle = viewAll.getAttribute('style') || '';
+  viewAll.style.display = 'flex';
+  viewAll.style.justifyContent = 'flex-start';
+  viewAll.style.overflow = 'visible';
+
+  const bracket = viewAll.querySelector('.full-bracket');
+  // Allow layout to settle before measuring
+  await new Promise(r => requestAnimationFrame(r));
+
+  // Hide TBD placeholders for the PDF
+  const tbdEls = [...bracket.querySelectorAll('.gtbd')];
+  const qEls   = [...bracket.querySelectorAll('.gseed')].filter(el => el.textContent.trim() === '?');
+  [...tbdEls, ...qEls].forEach(el => el.style.visibility = 'hidden');
+
+  try {
+    const margin = 0.35;
+    const dpi = 96;
+    const rect = bracket.getBoundingClientRect();
+    const natW = Math.round(rect.width);
+    const natH = Math.round(rect.height);
+    const pageW = natW / dpi + margin * 2;
+    const pageH = natH / dpi + margin * 2;
+
+    await html2pdf().set({
+      margin: margin,
+      filename: 'song-battle-bracket.pdf',
+      image: { type: 'jpeg', quality: 1 },
+      html2canvas: {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: '#0d1628',
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: document.documentElement.offsetWidth,
+      },
+      pagebreak: { mode: [] },
+      jsPDF: { unit: 'in', format: [pageW, pageH], orientation: 'landscape' }
+    }).from(bracket).save();
+  } finally {
+    [...tbdEls, ...qEls].forEach(el => el.style.visibility = '');
+    viewAll.setAttribute('style', origStyle);
+    btn.classList.remove('loading-pdf');
+    btn.innerHTML = `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg> Download PDF`;
+  }
+}
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </body>
 </html>
