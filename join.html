@@ -236,15 +236,15 @@
   }
 
   // ── Supabase ──────────────────────────────────
-  async function submitSteps(fitbitId, name, dept, steps, month) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/step_challenge?on_conflict=fitbit_user_id,month`, {
+  async function submitSteps(fitbitId, name, dept, steps) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/step_challenge?on_conflict=fitbit_user_id`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
         'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates',
       },
       body: JSON.stringify({
-        fitbit_user_id: fitbitId, month, name, department: dept,
+        fitbit_user_id: fitbitId, name, department: dept,
         steps, updated_at: new Date().toISOString(),
         access_token:  localStorage.getItem(LBK_ACCESS)  || null,
         refresh_token: localStorage.getItem(LBK_REFRESH) || null,
@@ -383,7 +383,7 @@
   async function syncSteps() {
     try {
       const token = await getValidToken();
-      const [{ name: fitbitName, avatar }, { total, month, label }] = await Promise.all([
+      const [{ name: fitbitName, avatar }, { total, label }] = await Promise.all([
         fetchProfile(token),
         fetchMonthlySteps(token),
       ]);
@@ -391,7 +391,7 @@
       const name = localStorage.getItem(LBK_NAME) || fitbitName;
       const dept = localStorage.getItem(LBK_DEPT) || '';
       localStorage.setItem(LBK_NAME, name);
-      await submitSteps(fitbitId, name, dept, total, month);
+      await submitSteps(fitbitId, name, dept, total);
       showConnected(name, avatar, total, label);
     } catch(e) {
       if (e.message === 'no_refresh') {

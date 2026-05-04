@@ -3272,8 +3272,8 @@
   }
 
   // ── Submit steps to Supabase ──────────────────
-  async function lbSubmitSteps(fitbitId, name, dept, steps, month) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/step_challenge?on_conflict=fitbit_user_id,month`, {
+  async function lbSubmitSteps(fitbitId, name, dept, steps) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/step_challenge?on_conflict=fitbit_user_id`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY,
@@ -3283,7 +3283,6 @@
       },
       body: JSON.stringify({
         fitbit_user_id: fitbitId,
-        month,
         name,
         department:    dept,
         steps,
@@ -3301,9 +3300,7 @@
 
   // ── Fetch leaderboard from Supabase ───────────
   async function lbFetchLeaderboard() {
-    const now   = new Date();
-    const curMo = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    const rows  = await supabaseGet('step_challenge', `month=eq.${curMo}&order=steps.desc&select=name,department,steps`);
+    const rows = await supabaseGet('step_challenge', `order=steps.desc&select=name,department,steps`);
     return rows.map(r => ({ name: r.name, dept: r.department, steps: r.steps }));
   }
 
