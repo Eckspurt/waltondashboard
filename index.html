@@ -3092,7 +3092,9 @@
         ? Math.round(((nowMin - p.start) / (p.end - p.start)) * 100)
         : 0;
       const remaining = isCurrent ? minsToStr(p.end - nowMin) : '';
-      const showLunch = !upcomingLabel && ld.enabled && (ld.entries || []).some(e => e.period === p.name && e.day === todayName);
+      const isWebDay  = /\bweb\b/i.test(tabName);
+      const showLunch = !upcomingLabel && ld.enabled && (ld.entries || []).some(e =>
+        e.period === p.name && e.day === todayName && !(isWebDay && e.half === '2nd Half'));
       return `<div class="period-row ${isPast ? 'is-past' : ''} ${isCurrent ? 'is-current' : ''} ${isDeadTime ? 'is-dead-time' : ''} ${isEndingSoon ? 'is-ending-soon' : ''}">
         ${isCurrent ? `<div class="period-progress" style="width:${pct}%"></div>` : ''}
         <div class="period-name">${p.name}</div>
@@ -4095,6 +4097,7 @@
       if (ld.enabled) {
         const triggered = (ld.entries || []).some(e => {
           if (e.day !== todayName || !e.period) return false;
+          if (e.half === '2nd Half' && /\bweb\b/i.test(currentScheduleTab)) return false;
           const p = currentSchedulePeriods.find(p => p.name === e.period);
           if (!p) return false;
           const triggerMin = e.half === '2nd Half'
