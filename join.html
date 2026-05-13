@@ -200,7 +200,19 @@
       const data = await fitbitToken({ grant_type: 'refresh_token', client_id: FITBIT_CLIENT_ID, refresh_token: refresh });
       saveTokens(data);
       return data.access_token;
-    } catch(e) { clearTokens(); throw new Error('no_refresh'); }
+    } catch(e) {
+      const fitbitId = localStorage.getItem(LBK_FITBIT_ID);
+      clearTokens();
+      // Wipe stale tokens from DB so background jobs don't keep retrying an invalid_grant
+      if (fitbitId) {
+        fetch(`${SUPABASE_URL}/rest/v1/step_challenge?fitbit_user_id=eq.${encodeURIComponent(fitbitId)}`, {
+          method: 'PATCH',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: null, refresh_token: null, expires_at: null }),
+        }).catch(() => {});
+      }
+      throw new Error('no_refresh');
+    }
   }
   function clearTokens() {
     [LBK_ACCESS, LBK_REFRESH, LBK_EXPIRY, LBK_FITBIT_ID].forEach(k => localStorage.removeItem(k));
