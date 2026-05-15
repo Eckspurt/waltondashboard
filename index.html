@@ -4053,7 +4053,7 @@
               && localStorage.getItem(SCHED_REMIND_BELL_KEY) !== 'false'
               && currentSchedulePeriods.some(p => p.end === nowMin)) {
             _lastBellMin = nowMin;
-            playBell();
+            if (!document.hidden) playBell();
           }
           currentSchedulePeriods = null; // prevent re-entry before async completes
           fetchSchedule(true);           // switches to upcoming schedule
@@ -4068,37 +4068,37 @@
         && localStorage.getItem(SCHED_REMIND_BELL_KEY) !== 'false'
         && currentSchedulePeriods?.some(p => p.end === nowMin)) {
       _lastBellMin = nowMin;
-      playBell();
+      if (!document.hidden) playBell();
     }
     if (nowMin !== _lastStartBellMin
         && localStorage.getItem(SCHED_REMIND_START_BELL_KEY) === 'true'
         && currentSchedulePeriods?.some(p => p.start === nowMin)) {
       _lastStartBellMin = nowMin;
-      playBell();
+      if (!document.hidden) playBell();
     }
     if (nowMin !== _lastEarlyMin
         && localStorage.getItem(SCHED_REMIND_EARLY_KEY) === 'true'
         && currentSchedulePeriods.some(p => p.start - 1 === nowMin)) {
       _lastEarlyMin = nowMin;
-      speakReminder('1 minute until class begins');
+      if (!document.hidden) speakReminder('1 minute until class begins');
     }
     if (nowMin !== _lastEndingMin
         && localStorage.getItem(SCHED_REMIND_ENDING_KEY) === 'true'
         && currentSchedulePeriods.some(p => p.end - 1 === nowMin)) {
       _lastEndingMin = nowMin;
-      speakReminder('1 minute remaining');
+      if (!document.hidden) speakReminder('1 minute remaining');
     }
     if (nowMin !== _lastAttendMin
         && localStorage.getItem(SCHED_REMIND_ATTEND_KEY) === 'true'
         && currentSchedulePeriods.some(p => p.start + 5 === nowMin)) {
       _lastAttendMin = nowMin;
-      speakReminder('Take attendance');
+      if (!document.hidden) speakReminder('Take attendance');
     }
     if (nowMin !== _lastAnnounceMin
         && localStorage.getItem(SCHED_REMIND_ANNOUNCE_KEY) === 'true'
         && currentSchedulePeriods.some(p => p.name.toLowerCase().includes('homeroom') && p.start + 1 === nowMin)) {
       _lastAnnounceMin = nowMin;
-      speakReminder('Turn on announcements');
+      if (!document.hidden) speakReminder('Turn on announcements');
     }
     if (nowMin !== _lastLunchDutyMin) {
       const ld = getLunchDuty();
@@ -4116,7 +4116,7 @@
         });
         if (triggered) {
           _lastLunchDutyMin = nowMin;
-          speakReminder('Lunch duty in 5 minutes');
+          if (!document.hidden) speakReminder('Lunch duty in 5 minutes');
         }
       }
     }
