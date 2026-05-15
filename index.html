@@ -2876,17 +2876,14 @@
     document.querySelectorAll('.sched-grade-pill').forEach((el, i) => {
       el.classList.toggle('active', i === idx);
     });
-    try {
-      const cached = JSON.parse(localStorage.getItem(SCHED_CACHE_KEY) || 'null');
-      const grade = _schedGradeOptions[idx]?.label;
-      if (cached?.periods && grade) {
-        const filtered = cached.periods.filter(r => r.grade === grade);
-        renderSchedule(_schedRowsToPeriods(filtered), grade);
-      }
-    } catch(e) {}
+    const grade = _schedGradeOptions[idx]?.label;
+    if (_schedCurrentRows.length && grade) {
+      const filtered = _schedCurrentRows.filter(r => r.grade === grade);
+      renderSchedule(_schedRowsToPeriods(filtered), grade);
+    }
   }
 
-  const SCHED_CACHE_KEY = 'walton-sched-cache';
+  let _schedCurrentRows = [];
 
   async function _showUpcomingSchedule(fromDate) {
     // Null out now so the tick loop doesn't overwrite the upcoming view while we fetch
@@ -2941,7 +2938,7 @@
     return null;
   }
 
-  async function fetchSchedule(force = false) {
+  async function fetchSchedule() {
     const body = document.getElementById('schedule-body');
     const now     = new Date();
     const weekday = now.getDay();
@@ -2952,21 +2949,6 @@
       if (!rows.length) return false;
       const nowMin = minutesToNow();
       return rows.every(r => { const e = parseTime(r.end_time); return e !== null && nowMin >= e; });
-    }
-
-    // Serve from cache (keyed by date) — only bypass when force=true
-    if (!isWeekend && !force) {
-      try {
-        const cached = JSON.parse(localStorage.getItem(SCHED_CACHE_KEY) || 'null');
-        if (cached?.date === todayKey && cached.tab && cached.periods?.length) {
-          if (_rowsAllPast(cached.periods)) {
-            await _showUpcomingSchedule(now);
-          } else {
-            _schedApplySupabasePeriods(cached.periods, cached.tab);
-          }
-          return;
-        }
-      } catch(e) { /* ignore bad cache */ }
     }
 
     try {
@@ -2993,8 +2975,6 @@
         rows = await supabaseGet('schedule_periods', `tab_name=eq.Daily&order=sort_order.asc`);
       }
 
-      try { localStorage.setItem(SCHED_CACHE_KEY, JSON.stringify({ date: todayKey, tab: tabToUse, periods: rows })); } catch(e) {}
-
       if (_rowsAllPast(rows)) {
         await _showUpcomingSchedule(now);
       } else {
@@ -3014,6 +2994,7 @@
   // upcomingLabel: if set, renders as an upcoming (future-day) schedule
   function _schedApplySupabasePeriods(rows, tabName, upcomingLabel = '') {
     if (!rows.length) return;
+    _schedCurrentRows = rows;
 
     const GRADE_ORDER = ['9th','10th','11th','12th'];
     const grades = [...new Set(rows.map(r => r.grade).filter(Boolean))]
@@ -4056,7 +4037,7 @@
             if (!document.hidden) playBell();
           }
           currentSchedulePeriods = null; // prevent re-entry before async completes
-          fetchSchedule(true);           // switches to upcoming schedule
+          fetchSchedule();           // switches to upcoming schedule
         } else {
           renderSchedule(currentSchedulePeriods, currentScheduleTab);
         }
@@ -4126,7 +4107,7 @@
   fetchSchedule();
   setInterval(() => { updateSchedStrip(); }, 60 * 1000);
   // Re-fetch schedule from Sheets once per hour (cache serves the rest)
-  setInterval(() => { fetchSchedule(true); }, 60 * 60 * 1000);
+  setInterval(() => { fetchSchedule(); }, 60 * 60 * 1000);
 
   fetchWeather();
   setInterval(fetchWeather, 10 * 60 * 1000);
