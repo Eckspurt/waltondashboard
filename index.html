@@ -2556,7 +2556,12 @@
       if (!res.ok) return;
       const j = await res.json();
       const serverMs = Date.UTC(j.year, j.month - 1, j.day, j.hour, j.minute, j.seconds, j.milliSeconds);
-      _timeOffsetMs  = serverMs - Date.now();
+      const offset   = serverMs - Date.now();
+      // Reject offsets that imply the "atomic" source is itself off by a lot —
+      // a stale/buggy API response is more likely than the local clock being wrong.
+      if (Math.abs(offset) <= 2 * 60 * 1000) {
+        _timeOffsetMs = offset;
+      }
     } catch {
       // Fall back to machine time silently
     }
@@ -5550,18 +5555,16 @@
       {seed:6,title:'…Baby One More Time',artist:'Britney Spears'},
       {seed:7,title:'I Will Always Love You',artist:'Whitney Houston'},
       {seed:8,title:'1979',artist:'Smashing Pumpkins'},
-      {seed:9,title:'Waterfalls',artist:'TLC'},
     ],
     '2000s':[
       {seed:1,title:'Mr. Brightside',artist:'The Killers'},
       {seed:2,title:'Lose Yourself',artist:'Eminem'},
       {seed:3,title:'Numb',artist:'Linkin Park'},
-      {seed:4,title:'Umbrella',artist:'Rihanna'},
+      {seed:4,title:'Single Ladies',artist:'Beyoncé'},
       {seed:5,title:'Seven Nation Army',artist:'The White Stripes'},
       {seed:6,title:'Yeah!',artist:'Usher'},
       {seed:7,title:'Hey Ya!',artist:'OutKast'},
-      {seed:8,title:'Single Ladies',artist:'Beyoncé'},
-      {seed:9,title:'Bye Bye Bye',artist:'NSYNC'},
+      {seed:8,title:'Bye Bye Bye',artist:'NSYNC'},
     ],
     '2010s':[
       {seed:1,title:'Blinding Lights',artist:'The Weeknd'},
@@ -5572,7 +5575,6 @@
       {seed:6,title:'Shake It Off',artist:'Taylor Swift'},
       {seed:7,title:'Royals',artist:'Lorde'},
       {seed:8,title:'Happy',artist:'Pharrell Williams'},
-      {seed:9,title:'Call Me Maybe',artist:'Carly Rae Jepsen'},
     ],
     '2020s':[
       {seed:1,title:'As It Was',artist:'Harry Styles'},
@@ -5581,48 +5583,43 @@
       {seed:4,title:'Espresso',artist:'Sabrina Carpenter'},
       {seed:5,title:'Flowers',artist:'Miley Cyrus'},
       {seed:6,title:'Levitating',artist:'Dua Lipa'},
-      {seed:7,title:'Anti-Hero',artist:'Taylor Swift'},
+      {seed:7,title:'Golden',artist:'K-Pop Demon Hunters'},
       {seed:8,title:'Thank U, Next',artist:'Ariana Grande'},
-      {seed:9,title:'Golden',artist:'K-Pop Demon Hunters'},
     ],
   };
   const SB_GAMES = [
-    {n:1, date:'2026-07-31',round:'play-in', div:'90s',  a:{d:'90s',  s:8},b:{d:'90s',  s:9}},
-    {n:2, date:'2026-08-07',round:'play-in', div:'2000s',a:{d:'2000s',s:8},b:{d:'2000s',s:9}},
-    {n:3, date:'2026-08-14',round:'play-in', div:'2010s',a:{d:'2010s',s:8},b:{d:'2010s',s:9}},
-    {n:4, date:'2026-08-21',round:'play-in', div:'2020s',a:{d:'2020s',s:8},b:{d:'2020s',s:9}},
-    {n:5, date:'2026-08-28',round:'r32',     div:'90s',  a:{d:'90s',  s:1},b:{win:1}},
-    {n:6, date:'2026-09-04',round:'r32',     div:'2000s',a:{d:'2000s',s:1},b:{win:2}},
-    {n:7, date:'2026-09-11',round:'r32',     div:'2010s',a:{d:'2010s',s:1},b:{win:3}},
-    {n:8, date:'2026-09-18',round:'r32',     div:'2020s',a:{d:'2020s',s:1},b:{win:4}},
-    {n:9, date:'2026-10-02',round:'r32',     div:'90s',  a:{d:'90s',  s:4},b:{d:'90s',  s:5}},
-    {n:10,date:'2026-10-09',round:'r32',     div:'2000s',a:{d:'2000s',s:4},b:{d:'2000s',s:5}},
-    {n:11,date:'2026-10-16',round:'r32',     div:'2010s',a:{d:'2010s',s:4},b:{d:'2010s',s:5}},
-    {n:12,date:'2026-10-23',round:'r32',     div:'2020s',a:{d:'2020s',s:4},b:{d:'2020s',s:5}},
-    {n:13,date:'2026-10-30',round:'r32',     div:'90s',  a:{d:'90s',  s:2},b:{d:'90s',  s:7}},
-    {n:14,date:'2026-11-06',round:'r32',     div:'2000s',a:{d:'2000s',s:2},b:{d:'2000s',s:7}},
-    {n:15,date:'2026-11-13',round:'r32',     div:'2010s',a:{d:'2010s',s:2},b:{d:'2010s',s:7}},
-    {n:16,date:'2026-11-20',round:'r32',     div:'2020s',a:{d:'2020s',s:2},b:{d:'2020s',s:7}},
-    {n:17,date:'2026-12-04',round:'r32',     div:'90s',  a:{d:'90s',  s:3},b:{d:'90s',  s:6}},
-    {n:18,date:'2026-12-11',round:'r32',     div:'2000s',a:{d:'2000s',s:3},b:{d:'2000s',s:6}},
-    {n:19,date:'2026-12-18',round:'r32',     div:'2010s',a:{d:'2010s',s:3},b:{d:'2010s',s:6}},
-    {n:20,date:'2027-01-08',round:'r32',     div:'2020s',a:{d:'2020s',s:3},b:{d:'2020s',s:6}},
-    {n:21,date:'2027-01-15',round:'sweet16', div:'90s',  a:{win:5}, b:{win:9}},
-    {n:22,date:'2027-01-22',round:'sweet16', div:'2000s',a:{win:6}, b:{win:10}},
-    {n:23,date:'2027-01-29',round:'sweet16', div:'2010s',a:{win:7}, b:{win:11}},
-    {n:24,date:'2027-02-05',round:'sweet16', div:'2020s',a:{win:8}, b:{win:12}},
-    {n:25,date:'2027-02-12',round:'sweet16', div:'90s',  a:{win:13},b:{win:17}},
-    {n:26,date:'2027-02-26',round:'sweet16', div:'2000s',a:{win:14},b:{win:18}},
-    {n:27,date:'2027-03-05',round:'sweet16', div:'2010s',a:{win:15},b:{win:19}},
-    {n:28,date:'2027-03-12',round:'sweet16', div:'2020s',a:{win:16},b:{win:20}},
-    {n:29,date:'2027-03-19',round:'elite8',  div:'90s',  a:{win:21},b:{win:25}},
-    {n:30,date:'2027-03-26',round:'elite8',  div:'2000s',a:{win:22},b:{win:26}},
-    {n:31,date:'2027-04-02',round:'elite8',  div:'2010s',a:{win:23},b:{win:27}},
-    {n:32,date:'2027-04-16',round:'elite8',  div:'2020s',a:{win:24},b:{win:28}},
-    {n:33,date:'2027-04-23',round:'final4',  div:null,   a:{win:29},b:{win:32}},
-    {n:34,date:'2027-04-30',round:'final4',  div:null,   a:{win:30},b:{win:31}},
-    {n:35,date:'2027-05-07',round:'champ',   div:null,   a:{win:33},b:{win:34}},
-    {n:36,date:'2027-05-14',round:'3rd',     div:null,   a:{lose:33},b:{lose:34}},
+    {n:1, date:'2026-08-14',round:'r32',     div:'90s',   a:{d:'90s',  s:1},b:{d:'90s',  s:8}},
+    {n:2, date:'2026-08-21',round:'r32',     div:'2000s', a:{d:'2000s',s:1},b:{d:'2000s',s:8}},
+    {n:3, date:'2026-08-28',round:'r32',     div:'2010s', a:{d:'2010s',s:1},b:{d:'2010s',s:8}},
+    {n:4, date:'2026-09-04',round:'r32',     div:'2020s', a:{d:'2020s',s:1},b:{d:'2020s',s:8}},
+    {n:5, date:'2026-09-11',round:'r32',     div:'90s',   a:{d:'90s',  s:4},b:{d:'90s',  s:5}},
+    {n:6, date:'2026-09-18',round:'r32',     div:'2000s', a:{d:'2000s',s:4},b:{d:'2000s',s:5}},
+    {n:7, date:'2026-10-02',round:'r32',     div:'2010s', a:{d:'2010s',s:4},b:{d:'2010s',s:5}},
+    {n:8, date:'2026-10-09',round:'r32',     div:'2020s', a:{d:'2020s',s:4},b:{d:'2020s',s:5}},
+    {n:9, date:'2026-10-16',round:'r32',     div:'90s',   a:{d:'90s',  s:2},b:{d:'90s',  s:7}},
+    {n:10,date:'2026-10-23',round:'r32',     div:'2000s', a:{d:'2000s',s:2},b:{d:'2000s',s:7}},
+    {n:11,date:'2026-10-30',round:'r32',     div:'2010s', a:{d:'2010s',s:2},b:{d:'2010s',s:7}},
+    {n:12,date:'2026-11-06',round:'r32',     div:'2020s', a:{d:'2020s',s:2},b:{d:'2020s',s:7}},
+    {n:13,date:'2026-11-13',round:'r32',     div:'90s',   a:{d:'90s',  s:3},b:{d:'90s',  s:6}},
+    {n:14,date:'2026-11-20',round:'r32',     div:'2000s', a:{d:'2000s',s:3},b:{d:'2000s',s:6}},
+    {n:15,date:'2026-12-04',round:'r32',     div:'2010s', a:{d:'2010s',s:3},b:{d:'2010s',s:6}},
+    {n:16,date:'2026-12-11',round:'r32',     div:'2020s', a:{d:'2020s',s:3},b:{d:'2020s',s:6}},
+    {n:17,date:'2026-12-18',round:'sweet16', div:'90s',   a:{win:1}, b:{win:5}},
+    {n:18,date:'2027-01-08',round:'sweet16', div:'2000s', a:{win:2}, b:{win:6}},
+    {n:19,date:'2027-01-15',round:'sweet16', div:'2010s', a:{win:3}, b:{win:7}},
+    {n:20,date:'2027-01-22',round:'sweet16', div:'2020s', a:{win:4}, b:{win:8}},
+    {n:21,date:'2027-01-29',round:'sweet16', div:'90s',   a:{win:9}, b:{win:13}},
+    {n:22,date:'2027-02-05',round:'sweet16', div:'2000s', a:{win:10},b:{win:14}},
+    {n:23,date:'2027-02-12',round:'sweet16', div:'2010s', a:{win:11},b:{win:15}},
+    {n:24,date:'2027-02-26',round:'sweet16', div:'2020s', a:{win:12},b:{win:16}},
+    {n:25,date:'2027-03-05',round:'elite8',  div:'90s',   a:{win:17},b:{win:21}},
+    {n:26,date:'2027-03-12',round:'elite8',  div:'2000s', a:{win:18},b:{win:22}},
+    {n:27,date:'2027-03-19',round:'elite8',  div:'2010s', a:{win:19},b:{win:23}},
+    {n:28,date:'2027-03-26',round:'elite8',  div:'2020s', a:{win:20},b:{win:24}},
+    {n:29,date:'2027-04-02',round:'final4',  div:null,    a:{win:25},b:{win:28}},
+    {n:30,date:'2027-04-16',round:'final4',  div:null,    a:{win:26},b:{win:27}},
+    {n:31,date:'2027-04-30',round:'champ',   div:null,    a:{win:29},b:{win:30}},
+    {n:32,date:'2027-04-23',round:'3rd',     div:null,    a:{lose:29},b:{lose:30}},
   ];
 
   function _sbSong(d, s) { return SB_SONGS[d]?.[s - 1] ?? null; }

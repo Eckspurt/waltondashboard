@@ -126,48 +126,44 @@
 
   // ── Song Battle bracket data ──────────────────
   const SB_SONGS = {
-    '90s':[{seed:1,title:'Iris',artist:'Goo Goo Dolls'},{seed:2,title:'Smells Like Teen Spirit',artist:'Nirvana'},{seed:3,title:'Wonderwall',artist:'Oasis'},{seed:4,title:"Gangsta's Paradise",artist:'Coolio'},{seed:5,title:'I Want It That Way',artist:'Backstreet Boys'},{seed:6,title:'…Baby One More Time',artist:'Britney Spears'},{seed:7,title:'I Will Always Love You',artist:'Whitney Houston'},{seed:8,title:'1979',artist:'Smashing Pumpkins'},{seed:9,title:'Waterfalls',artist:'TLC'}],
-    '2000s':[{seed:1,title:'Mr. Brightside',artist:'The Killers'},{seed:2,title:'Lose Yourself',artist:'Eminem'},{seed:3,title:'Numb',artist:'Linkin Park'},{seed:4,title:'Umbrella',artist:'Rihanna'},{seed:5,title:'Seven Nation Army',artist:'The White Stripes'},{seed:6,title:'Yeah!',artist:'Usher'},{seed:7,title:'Hey Ya!',artist:'OutKast'},{seed:8,title:'Single Ladies',artist:'Beyoncé'},{seed:9,title:'Bye Bye Bye',artist:'NSYNC'}],
-    '2010s':[{seed:1,title:'Blinding Lights',artist:'The Weeknd'},{seed:2,title:'Shape of You',artist:'Ed Sheeran'},{seed:3,title:'Uptown Funk',artist:'Mark Ronson ft. Bruno Mars'},{seed:4,title:'Rolling in the Deep',artist:'Adele'},{seed:5,title:'Old Town Road',artist:'Lil Nas X'},{seed:6,title:'Shake It Off',artist:'Taylor Swift'},{seed:7,title:'Royals',artist:'Lorde'},{seed:8,title:'Happy',artist:'Pharrell Williams'},{seed:9,title:'Call Me Maybe',artist:'Carly Rae Jepsen'}],
-    '2020s':[{seed:1,title:'As It Was',artist:'Harry Styles'},{seed:2,title:'Stay',artist:'The Kid LAROI & Justin Bieber'},{seed:3,title:'Heat Waves',artist:'Glass Animals'},{seed:4,title:'Espresso',artist:'Sabrina Carpenter'},{seed:5,title:'Flowers',artist:'Miley Cyrus'},{seed:6,title:'Levitating',artist:'Dua Lipa'},{seed:7,title:'Anti-Hero',artist:'Taylor Swift'},{seed:8,title:'Thank U, Next',artist:'Ariana Grande'},{seed:9,title:'Golden',artist:'K-Pop Demon Hunters'}],
+    '90s':[{seed:1,title:'Iris',artist:'Goo Goo Dolls'},{seed:2,title:'Smells Like Teen Spirit',artist:'Nirvana'},{seed:3,title:'Wonderwall',artist:'Oasis'},{seed:4,title:"Gangsta's Paradise",artist:'Coolio'},{seed:5,title:'I Want It That Way',artist:'Backstreet Boys'},{seed:6,title:'…Baby One More Time',artist:'Britney Spears'},{seed:7,title:'I Will Always Love You',artist:'Whitney Houston'},{seed:8,title:'1979',artist:'Smashing Pumpkins'}],
+    '2000s':[{seed:1,title:'Mr. Brightside',artist:'The Killers'},{seed:2,title:'Lose Yourself',artist:'Eminem'},{seed:3,title:'Numb',artist:'Linkin Park'},{seed:4,title:'Single Ladies',artist:'Beyoncé'},{seed:5,title:'Seven Nation Army',artist:'The White Stripes'},{seed:6,title:'Yeah!',artist:'Usher'},{seed:7,title:'Hey Ya!',artist:'OutKast'},{seed:8,title:'Bye Bye Bye',artist:'NSYNC'}],
+    '2010s':[{seed:1,title:'Blinding Lights',artist:'The Weeknd'},{seed:2,title:'Shape of You',artist:'Ed Sheeran'},{seed:3,title:'Uptown Funk',artist:'Mark Ronson ft. Bruno Mars'},{seed:4,title:'Rolling in the Deep',artist:'Adele'},{seed:5,title:'Old Town Road',artist:'Lil Nas X'},{seed:6,title:'Shake It Off',artist:'Taylor Swift'},{seed:7,title:'Royals',artist:'Lorde'},{seed:8,title:'Happy',artist:'Pharrell Williams'}],
+    '2020s':[{seed:1,title:'As It Was',artist:'Harry Styles'},{seed:2,title:'Stay',artist:'The Kid LAROI & Justin Bieber'},{seed:3,title:'Heat Waves',artist:'Glass Animals'},{seed:4,title:'Espresso',artist:'Sabrina Carpenter'},{seed:5,title:'Flowers',artist:'Miley Cyrus'},{seed:6,title:'Levitating',artist:'Dua Lipa'},{seed:7,title:'Golden',artist:'K-Pop Demon Hunters'},{seed:8,title:'Thank U, Next',artist:'Ariana Grande'}],
   };
   const SB_GAMES = [
-    {n:1,date:'2026-07-31',a:{d:'90s',  s:8},b:{d:'90s',  s:9}},
-    {n:2,date:'2026-08-07',a:{d:'2000s',s:8},b:{d:'2000s',s:9}},
-    {n:3,date:'2026-08-14',a:{d:'2010s',s:8},b:{d:'2010s',s:9}},
-    {n:4,date:'2026-08-21',a:{d:'2020s',s:8},b:{d:'2020s',s:9}},
-    {n:5,date:'2026-08-28',a:{d:'90s',  s:1},b:{win:1}},
-    {n:6,date:'2026-09-04',a:{d:'2000s',s:1},b:{win:2}},
-    {n:7,date:'2026-09-11',a:{d:'2010s',s:1},b:{win:3}},
-    {n:8,date:'2026-09-18',a:{d:'2020s',s:1},b:{win:4}},
-    {n:9,date:'2026-10-02',a:{d:'90s',  s:4},b:{d:'90s',  s:5}},
-    {n:10,date:'2026-10-09',a:{d:'2000s',s:4},b:{d:'2000s',s:5}},
-    {n:11,date:'2026-10-16',a:{d:'2010s',s:4},b:{d:'2010s',s:5}},
-    {n:12,date:'2026-10-23',a:{d:'2020s',s:4},b:{d:'2020s',s:5}},
-    {n:13,date:'2026-10-30',a:{d:'90s',  s:2},b:{d:'90s',  s:7}},
-    {n:14,date:'2026-11-06',a:{d:'2000s',s:2},b:{d:'2000s',s:7}},
-    {n:15,date:'2026-11-13',a:{d:'2010s',s:2},b:{d:'2010s',s:7}},
-    {n:16,date:'2026-11-20',a:{d:'2020s',s:2},b:{d:'2020s',s:7}},
-    {n:17,date:'2026-12-04',a:{d:'90s',  s:3},b:{d:'90s',  s:6}},
-    {n:18,date:'2026-12-11',a:{d:'2000s',s:3},b:{d:'2000s',s:6}},
-    {n:19,date:'2026-12-18',a:{d:'2010s',s:3},b:{d:'2010s',s:6}},
-    {n:20,date:'2027-01-08',a:{d:'2020s',s:3},b:{d:'2020s',s:6}},
-    {n:21,date:'2027-01-15',a:{win:5}, b:{win:9}},
-    {n:22,date:'2027-01-22',a:{win:6}, b:{win:10}},
-    {n:23,date:'2027-01-29',a:{win:7}, b:{win:11}},
-    {n:24,date:'2027-02-05',a:{win:8}, b:{win:12}},
-    {n:25,date:'2027-02-12',a:{win:13},b:{win:17}},
-    {n:26,date:'2027-02-26',a:{win:14},b:{win:18}},
-    {n:27,date:'2027-03-05',a:{win:15},b:{win:19}},
-    {n:28,date:'2027-03-12',a:{win:16},b:{win:20}},
-    {n:29,date:'2027-03-19',a:{win:21},b:{win:25}},
-    {n:30,date:'2027-03-26',a:{win:22},b:{win:26}},
-    {n:31,date:'2027-04-02',a:{win:23},b:{win:27}},
-    {n:32,date:'2027-04-16',a:{win:24},b:{win:28}},
-    {n:33,date:'2027-04-23',a:{win:29},b:{win:32}},
-    {n:34,date:'2027-04-30',a:{win:30},b:{win:31}},
-    {n:35,date:'2027-05-07',a:{win:33},b:{win:34}},
-    {n:36,date:'2027-05-14',a:{lose:33},b:{lose:34}},
+    {n:1, date:'2026-08-14',a:{d:'90s',  s:1},b:{d:'90s',  s:8}},
+    {n:2, date:'2026-08-21',a:{d:'2000s',s:1},b:{d:'2000s',s:8}},
+    {n:3, date:'2026-08-28',a:{d:'2010s',s:1},b:{d:'2010s',s:8}},
+    {n:4, date:'2026-09-04',a:{d:'2020s',s:1},b:{d:'2020s',s:8}},
+    {n:5, date:'2026-09-11',a:{d:'90s',  s:4},b:{d:'90s',  s:5}},
+    {n:6, date:'2026-09-18',a:{d:'2000s',s:4},b:{d:'2000s',s:5}},
+    {n:7, date:'2026-10-02',a:{d:'2010s',s:4},b:{d:'2010s',s:5}},
+    {n:8, date:'2026-10-09',a:{d:'2020s',s:4},b:{d:'2020s',s:5}},
+    {n:9, date:'2026-10-16',a:{d:'90s',  s:2},b:{d:'90s',  s:7}},
+    {n:10,date:'2026-10-23',a:{d:'2000s',s:2},b:{d:'2000s',s:7}},
+    {n:11,date:'2026-10-30',a:{d:'2010s',s:2},b:{d:'2010s',s:7}},
+    {n:12,date:'2026-11-06',a:{d:'2020s',s:2},b:{d:'2020s',s:7}},
+    {n:13,date:'2026-11-13',a:{d:'90s',  s:3},b:{d:'90s',  s:6}},
+    {n:14,date:'2026-11-20',a:{d:'2000s',s:3},b:{d:'2000s',s:6}},
+    {n:15,date:'2026-12-04',a:{d:'2010s',s:3},b:{d:'2010s',s:6}},
+    {n:16,date:'2026-12-11',a:{d:'2020s',s:3},b:{d:'2020s',s:6}},
+    {n:17,date:'2026-12-18',a:{win:1}, b:{win:5}},
+    {n:18,date:'2027-01-08',a:{win:2}, b:{win:6}},
+    {n:19,date:'2027-01-15',a:{win:3}, b:{win:7}},
+    {n:20,date:'2027-01-22',a:{win:4}, b:{win:8}},
+    {n:21,date:'2027-01-29',a:{win:9}, b:{win:13}},
+    {n:22,date:'2027-02-05',a:{win:10},b:{win:14}},
+    {n:23,date:'2027-02-12',a:{win:11},b:{win:15}},
+    {n:24,date:'2027-02-26',a:{win:12},b:{win:16}},
+    {n:25,date:'2027-03-05',a:{win:17},b:{win:21}},
+    {n:26,date:'2027-03-12',a:{win:18},b:{win:22}},
+    {n:27,date:'2027-03-19',a:{win:19},b:{win:23}},
+    {n:28,date:'2027-03-26',a:{win:20},b:{win:24}},
+    {n:29,date:'2027-04-02',a:{win:25},b:{win:28}},
+    {n:30,date:'2027-04-16',a:{win:26},b:{win:27}},
+    {n:31,date:'2027-04-30',a:{win:29},b:{win:30}},
+    {n:32,date:'2027-04-23',a:{lose:29},b:{lose:30}},
   ];
 
   function _sbSong(d,s){ return SB_SONGS[d]?.[s-1]??null; }
@@ -293,8 +289,13 @@
       const rows = await sbGet('qotd_questions', `date=eq.${date}&select=question,options`);
       if (!rows.length) { showError('No question found for today.'); return; }
       question = rows[0].question;
-      options  = typeof rows[0].options === 'string' ? JSON.parse(rows[0].options) : rows[0].options;
-      options  = await resolveWinnerPlaceholders(options, date);
+      if (question === 'Song Battle') {
+        options = await sbResolveMatchup(date);
+        if (!options) { showError('This matchup isn\'t decided yet. Check back once earlier rounds are in.'); return; }
+      } else {
+        options = typeof rows[0].options === 'string' ? JSON.parse(rows[0].options) : rows[0].options;
+        options = await resolveWinnerPlaceholders(options, date);
+      }
     } catch(e) { showError('Unable to load question. Please try again.'); return; }
 
     // Render voting UI
