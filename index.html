@@ -5662,9 +5662,6 @@
 
     const songA = _sbResolve(game.a, results);
     const songB = _sbResolve(game.b, results);
-    const todayCounts = tally.get(dayKey) || [0,0];
-    const total = todayCounts[0] + todayCounts[1];
-    const voted = _qotdHasVoted(dayKey);
 
     const ROUND_LABELS = {
       'play-in':'First Four','r32':'Round of 32','sweet16':'Sweet 16',
@@ -5673,50 +5670,12 @@
     const divLabel = game.div ? `${game.div} Division · ` : '';
     const roundLabel = ROUND_LABELS[game.round] || game.round;
 
-    const voteUrl = `${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}&voter=${encodeURIComponent(_qotdDeviceId())}`;
-    const qrHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=88x88&margin=0&data=${encodeURIComponent(voteUrl)}" alt="Vote QR"/>`;
-
-    function pct(idx) {
-      return total > 0 ? Math.round(todayCounts[idx] / total * 100) : 0;
-    }
-    function songCard(song, idx) {
-      if (!song) return `<div class="sb-song-card"><div class="sb-song-tbd">TBD</div></div>`;
-      const p = pct(idx);
-      return `<div class="sb-song-card">
-        <div class="sb-vbar" style="width:${p}%"></div>
-        <div class="sb-song-seed">${song.seed}</div>
-        <div class="sb-song-info">
-          <div class="sb-song-title">${escHtml(song.title)}</div>
-          <div class="sb-song-artist">${escHtml(song.artist)}</div>
-        </div>
-        ${total > 0 ? `<div class="sb-song-pct">${p}%</div>` : ''}
-      </div>`;
-    }
-
-    body.innerHTML = `
-      <div class="qotd-body" onclick="qotdOpenModal()" style="cursor:pointer" title="Click to expand">
-        <div class="sb-round-label">${divLabel}${roundLabel}</div>
-        <div class="qotd-qr-wrap">
-          <div class="qotd-qr" style="cursor:pointer" onclick="qotdHandleVoteClick('${escHtml(dayKey)}',event)">
-            ${voted ? '<div class="qotd-qr-placeholder">Voted!<br>Thanks ✓</div>' : qrHTML}
-            ${voted ? '<div class="qotd-voted-badge"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Voted</span></div>' : ''}
-          </div>
-        </div>
-        <div class="sb-vs-wrap">
-          ${songCard(songA, 0)}
-          <div class="sb-vs">VS</div>
-          ${songCard(songB, 1)}
-        </div>
-        <div class="qotd-footer">
-          <span>${total} vote${total !== 1 ? 's' : ''}</span>
-          <a href="/bracket.html" onclick="event.stopPropagation()" style="color:var(--raider-red);text-decoration:none;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase">View Bracket →</a>
-        </div>
-      </div>`;
-
-    _qotdQuestion = { dayKey, text: 'Song Battle', options: [
+    _qotdQuestion = { dayKey, text: `Song Battle — ${divLabel}${roundLabel}`, options: [
       songA ? `${songA.title} – ${songA.artist}` : 'TBD',
       songB ? `${songB.title} – ${songB.artist}` : 'TBD',
-    ]};
+    ], bracketLink: true };
+    renderQOTD();
+    fetchQOTDResults();
   }
 
   // ══════════════════════════════════════════════
@@ -5797,7 +5756,7 @@
   function renderQOTD() {
     const body = document.getElementById('qotd-body');
     if (!body || !_qotdQuestion) return;
-    const { text, options, dayKey } = _qotdQuestion;
+    const { text, options, dayKey, bracketLink } = _qotdQuestion;
     const voted = _qotdHasVoted(dayKey);
     const qrHTML = QOTD_VOTE_URL
       ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=88x88&margin=0&data=${encodeURIComponent(QOTD_VOTE_URL + '?date=' + encodeURIComponent(dayKey))}" alt="Vote QR"/>`
@@ -5819,7 +5778,9 @@
         <div class="qotd-results">${barsHTML}</div>
         <div class="qotd-footer">
           <span id="qotd-total">0 votes</span>
-          <span id="qotd-updated"></span>
+          ${bracketLink
+            ? `<a href="/bracket.html" onclick="event.stopPropagation()" style="color:var(--raider-red);text-decoration:none;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase">View Bracket →</a>`
+            : `<span id="qotd-updated"></span>`}
         </div>
       </div>`;
   }
@@ -5851,7 +5812,7 @@
 
   function qotdOpenModal() {
     if (!_qotdQuestion) return;
-    const { text, options, dayKey } = _qotdQuestion;
+    const { text, options, dayKey, bracketLink } = _qotdQuestion;
     const voted = _qotdHasVoted(dayKey);
     const voteUrl = QOTD_VOTE_URL ? `${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}` : null;
     const qrHTML = voteUrl
@@ -5874,7 +5835,9 @@
       <div class="qotd-modal-results">${barsHTML}</div>
       <div class="qotd-modal-footer">
         <span id="qotd-modal-total">0 votes</span>
-        <span id="qotd-modal-updated"></span>
+        ${bracketLink
+          ? `<a href="/bracket.html" onclick="event.stopPropagation()" style="color:var(--raider-red);text-decoration:none;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase">View Bracket →</a>`
+          : `<span id="qotd-modal-updated"></span>`}
       </div>`;
     fetchQOTDResults();
     document.getElementById('qotd-modal-overlay').classList.add('open');
