@@ -39,7 +39,7 @@
     .tab.active{color:var(--txt);border-bottom-color:var(--red)}
 
     /* ── Content ── */
-    .page{padding:1.25rem 1.5rem;overflow-x:auto}
+    .page{padding:1.25rem 1.5rem;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-left:1.5rem}
     .view{display:none}.view.active{display:block}
 
     /* ── Loading ── */
@@ -63,7 +63,7 @@
     .div-bracket{display:flex;gap:0;min-width:800px;align-items:stretch}
 
     /* ── Round column ── */
-    .round-col{display:flex;flex-direction:column}
+    .round-col{display:flex;flex-direction:column;scroll-snap-align:start}
     .round-hdr{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;
       letter-spacing:.14em;text-transform:uppercase;color:var(--txt-dim);
       text-align:center;padding:.25rem .4rem .55rem;white-space:nowrap}
