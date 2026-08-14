@@ -128,7 +128,7 @@
     .gsong.win{background:rgba(139,21,21,.18)}
     .gsong.lose{opacity:.5}
     .vbar{position:absolute;left:0;top:0;bottom:0;background:rgba(139,21,21,.1);z-index:0;transition:width .5s}
-    .gsong>*{position:relative;z-index:1}
+    .gsong>*:not(.vbar){position:relative;z-index:1}
     .gseed{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:700;
       color:var(--txt-dim);min-width:15px;flex-shrink:0}
     .ginfo{flex:1;min-width:0}
@@ -310,9 +310,10 @@ function esc(s) {
 function resolveSong(spec, results) {
   if (spec.d) return getSong(spec.d, spec.s);
   const ref = spec.win ?? spec.lose;
+  const g = GAMES[ref - 1];
+  if (g.date >= TODAY) return null; // don't reveal until that game's voting day is over
   const r = results.get(ref);
   if (!r) return null;
-  const g = GAMES[ref - 1];
   const side = (spec.win !== undefined)
     ? (r.wi === 0 ? g.a : g.b)
     : (r.wi === 0 ? g.b : g.a);
