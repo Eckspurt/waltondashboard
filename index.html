@@ -5772,7 +5772,7 @@
         <div class="qotd-footer">
           <span id="qotd-total">0 votes</span>
           ${bracketLink
-            ? `<a href="/bracket.html" onclick="event.stopPropagation()" style="color:var(--raider-red);text-decoration:none;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase">View Bracket →</a>`
+            ? `<a href="/bracket.html" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--raider-red);text-decoration:none;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase">View Bracket →</a>`
             : `<span id="qotd-updated"></span>`}
         </div>
       </div>`;
@@ -5829,7 +5829,7 @@
       <div class="qotd-modal-footer">
         <span id="qotd-modal-total">0 votes</span>
         ${bracketLink
-          ? `<a href="/bracket.html" onclick="event.stopPropagation()" style="color:var(--raider-red);text-decoration:none;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase">View Bracket →</a>`
+          ? `<a href="/bracket.html" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--raider-red);text-decoration:none;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase">View Bracket →</a>`
           : `<span id="qotd-modal-updated"></span>`}
       </div>`;
     fetchQOTDResults();
