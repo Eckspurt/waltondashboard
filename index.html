@@ -281,6 +281,12 @@
       transition: transform 0.25s ease, color 0.15s;
     }
     .widget-chevron.collapsed { transform: rotate(-90deg); }
+    .widget-header-icon-btn {
+      display: flex; align-items: center; justify-content: center;
+      color: var(--txt-dim); background: none; border: none; cursor: pointer;
+      padding: 2px; flex-shrink: 0; transition: color 0.15s;
+    }
+    .widget-header-icon-btn:hover { color: var(--txt-bright); }
     /* Temp shown in weather header when collapsed */
     .weather-header-temp {
       font-family: 'Barlow Condensed', sans-serif;
@@ -571,10 +577,11 @@
     .sched-reminders {
       display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;
       padding: 0.55rem 0.75rem 0.65rem;
-      overflow: hidden;
+      overflow-y: auto; overflow-x: hidden;
       transition: max-height 0.25s ease, padding 0.25s ease;
       max-height: 340px;
     }
+    .sched-reminders:not(.collapsed) { max-height: 600px; }
     .sched-reminders.collapsed { max-height: 0; padding-top: 0; padding-bottom: 0; }
     .sched-voice-select {
       background: var(--gm-dark);
@@ -2141,6 +2148,13 @@
           </div>
           <div style="display:flex;align-items:center;gap:0.75rem;">
             <span class="widget-header-badge" id="schedule-badge"></span>
+            <button class="widget-header-icon-btn" onclick="printBellSchedule()" title="Print schedule">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="6 9 6 2 18 2 18 9"/>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+              </svg>
+            </button>
             <svg class="widget-chevron" id="schedule-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <polyline points="6 9 12 15 18 9"/>
             </svg>
@@ -2178,7 +2192,7 @@
               </svg>
               1 min warning
             </button>
-            <button class="sched-reminder-btn" id="sched-remind-attend" onclick="toggleSchedReminder('attend')" title="Spoken reminder to take attendance 5 minutes into each period">
+            <button class="sched-reminder-btn" id="sched-remind-attend" onclick="toggleSchedReminder('attend')" title="Spoken reminder to take attendance 10% of the way into each period">
               <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M9 11l3 3L22 4"/>
                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
@@ -3024,6 +3038,7 @@
 
   let currentSchedulePeriods = null;
   let currentScheduleTab     = '';
+  let _schedDisplayedPeriods = null; // whatever is on screen right now, even an "upcoming" schedule
 
   function updateSchedStrip() {
     const strip    = document.getElementById('sched-period-strip');
@@ -3114,6 +3129,7 @@
       currentSchedulePeriods = periods;
       currentScheduleTab     = tabName;
     }
+    _schedDisplayedPeriods = periods;
     renderLunchDutyEntries();
     updateSchedStrip();
   }
@@ -3124,6 +3140,50 @@
   function schedCloseModal(e) {
     if (e && e.target !== document.getElementById('sched-modal-overlay') && !e.target.closest('.sched-modal-close')) return;
     document.getElementById('sched-modal-overlay')?.classList.remove('open');
+  }
+
+  function printBellSchedule() {
+    const clean = s => (s || '').replace(/\s+/g, ' ').trim();
+    const rows = [...document.querySelectorAll('#schedule-body .period-row')].map(row => ({
+      name:  clean(row.querySelector('.period-name')?.textContent),
+      time:  clean(row.querySelector('.period-time')?.textContent),
+      lunch: clean(row.querySelector('.period-lunch-badge')?.textContent),
+    }));
+    if (!rows.length) { alert('No schedule loaded yet.'); return; }
+
+    const title   = document.getElementById('schedule-badge')?.textContent || 'Bell Schedule';
+    const dateStr = now().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const tableRows = rows.map(r => `<tr>
+        <td>${escHtml(r.name)}</td>
+        <td>${escHtml(r.time)}</td>
+        <td class="notes">${escHtml(r.lunch)}</td>
+      </tr>`).join('');
+
+    const html = `<!doctype html><html><head><title>Bell Schedule</title><style>
+      body { font-family: Arial, Helvetica, sans-serif; padding: 32px; color: #111; }
+      h1 { font-size: 22px; margin: 0 0 2px; }
+      .sub { color: #555; font-size: 13px; margin-bottom: 20px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; font-size: 14px; }
+      th { background: #f2f2f2; }
+      td.notes { color: #b00020; font-weight: 600; }
+      @media print { body { padding: 0; } }
+    </style></head><body>
+      <h1>${escHtml(title)}</h1>
+      <div class="sub">${escHtml(dateStr)}</div>
+      <table><thead><tr><th>Period</th><th>Time</th><th>Notes</th></tr></thead><tbody>${tableRows}</tbody></table>
+    </body></html>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+    document.body.appendChild(iframe);
+    const doc = iframe.contentWindow.document;
+    doc.open(); doc.write(html); doc.close();
+    iframe.onload = () => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      setTimeout(() => iframe.remove(), 1000);
+    };
   }
 
   // ══════════════════════════════════════════════
@@ -3974,7 +4034,7 @@
     const config = document.getElementById('lunch-duty-config');
     if (!config) return;
     const d = getLunchDuty();
-    const lunchPeriods = (currentSchedulePeriods || [])
+    const lunchPeriods = (_schedDisplayedPeriods || currentSchedulePeriods || [])
       .filter(p => /\b(3rd|4th|5th|6th|period\s*[3456]|^[3456]$)/i.test(p.name));
     if (!d.entries[0]?.period && lunchPeriods.length) {
       d.entries[0].period = lunchPeriods[0].name; _saveLunchDuty(d);
@@ -4068,7 +4128,7 @@
     }
     if (nowMin !== _lastAttendMin
         && localStorage.getItem(SCHED_REMIND_ATTEND_KEY) === 'true'
-        && currentSchedulePeriods.some(p => p.start + 5 === nowMin)) {
+        && currentSchedulePeriods.some(p => p.start + Math.round((p.end - p.start) * 0.1) === nowMin)) {
       _lastAttendMin = nowMin;
       if (!document.hidden) speakReminder('Take attendance');
     }
