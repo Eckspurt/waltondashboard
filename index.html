@@ -2912,6 +2912,13 @@
     }
   }
 
+  // yyyy-mm-dd using local calendar fields — toISOString() converts to UTC first,
+  // which rolls the date over to the next (or previous) day depending on time zone
+  // and time of day, so it must never be used to key a local calendar date.
+  function _localDateKey(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
   async function _fetchNextSchedule(fromDate) {
     const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     // Look up to 100 days ahead (covers full summer break) for the next school day with a real schedule
@@ -2920,7 +2927,7 @@
       const d = new Date(fromDate);
       d.setDate(d.getDate() + i);
       if (d.getDay() === 0 || d.getDay() === 6) continue; // skip weekends
-      candidates.push(d.toISOString().split('T')[0]);
+      candidates.push(_localDateKey(d));
     }
     if (!candidates.length) return null;
 
@@ -2954,7 +2961,7 @@
     const now     = new Date();
     const weekday = now.getDay();
     const isWeekend = weekday === 0 || weekday === 6;
-    const todayKey = now.toISOString().split('T')[0];
+    const todayKey = _localDateKey(now);
 
     function _rowsAllPast(rows) {
       if (!rows.length) return false;
