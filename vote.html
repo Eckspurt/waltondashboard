@@ -303,7 +303,12 @@
     if (res.ok || res.status === 409) return { ok: true };
     // The server's date check rejects with "qotd_closed" (see qotd_vote_rules.sql)
     const text = await res.text().catch(() => '');
-    return { ok: false, closed: text.includes('qotd_closed') };
+    return {
+      ok: false,
+      closed: text.includes('qotd_closed'),
+      busy: text.includes('qotd_busy'),
+      limit: text.includes('qotd_limit'),
+    };
   }
 
   function esc(s) {
@@ -423,8 +428,12 @@
       showThanks(false);
     } else if (res.closed) {
       showError('Voting is closed for this question. Check that your device\'s date is correct.');
+    } else if (res.limit) {
+      showError('Too many votes have come from this network today. Try again tomorrow.');
     } else {
-      document.getElementById('msg').textContent = 'Something went wrong. Please try again.';
+      document.getElementById('msg').textContent = res.busy
+        ? 'Lots of votes coming in right now. Please try again in a minute.'
+        : 'Something went wrong. Please try again.';
       document.getElementById('msg').classList.add('error');
       document.querySelectorAll('.opt').forEach(b => { b.disabled = false; });
       btn.classList.remove('picked');
