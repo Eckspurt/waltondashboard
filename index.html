@@ -5750,11 +5750,6 @@
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
-  function _qotdDeviceId() {
-    let id = localStorage.getItem('qotd-device-id');
-    if (!id) { id = Math.random().toString(36).slice(2,10) + Date.now().toString(36); localStorage.setItem('qotd-device-id', id); }
-    return id;
-  }
   function _qotdHasVoted(dayKey) { return localStorage.getItem(`qotd-voted-${dayKey}`) === '1'; }
   function _qotdMarkVoted(dayKey) { localStorage.setItem(`qotd-voted-${dayKey}`, '1'); }
 
@@ -5762,7 +5757,7 @@
     e.stopPropagation();
     if (!QOTD_VOTE_URL) return;
     _qotdMarkVoted(dayKey);
-    window.open(`${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}&voter=${encodeURIComponent(_qotdDeviceId())}`, '_blank', 'noopener');
+    window.open(`${QOTD_VOTE_URL}?date=${encodeURIComponent(dayKey)}`, '_blank', 'noopener');
     renderQOTD();
   }
 

@@ -204,10 +204,15 @@
   }
   // ─────────────────────────────────────────────
 
-  const params   = new URLSearchParams(location.search);
-  const date     = params.get('date') || todayISO();
-  const voterId  = params.get('voter') || getVoterId();
-  const lsKey    = 'qotd-page-voted-' + date;
+  // Voting is only ever open for today's question. ?date= from an old QR code
+  // is only used to tell the student that poll is closed. The server also
+  // rejects votes for any date other than today (Eastern time).
+  const params    = new URLSearchParams(location.search);
+  const date      = todayISO();
+  const linkDate  = params.get('date');
+  const lsKey     = 'qotd-page-voted-' + date;
+  const ID_KEY    = 'qotd-device-id';
+  let voterId     = null;
 
   function todayISO() {
     const d = new Date();
@@ -216,11 +221,62 @@
       String(d.getDate()).padStart(2,'0');
   }
 
-  function getVoterId() {
-    let id = localStorage.getItem('qotd-device-id');
+  // ── Sticky storage ───────────────────────────
+  // The voter ID and "already voted" marks are kept in localStorage, a cookie
+  // and IndexedDB. If any one survives a partial clear, it restores the others.
+  const store = {
+    getLS(k)    { try { return localStorage.getItem(k); } catch(e) { return null; } },
+    setLS(k, v) { try { localStorage.setItem(k, v); } catch(e) {} },
+    getCookie(k) {
+      const m = document.cookie.match('(?:^|; )' + k + '=([^;]*)');
+      return m ? decodeURIComponent(m[1]) : null;
+    },
+    setCookie(k, v) {
+      try {
+        document.cookie = `${k}=${encodeURIComponent(v)}; max-age=31536000; path=/; SameSite=Lax; Secure`;
+      } catch(e) {}
+    },
+    _db: null,
+    idb() {
+      if (!this._db) this._db = new Promise(resolve => {
+        try {
+          const req = indexedDB.open('qotd', 1);
+          req.onupgradeneeded = () => req.result.createObjectStore('kv');
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => resolve(null);
+        } catch(e) { resolve(null); }
+      });
+      return this._db;
+    },
+    async getIDB(k) {
+      const db = await this.idb();
+      if (!db) return null;
+      return new Promise(resolve => {
+        try {
+          const r = db.transaction('kv').objectStore('kv').get(k);
+          r.onsuccess = () => resolve(r.result ?? null);
+          r.onerror = () => resolve(null);
+        } catch(e) { resolve(null); }
+      });
+    },
+    async setIDB(k, v) {
+      const db = await this.idb();
+      if (!db) return;
+      try { db.transaction('kv', 'readwrite').objectStore('kv').put(v, k); } catch(e) {}
+    },
+    async get(k) {
+      const v = this.getLS(k) || this.getCookie(k) || await this.getIDB(k);
+      if (v) this.set(k, v);
+      return v;
+    },
+    set(k, v) { this.setLS(k, v); this.setCookie(k, v); this.setIDB(k, v); },
+  };
+
+  async function getVoterId() {
+    let id = await store.get(ID_KEY);
     if (!id) {
       id = Math.random().toString(36).slice(2,10) + Date.now().toString(36);
-      localStorage.setItem('qotd-device-id', id);
+      store.set(ID_KEY, id);
     }
     return id;
   }
@@ -244,7 +300,10 @@
       },
       body: JSON.stringify(body),
     });
-    return res.ok || res.status === 409;
+    if (res.ok || res.status === 409) return { ok: true };
+    // The server's date check rejects with "qotd_closed" (see qotd_vote_rules.sql)
+    const text = await res.text().catch(() => '');
+    return { ok: false, closed: text.includes('qotd_closed') };
   }
 
   function esc(s) {
@@ -273,14 +332,21 @@
   }
 
   async function init() {
+    if (linkDate && linkDate !== date) {
+      showError('This poll is closed. Scan the QR code on today\'s dashboard to vote on today\'s question.');
+      return;
+    }
+
+    voterId = await getVoterId();
+
     // Already voted? Show thanks immediately.
-    if (localStorage.getItem(lsKey)) { showThanks(true); return; }
+    if (await store.get(lsKey)) { showThanks(true); return; }
 
     // Check server-side too
     try {
       const existing = await sbGet('qotd_votes',
         `date=eq.${date}&voter_id=eq.${encodeURIComponent(voterId)}&select=id&limit=1`);
-      if (existing.length) { localStorage.setItem(lsKey, '1'); showThanks(true); return; }
+      if (existing.length) { store.set(lsKey, '1'); showThanks(true); return; }
     } catch(e) {}
 
     // Load question
@@ -351,10 +417,12 @@
     document.querySelectorAll('.opt').forEach(b => b.disabled = true);
     btn.classList.add('picked');
 
-    const ok = await sbPost('qotd_votes', { date, option_index: idx, voter_id: voterId });
-    if (ok) {
-      localStorage.setItem(lsKey, '1');
+    const res = await sbPost('qotd_votes', { date, option_index: idx, voter_id: voterId });
+    if (res.ok) {
+      store.set(lsKey, '1');
       showThanks(false);
+    } else if (res.closed) {
+      showError('Voting is closed for this question. Check that your device\'s date is correct.');
     } else {
       document.getElementById('msg').textContent = 'Something went wrong. Please try again.';
       document.getElementById('msg').classList.add('error');
